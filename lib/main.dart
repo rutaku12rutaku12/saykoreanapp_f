@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget{
   Widget build(BuildContext context) {
     return MaterialApp(
       initialRoute: "/",
+      // routes : { "경로정의" : (context) =>위젯명() },
       routes: {
         "/" : (context) => StartPage() ,
         "/home" : (context) => HomePage() ,

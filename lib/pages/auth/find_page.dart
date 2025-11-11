@@ -4,11 +4,11 @@ class FindPage extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar( title: Text("시작페이지"),),
+      appBar: AppBar( title: Text("찾기페이지"),),
       body: Center(
         child: Column(
           children: [
-            Text("상세 페이지"),
+            Text("찾기 페이지"),
             ElevatedButton(
                 onPressed: (){
                   Navigator.pop(context);

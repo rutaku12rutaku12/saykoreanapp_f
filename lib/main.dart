@@ -14,7 +14,7 @@ void main(){
 
 class MyApp extends StatelessWidget{
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { //
     return MaterialApp(
       initialRoute: "/",
       // routes : { "경로정의" : (context) =>위젯명() },

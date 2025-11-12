@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
+import 'package:saykoreanapp_f/pages/setting/myPage.dart';
 
 class StartPage extends StatelessWidget{
   @override
@@ -20,6 +21,14 @@ class StartPage extends StatelessWidget{
                 context,
                 MaterialPageRoute(builder: (context)=>SignupPage() ));
               }, child: Text("회원가입") , ) ,
+
+            TextButton(onPressed: () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => Mypage()));
+            }, child: Text("마이페이지") , ) ,
+            ElevatedButton(onPressed: (){ Navigator.pop(context);
+              }, child: Text("뒤로가기"))
           ],
         ),
       ),

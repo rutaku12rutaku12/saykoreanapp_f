@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  flutter_svg: ^2.2.2
   flutter:
     sdk: flutter
   dio: ^5.9.0
@@ -58,6 +59,11 @@ flutter:
  uses-material-design: true
  assets:
     - assets/game/
+    - assets/icons/home.svg
+    - assets/icons/user.svg
+    - assets/icons/study.svg
+    - assets/icons/test.svg
+    - assets/icons/rank.svg
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

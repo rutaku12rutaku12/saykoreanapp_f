@@ -35,23 +35,23 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SayKorean Language',
+      title: 'SayKorean Genres',
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.teal),
-      home: const Language(),
+      home: const Ranking(),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-class Language extends StatelessWidget{
-  const Language({super.key});
+class Ranking extends StatelessWidget{
+  const Ranking({super.key});
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("언어 선택"),
+        title: Text("랭킹"),
       ),
       body: Center(
         child: Column(

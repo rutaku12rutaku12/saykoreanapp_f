@@ -9,11 +9,6 @@ class MyInfoUpdatePage extends StatelessWidget{
         child: Column(
           children: [
             Text("정보 수정 페이지"),
-            ElevatedButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-                child: Text("뒤로가기"))
           ],
         ),
       ),

@@ -9,11 +9,7 @@ class FindPage extends StatelessWidget{
         child: Column(
           children: [
             Text("찾기 페이지"),
-            ElevatedButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-                child: Text("뒤로가기"))
+            // 정유진 : 뒤로가기 삭제함
           ],
         ),
       ),

@@ -66,6 +66,7 @@ flutter:
  assets:
     - .env
     - assets/game/
+    - assets/icons/
     - assets/icons/home.svg
     - assets/icons/user.svg
     - assets/icons/study.svg

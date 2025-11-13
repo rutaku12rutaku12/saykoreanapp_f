@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:saykoreanapp_f/pages/study/successList.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)
 String _detectBaseUrl() {
-  final env = const String.fromEnvironment('API_HOST'); // 예) --dart-define=API_HOST=http://192.168.0.10:8080
+  final env = const String.fromEnvironment('API_HOST');
   if (env.isNotEmpty) return env;
 
   if (kIsWeb) return 'http://localhost:8080';
@@ -38,27 +39,73 @@ String buildUrl(String? path) {
 // DTO
 class StudyDto {
   final int studyNo;
-  final int? genreNo;
-  final String? themeSelected;
+  final int genreNo;
+
+  // 언어별 주제
   final String? themeKo;
+  final String? themeJp;
+  final String? themeCn;
+  final String? themeEn;
+  final String? themeEs;
+
+  // 언어별 해설
+  final String? commenKo;
+  final String? commenJp;
+  final String? commenCn;
+  final String? commenEn;
+  final String? commenEs;
+
+  // 백엔드에서 CASE로 내려주는 통합 필드
+  final String? themeSelected;
   final String? commenSelected;
 
   StudyDto({
     required this.studyNo,
-    this.genreNo,
-    this.themeSelected,
+    required this.genreNo,
     this.themeKo,
+    this.themeJp,
+    this.themeCn,
+    this.themeEn,
+    this.themeEs,
+    this.commenKo,
+    this.commenJp,
+    this.commenCn,
+    this.commenEn,
+    this.commenEs,
+    this.themeSelected,
     this.commenSelected,
   });
 
-  factory StudyDto.fromJson(Map<String, dynamic> j) => StudyDto(
-    studyNo: (j['studyNo'] ?? j['id']) as int,
-    genreNo: j['genreNo'] as int?,
-    themeSelected: (j['themeSelected'] ?? j['studyTitleSelected'] ?? j['titleSelected'])?.toString(),
-    themeKo: (j['themeKo'] ?? j['titleKo'])?.toString(),
-    commenSelected: (j['commenSelected'] ?? j['commentSelected'])?.toString(),
-  );
+  factory StudyDto.fromJson(Map<String, dynamic> j) {
+    return StudyDto(
+      studyNo: j['studyNo'] is int
+          ? j['studyNo'] as int
+          : int.tryParse(j['studyNo']?.toString() ?? '') ?? 0,
+      genreNo: j['genreNo'] is int
+          ? j['genreNo'] as int
+          : int.tryParse(j['genreNo']?.toString() ?? '') ?? 0,
+
+      // 언어별 주제
+      themeKo: j['themeKo']?.toString(),
+      themeJp: j['themeJp']?.toString(),
+      themeCn: j['themeCn']?.toString(),
+      themeEn: j['themeEn']?.toString(),
+      themeEs: j['themeEs']?.toString(),
+
+      // 언어별 해설
+      commenKo: j['commenKo']?.toString(),
+      commenJp: j['commenJp']?.toString(),
+      commenCn: j['commenCn']?.toString(),
+      commenEn: j['commenEn']?.toString(),
+      commenEs: j['commenEs']?.toString(),
+
+      // CASE로 내려주는 통합 필드
+      themeSelected: j['themeSelected']?.toString(),
+      commenSelected: j['commenSelected']?.toString(),
+    );
+  }
 }
+
 
 class ExamDto {
   final int examNo;
@@ -251,14 +298,25 @@ class _StudyPageState extends State<StudyPage> {
   }
 
   // ── 완료 처리
+  // ── 완료 처리
   Future<void> _complete() async {
     final id = _subject?.studyNo;
     if (id == null || id <= 0) return;
 
     final prefs = await SharedPreferences.getInstance();
+
+
+    // final prev = prefs.getStringList('studies') ?? [];
+    // final Set<String> merged = {...prev, id.toString()};
+    // await prefs.setStringList('studies', merged.toList());
+
+    // 순서 유지 + 중복 방지
     final prev = prefs.getStringList('studies') ?? [];
-    final Set<String> merged = {...prev, id.toString()};
-    await prefs.setStringList('studies', merged.toList());
+    final idStr = id.toString();
+    if (!prev.contains(idStr)) {
+      prev.add(idStr); // 뒤에 붙여서 "마지막에 완료한 주제"를 알 수 있게
+    }
+    await prefs.setStringList('studies', prev);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -266,7 +324,7 @@ class _StudyPageState extends State<StudyPage> {
     );
 
     // 이동
-    Navigator.pushNamed(context, '/successList'); // 예: 시험 화면으로
+    Navigator.pushNamed(context, '/successList'); // 예: 완료 목록으로 이동
   }
 
   // ── UI
@@ -600,6 +658,9 @@ class _ExamCard extends StatelessWidget {
     );
   }
 }
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
   final String message;

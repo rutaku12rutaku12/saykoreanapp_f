@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
+import 'package:saykoreanapp_f/api/base_url.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -44,7 +45,7 @@ class _SignupState extends State<SignupPage> {
     try {
       Dio dio = Dio();
       final response = await dio.post(
-          "http://192.168.40.22:8080/saykorean/signup", data: sendData);
+          "$baseUrl/saykorean/signup", data: sendData);
       final data = response.data;
 
       Navigator.pop(context); // 가장 앞(가장 최근에 열린)에 있는 위젯 닫기 (showDialog(): 팝업 창)

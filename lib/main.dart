@@ -12,7 +12,7 @@ import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
 import 'package:saykoreanapp_f/pages/test/test.dart';
 import 'package:saykoreanapp_f/pages/test/testList.dart';
-
+import 'package:saykoreanapp_f/pages/friends/friends.dart';
 
 
 // ─────────────────────────────────────────────
@@ -98,6 +98,7 @@ class MyApp extends StatelessWidget {
         "/game"   : (context) => GamePage(),
         "/study"  : (context) => StudyPage(),
         "/ranking": (context) => Ranking(),
+        "/friends": (context) => FriendsPage(myUserNo: 1),
       },
 
       // 공통 레이아웃 (푸터 표시/숨김)
@@ -237,6 +238,10 @@ class _FooterBar extends StatelessWidget {
                       routeName: '/testList',    active: current == '/testList'),
                   _btn(label: '순위',  svg: 'assets/icons/rank.svg',
                       routeName: '/ranking', active: current == '/ranking'),
+                  _btn(
+                    label: '친구', svg: 'assets/icons/friends.svg', // ← 이건 네가 원하는 SVG 파일 경로
+                    routeName: '/friends', active: current == '/friends',
+                  ),
                 ],
               ),
             ),

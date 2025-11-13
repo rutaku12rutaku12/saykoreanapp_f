@@ -1,20 +1,30 @@
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:saykoreanapp_f/api/dio_client.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:saykoreanapp_f/api/base_url.dart';
-class LoginPage extends StatefulWidget {
 
+class LoginPage extends StatefulWidget {
     @override
-  State<StatefulWidget> createState() {
-    return _LoginState();
+    State<StatefulWidget> createState() {
+      return _LoginState();
   }
 }
 
   class _LoginState extends State<LoginPage>{
+    final dioClient = DioClient();
+
+    @override
+    void initState() {
+      super.initState();
+      _initDio();
+  }
+
+  Future<void> _initDio() async {
+      await dioClient.init();
+  }
+  
   // 1. 입력상자 컨트롤러
   TextEditingController emailCon = TextEditingController();
   TextEditingController pwdCont = TextEditingController();
@@ -22,18 +32,20 @@ class LoginPage extends StatefulWidget {
   // 2. 자바와 통신
   // user02@example.com , pass#02!
   void onLogin() async {
-    print("onLogin.exe");
-    try {
-      Dio dio = Dio();
-      final sendData = { "email": emailCon.text, "password": pwdCont.text};
+    print("onLogin 실행");
+    final sendData = { "email": emailCon.text, "password": pwdCont.text};
       print(sendData);
-      final response = await dio.post( "$baseUrl/saykorean/login", data: sendData); print(response);
-      final data = response.data; print(data);
-      if (data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
-        // 1. 전역변수 호출
-        final prefs = await SharedPreferences.getInstance();
-        // 2. 전역변수 값 추가
-        await prefs.setString( 'result', data.toString() );
+    try {
+      final response = await dioClient.instance.post(
+          "/saykorean/login",
+          data: sendData);
+
+      print(response);
+      print("응답: $response");
+      print("상태코드: ${response.statusCode}");
+
+      if( response.statusCode == 200 ){
+        print("로그인 성공, 세션 쿠키 저장");
 
         // * 로그인 성공 시 페이지 전환
         Navigator.pushReplacement(
@@ -42,13 +54,17 @@ class LoginPage extends StatefulWidget {
         );
       } else {
         print("로그인 실패");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("로그인 실패. 이메일과 비밀번호를 확인하세요.")),
+        );
       }
     } catch (e) {
-      print(e);
+      print("로그인 예외 : $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("로그인 중 오류가 발생했습니다.")),
+      );
     }
   } // c end
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -60,14 +76,18 @@ class LoginPage extends StatefulWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           // 현재 축(Column) 기준으로 정렬
           children: [ // 하위 요소를 위젯
-            TextField(controller: emailCon,
+            TextField(
+              controller: emailCon,
               decoration: InputDecoration(
-                  labelText: "이메일", border: OutlineInputBorder()),
+                  labelText: "이메일",
+                  border: OutlineInputBorder()),
             ),
             SizedBox(height: 20,),
-            TextField(controller: pwdCont, obscureText: true, // 입력값 감추기
+            TextField(
+              controller: pwdCont, obscureText: true, // 입력값 감추기
               decoration: InputDecoration(
-                  labelText: "비밀번호", border: OutlineInputBorder()),
+                  labelText: "비밀번호",
+                  border: OutlineInputBorder()),
             ),
             SizedBox(height: 20,),
             ElevatedButton(onPressed: onLogin, child: Text("로그인")),

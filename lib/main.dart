@@ -95,7 +95,7 @@ class MyApp extends StatelessWidget {
         "/login"  : (context) => LoginPage(),
         "/signup" : (context) => SignupPage(),
         "/find"   : (context) => FindPage(),
-        "/info"   : (context) => Mypage(),
+        "/info"   : (context) => MyPage(),
         "/update" : (context) => MyInfoUpdatePage(),
         "/game"   : (context) => GamePage(),
         "/study"  : (context) => StudyPage(),
@@ -230,7 +230,7 @@ class _FooterBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _btn(label: '홈',   svg: 'assets/icons/home.svg',
-                      routeName: '/',    active: current == '/'),
+                      routeName: '/home',    active: current == '/home'),
                   _btn(label: '내정보',svg: 'assets/icons/user.svg',
                       routeName: '/info',    active: current == '/info'),
                   _btn(label: '학습',  svg: 'assets/icons/study.svg',

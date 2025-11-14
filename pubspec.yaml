@@ -65,10 +65,9 @@ dev_dependencies:
 flutter:
  uses-material-design: true
  assets:
-    - .env
     - assets/game/
-    - assets/game/receive
-    - assets/game/watermelon
+    - assets/game/receive/
+    - assets/game/watermelon/
     - assets/icons/
     - assets/icons/home.svg
     - assets/icons/user.svg

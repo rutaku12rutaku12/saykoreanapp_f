@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 아이콘용
-import 'package:saykoreanapp_f/api/dio_client.dart';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
@@ -51,12 +49,7 @@ int? _toInt(dynamic v) {
 
 // ─────────────────────────────────────────────
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await dotenv.load(fileName: ".env");
-
-  await DioClient().init();
+void main() {
   runApp(MyApp());
 }
 

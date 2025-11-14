@@ -14,7 +14,7 @@ String _detectBaseUrl() {
 
   if (kIsWeb) return 'http://localhost:8080';
   if (Platform.isAndroid) return 'http://10.0.2.2:8080'; // 안드 에뮬레이터→호스트
-  return 'http://localhost:8080';                        // iOS 시뮬레이터/데스크톱
+  return 'http://localhost:8080'; // iOS 시뮬레이터/데스크톱
 }
 
 final Dio dio = Dio(BaseOptions(
@@ -32,8 +32,12 @@ String buildUrl(String? path) {
     final p = path.replaceFirst('file://', '');
     return _baseUri.resolve(p.startsWith('/') ? p.substring(1) : p).toString();
   }
-  return _baseUri.resolve(path.startsWith('/') ? path.substring(1) : path).toString();
+  return _baseUri
+      .resolve(path.startsWith('/') ? path.substring(1) : path)
+      .toString();
 }
+
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DTO
@@ -106,7 +110,6 @@ class StudyDto {
   }
 }
 
-
 class ExamDto {
   final int examNo;
   final String? examSelected;
@@ -147,7 +150,7 @@ class _StudyPageState extends State<StudyPage> {
   // 목록/상세 상태
   List<StudyDto> _subjects = const [];
   StudyDto? _subject; // 선택된 주제 상세
-  ExamDto? _exam;     // 현재 예문
+  ExamDto? _exam; // 현재 예문
 
   // 로컬 상태
   int? _genreNo;
@@ -168,7 +171,7 @@ class _StudyPageState extends State<StudyPage> {
     // (선택) arguments로 초기 studyNo 받기
     final arg = ModalRoute.of(context)?.settings.arguments;
     if (arg is int && _subject == null) {
-      // 뒤에서 목록 로드 후에 적용
+      // 필요하면 여기서 활용 가능
     }
   }
 
@@ -231,7 +234,8 @@ class _StudyPageState extends State<StudyPage> {
         queryParameters: {'studyNo': studyNo, 'langNo': _langNo},
         options: Options(headers: {'Accept-Language': _langNo.toString()}),
       );
-      setState(() => _subject = StudyDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(() =>
+      _subject = StudyDto.fromJson(Map<String, dynamic>.from(res.data)));
     } on DioException catch (e) {
       setState(() => _error = e.message ?? '주제 상세를 불러오지 못했습니다.');
     } catch (_) {
@@ -245,7 +249,8 @@ class _StudyPageState extends State<StudyPage> {
         '/saykorean/study/exam/first',
         queryParameters: {'studyNo': studyNo, 'langNo': _langNo},
       );
-      setState(() => _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(() =>
+      _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } on DioException catch (e) {
       setState(() => _error = e.message ?? '예문을 불러오지 못했습니다.');
     } catch (_) {
@@ -264,7 +269,8 @@ class _StudyPageState extends State<StudyPage> {
           'langNo': _langNo,
         },
       );
-      setState(() => _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(() =>
+      _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } catch (_) {}
   }
 
@@ -279,7 +285,8 @@ class _StudyPageState extends State<StudyPage> {
           'langNo': _langNo,
         },
       );
-      setState(() => _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(() =>
+      _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } catch (_) {}
   }
 
@@ -294,21 +301,16 @@ class _StudyPageState extends State<StudyPage> {
       await _player.stop();
       await _player.play(UrlSource(resolved));
     } catch (e) {
+      // 무시
     }
   }
 
-  // ── 완료 처리
   // ── 완료 처리
   Future<void> _complete() async {
     final id = _subject?.studyNo;
     if (id == null || id <= 0) return;
 
     final prefs = await SharedPreferences.getInstance();
-
-
-    // final prev = prefs.getStringList('studies') ?? [];
-    // final Set<String> merged = {...prev, id.toString()};
-    // await prefs.setStringList('studies', merged.toList());
 
     // 순서 유지 + 중복 방지
     final prev = prefs.getStringList('studies') ?? [];
@@ -324,22 +326,29 @@ class _StudyPageState extends State<StudyPage> {
     );
 
     // 이동
-    Navigator.pushNamed(context, '/successList'); // 예: 완료 목록으로 이동
+    Navigator.pushNamed(context, '/successList'); // 완료 목록으로 이동
   }
 
   // ── UI
   @override
   Widget build(BuildContext context) {
-    final cream = const Color(0xFFFFF9F0);
-    final brown = const Color(0xFF6B4E42);
+    const cream = Color(0xFFFFF9F0);
+    const brown = Color(0xFF6B4E42);
 
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
-        title: const Text('학습'),
         backgroundColor: cream,
         elevation: 0,
-        foregroundColor: brown,
+        centerTitle: true,
+        title: const Text(
+          '학습',
+          style: TextStyle(
+            color: brown,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: brown),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -349,67 +358,165 @@ class _StudyPageState extends State<StudyPage> {
     );
   }
 
+  // ─────────────────────────────────────────────
+  // 주제 목록 화면 (마이페이지 스타일로)
+  // ─────────────────────────────────────────────
   Widget _buildList() {
-    // 주제 목록 (필 버튼)
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: _subjects.map((s) {
-          final label = s.themeSelected ?? s.themeKo ?? '제목 없음';
-          return _PillButton(
-            label: label,
-            active: false,
-            onTap: () async {
-              setState(() {
-                _loading = true;
-                _error = null;
-              });
-              await _fetchDailyStudy(s.studyNo);
-              await _fetchFirstExam(s.studyNo);
-              if (mounted) setState(() => _loading = false);
-            },
-          );
-        }).toList(),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            "오늘의 학습",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF6B4E42),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "선택한 장르에서 학습할 주제를 골라볼까요?",
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF9C7C68),
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          const Text(
+            "주제 선택",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF7C5A48),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.brown.withOpacity(0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: _subjects.isEmpty
+                ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  "등록된 학습 주제가 아직 없어요.",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF9C7C68),
+                  ),
+                ),
+              ),
+            )
+                : Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: _subjects.map((s) {
+                final label = s.themeSelected ?? s.themeKo ?? '제목 없음';
+                return _PillButton(
+                  label: label,
+                  active: false,
+                  onTap: () async {
+                    setState(() {
+                      _loading = true;
+                      _error = null;
+                    });
+                    await _fetchDailyStudy(s.studyNo);
+                    await _fetchFirstExam(s.studyNo);
+                    if (mounted) {
+                      setState(() => _loading = false);
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  // ─────────────────────────────────────────────
+  // 주제 상세 + 예문 학습 화면 (마이페이지 스타일로)
+  // ─────────────────────────────────────────────
   Widget _buildDetail() {
     final t = _subject!;
     final title = t.themeSelected ?? t.themeKo ?? '제목 없음';
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 제목
+          const Text(
+            "오늘의 학습",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF6B4E42),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "설명을 읽고 예문을 들으며 자연스럽게 익혀봐요.",
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF9C7C68),
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          const Text(
+            "주제 설명",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF7C5A48),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // 제목/해설 카드
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border.all(color: const Color(0xFFE5E7EB)),
               borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x12000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+                  color: Colors.brown.withOpacity(0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF6B4E42),
-                    )),
-                if (t.commenSelected != null && t.commenSelected!.isNotEmpty)
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF6B4E42),
+                  ),
+                ),
+                if (t.commenSelected != null &&
+                    t.commenSelected!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
@@ -417,6 +524,7 @@ class _StudyPageState extends State<StudyPage> {
                       style: const TextStyle(
                         fontSize: 14,
                         color: Color(0x995C4A42),
+                        height: 1.4,
                       ),
                     ),
                   ),
@@ -424,17 +532,38 @@ class _StudyPageState extends State<StudyPage> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          if (_exam != null) _ExamCard(
-            exam: _exam!,
-            onPlayKo: () => _play(_exam!.koAudioPath),
-            onPlayEn: () => _play(_exam!.enAudioPath),
-            onPrev: _fetchPrevExam,
-            onNext: _fetchNextExam,
+          const Text(
+            "예문 학습",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF7C5A48),
+            ),
           ),
+          const SizedBox(height: 8),
 
-          const SizedBox(height: 16),
+          if (_exam != null)
+            _ExamCard(
+              exam: _exam!,
+              onPlayKo: () => _play(_exam!.koAudioPath),
+              onPlayEn: () => _play(_exam!.enAudioPath),
+              onPrev: _fetchPrevExam,
+              onNext: _fetchNextExam,
+            ),
+
+          const SizedBox(height: 20),
+
+          const Text(
+            "학습 완료",
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF7C5A48),
+            ),
+          ),
+          const SizedBox(height: 8),
 
           SizedBox(
             height: 48,
@@ -479,6 +608,7 @@ class _StudyPageState extends State<StudyPage> {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 컴포넌트들
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _PillButton extends StatelessWidget {
   final String label;
@@ -556,11 +686,11 @@ class _ExamCard extends StatelessWidget {
         color: Colors.white,
         border: Border.all(color: const Color(0xFFE5E7EB)),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Colors.brown.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -570,8 +700,8 @@ class _ExamCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
-                width: 350, // 가로 폭 제한
-                height: 350, // 세로 폭 제한
+                width: 350,
+                height: 350,
                 child: Image.network(
                   buildUrl(exam.imagePath),
                   fit: BoxFit.cover,
@@ -659,7 +789,6 @@ class _ExamCard extends StatelessWidget {
   }
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
@@ -670,11 +799,49 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(message, style: const TextStyle(color: Colors.red)),
-        const SizedBox(height: 12),
-        ElevatedButton(onPressed: onRetry, child: const Text('다시 시도')),
-      ]),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.brown.withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline,
+                  color: Colors.redAccent, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: onRetry,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFEEE9),
+                  foregroundColor: const Color(0xFF6B4E42),
+                  elevation: 0,
+                ),
+                child: const Text('다시 시도'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

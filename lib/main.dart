@@ -20,6 +20,7 @@ import 'package:saykoreanapp_f/pages/test/testList.dart';
 
 // ─────────────────────────────────────────────
 
+
 // 전역 네비게이터 키
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -53,10 +54,14 @@ void main() {
   runApp(MyApp());
 }
 
+
 class MyApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // debug 표시 없애기
+      debugShowCheckedModeBanner: false,
       navigatorKey: appNavigatorKey,
       initialRoute: "/",
 

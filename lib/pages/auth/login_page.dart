@@ -5,6 +5,10 @@ import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:saykoreanapp_f/api.dart';
+
+
+
 
 class LoginPage extends StatefulWidget {
 
@@ -24,18 +28,22 @@ class _LoginState extends State<LoginPage>{
   void onLogin() async {
     print("onLogin.exe");
     try {
-      Dio dio = Dio();
       final sendData = { "email": emailCon.text, "password": pwdCont.text};
       print(sendData);
-      final response = await dio.post( "http://192.168.40.22:8080/saykorean/login", data: sendData); print(response);
-      final data = response.data; print(data);
+      // baseUrl + path만 사용
+      final response = await ApiClient.dio.post(
+        '/saykorean/login', // 슬래시로 시작하는 path만 적기
+        data: sendData,
+      );
+      final data = response.data;
+      print(data);
       if (data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
         // 1. 전역변수 호출
         final prefs = await SharedPreferences.getInstance();
         // 2. 전역변수 값 추가
         await prefs.setString( 'result', data.toString() );
 
-        // * 로그인 성공 시 페이지 전환
+        // * 로그인 성공 시 페이지 전환 //
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (content) => HomePage()),

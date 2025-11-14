@@ -67,8 +67,10 @@ flutter:
  assets:
     - .env
     - assets/game/
-    - assets/game/receive
-    - assets/game/watermelon
+    - assets/game/receive/
+    - assets/game/watermelon/
+
+    # 아이콘
     - assets/icons/
     - assets/icons/home.svg
     - assets/icons/user.svg

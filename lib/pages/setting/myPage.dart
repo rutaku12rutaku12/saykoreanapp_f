@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:saykoreanapp_f/api/dio_client.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/setting/genre.dart';
@@ -17,7 +16,7 @@ class MyPage extends StatefulWidget {
 }
 
 class _MyPageState extends State<MyPage> {
-  final dioClient = DioClient();
+  final dio = Dio();
 
   // 1. 상태변수
   String nickName = "";
@@ -33,7 +32,6 @@ class _MyPageState extends State<MyPage> {
 
   // 3. 로그인 상태를 확인하는 함수
   Future<void> loginCheck() async {
-    await dioClient.init();
     await onInfo();
   }
 
@@ -41,7 +39,7 @@ class _MyPageState extends State<MyPage> {
   Future<void> onInfo() async {
     try {
 
-      final response = await dioClient.instance.get(
+      final response = await dio.get(
         "/saykorean/info",
         options: Options(
           headers: {

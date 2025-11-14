@@ -1,5 +1,4 @@
-// lib/api/gameApi.dart
-
+// lib/api/game_api.dart
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -14,12 +13,12 @@ class GameApi {
   // 세션 쿠키 저장소
   static String? _sessionCookie;
 
-  // 로그인 후 세션 쿠키를 저장하는 메소드
-  // static Future<void> saveSessionCookie(String cookie) async {
-  //   _sessionCookie = cookie;
-  //   final prefs = await SharedPreferences.getInstance();
-  //   await prefs = setString('session_cookie' , cookie);
-  //
-  // }
+// 로그인 후 세션 쿠키를 저장하는 메소드
+// static Future<void> saveSessionCookie(String cookie) async {
+//   _sessionCookie = cookie;
+//   final prefs = await SharedPreferences.getInstance();
+//   await prefs = setString('session_cookie' , cookie);
+//
+// }
 
 }

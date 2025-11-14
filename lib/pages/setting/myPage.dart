@@ -1,10 +1,13 @@
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:saykoreanapp_f/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:saykoreanapp_f/pages/setting/language.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -25,33 +28,36 @@ class _MyPageState extends State<MyPage> {
 
   // 2. 해당 페이지 열렸을때 실행되는 함수
   @override
-  void initState() {
-    super.initState();
-    loginCheck();
-  }
+  void initState() { loginCheck(); }
 
   // 3. 로그인 상태를 확인하는 함수
-  Future<void> loginCheck() async {
-    await onInfo();
+  bool? isLogin; // Dart 문법 중에 타입? 은 null 포함할 수 있다는 뜻
+  void loginCheck() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if( token != null && token.isNotEmpty ){ // 전역 변수에 (로그인)토큰이 존재하면
+      setState(() {
+        isLogin = true; print("로그인 중");
+        onInfo( token ); // 로그인 중일때 로그인 정보 요청 함수 실행
+      });
+    }else{ // 비로그인 중일때 페이지 전환/이동
+      // Navigator.pushReplacement( context , MaterialPageRoute(builder: (context)=> 이동할위젯명() ) );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage() ) );
+    }
   }
 
   // 4. 로그인된 (회원) 정보 요청, 로그인 중일때 실행
-  Future<void> onInfo() async {
+  void onInfo( token ) async {
     try {
-
-      final response = await dio.get(
+      final response = await ApiClient.dio.get(
         "/saykorean/info",
         options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-          },
           validateStatus: (status) => true,
         ),
       );
 
       print("응답 상태: ${response.statusCode}");
       print("응답 데이터: ${response.data}");
-      print("응답 메시지: ${response.statusMessage}");
 
       if (response.statusCode == 200 && response.data != null) {
         setState(() {
@@ -60,28 +66,7 @@ class _MyPageState extends State<MyPage> {
           isLoading = false;
         });
       } else if (response.statusCode == 400) {
-        print("400 에러 상세:");
-        print("에러 메시지: ${response.data}");
-        print("요청 URL: ${response.requestOptions.uri}");
-        print("요청 헤더: ${response.requestOptions.headers}");
-
-        // 400 에러여도 일단 화면은 보여주기 (디버깅용)
-        setState(() {
-          nickName = "정보 로드 실패";
-          userDate = "API 오류 (400)";
-          isLoading = false;
-        });
-
-        // 로그인 페이지로 이동하지 않고 에러 메시지 표시
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("사용자 정보를 불러올 수 없습니다. (400 오류)"),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } else {
+        print("인증 실패 - 로그인 페이지로 이동");
         // 로그인 x -> 로그인 페이지로 이동
         if (mounted) {
           Navigator.pushReplacement(
@@ -89,6 +74,13 @@ class _MyPageState extends State<MyPage> {
             MaterialPageRoute(builder: (context) => LoginPage()),
           );
         }
+      } else{
+        print("기타 오류 : ${response.statusCode}");
+        setState(() {
+          nickName = "정보 로드 실패";
+          userDate = "API 오류";
+          isLoading = false;
+        });
       }
     } catch (e) {
       print("로그인 확인 오류: $e");

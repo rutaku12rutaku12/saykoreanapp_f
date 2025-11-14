@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
   static String _detectBaseUrl() {
@@ -20,6 +21,29 @@ class ApiClient {
       receiveTimeout: const Duration(seconds: 12),
       headers: {
         'X-Client-Type': 'flutter'
+      },
+    ),
+  )..interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options,handler) async{
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token');
+
+        if( token != null && token.isNotEmpty ){
+          options.headers['Authorization'] = 'Bearer $token';
+          print('Authorization 헤더 추가');
+        }
+        return handler.next(options);
+      },
+      onResponse: (response,handler){
+        print('응답성공: ${response.statusCode}');
+        return handler.next(response);
+      },
+      onError: (error, handler) {
+        print('API 에러: ${error.response?.statusCode}');
+        print('URL: ${error.requestOptions.uri}');
+        print('메시지: ${error.response?.data}');
+        return handler.next(error);
       }
     ),
   );

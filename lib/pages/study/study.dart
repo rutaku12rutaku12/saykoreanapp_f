@@ -80,8 +80,10 @@ class StudyDto {
     this.commenSelected,
   });
 
+  // JSON -> StudyDto 변환
   factory StudyDto.fromJson(Map<String, dynamic> j) {
     return StudyDto(
+      // studyNo, genreNo는 숫자/문자 둘 다 올 수 있어 안전 캐스팅
       studyNo: j['studyNo'] is int
           ? j['studyNo'] as int
           : int.tryParse(j['studyNo']?.toString() ?? '') ?? 0,
@@ -111,11 +113,12 @@ class StudyDto {
 }
 
 class ExamDto {
-  final int examNo;
-  final String? examSelected;
-  final String? imagePath;
-  final String? koAudioPath;
-  final String? enAudioPath;
+  final int examNo; // 예문 번호
+  final String? examSelected; // 선택된 언어의 예문
+  final String? imagePath; // 이미지 경로
+  final String? koAudioPath; // 한국어 오디오 경로
+  final String? enAudioPath; // 영어 오디오 경로
+
 
   ExamDto({
     required this.examNo,
@@ -125,6 +128,8 @@ class ExamDto {
     this.enAudioPath,
   });
 
+
+  // JSON -> ExamDto 변환
   factory ExamDto.fromJson(Map<String, dynamic> j) => ExamDto(
     examNo: (j['examNo'] ?? j['id']) as int,
     examSelected: j['examSelected']?.toString(),
@@ -135,7 +140,8 @@ class ExamDto {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 페이지
+// StudyPage : 주제 목록 + 상세 + 예문 학습
+// ─────────────────────────────────────────────────────────────────────────────
 class StudyPage extends StatefulWidget {
   const StudyPage({super.key});
 
@@ -144,25 +150,25 @@ class StudyPage extends StatefulWidget {
 }
 
 class _StudyPageState extends State<StudyPage> {
-  bool _loading = false;
-  String? _error;
+  bool _loading = false; // 전체 로딩 여부
+  String? _error; // 에러 메세지
 
   // 목록/상세 상태
-  List<StudyDto> _subjects = const [];
+  List<StudyDto> _subjects = const []; // 주제 목록
   StudyDto? _subject; // 선택된 주제 상세
   ExamDto? _exam; // 현재 예문
 
   // 로컬 상태
-  int? _genreNo;
-  int _langNo = 1;
+  int? _genreNo; // 선택된 장르 번호
+  int _langNo = 1; // 선택 언어 번호
 
-  // 오디오
+  // 오디오 플레이어( 예문 듣기용 )
   final AudioPlayer _player = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-    _bootstrap();
+    _bootstrap(); // 페이지 초기화
   }
 
   @override
@@ -190,9 +196,10 @@ class _StudyPageState extends State<StudyPage> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      _genreNo = prefs.getInt('selectedGenreNo');
-      _langNo = prefs.getInt('selectedLangNo') ?? 1;
+      _genreNo = prefs.getInt('selectedGenreNo'); // 선택된 장르
+      _langNo = prefs.getInt('selectedLangNo') ?? 1; // 선택된 언어
 
+      // 장르가 없는 경우 안내
       if (_genreNo == null || _genreNo! <= 0) {
         setState(() => _error = '먼저 장르를 선택해 주세요.');
         return;
@@ -206,15 +213,17 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
-  // ── API: 목록/상세/예문
+  // ── API: 주제 목록 조회
   Future<void> _fetchSubjects() async {
     try {
       final res = await dio.get(
         '/saykorean/study/getSubject',
         queryParameters: {'genreNo': _genreNo, 'langNo': _langNo},
+        // 헤더로 언어 정보 넘겨주기
         options: Options(headers: {'Accept-Language': _langNo.toString()}),
       );
 
+      // 응답이 배열이라고 가정하고 StudyDto 리스트로 변환
       final list = (res.data is List ? res.data as List : <dynamic>[])
           .map((e) => StudyDto.fromJson(Map<String, dynamic>.from(e)))
           .toList();
@@ -227,6 +236,7 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
+  // API : 특정 주제 상세 조회
   Future<void> _fetchDailyStudy(int studyNo) async {
     try {
       final res = await dio.get(
@@ -243,6 +253,7 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
+  // API : 첫번재 예문 조회
   Future<void> _fetchFirstExam(int studyNo) async {
     try {
       final res = await dio.get(
@@ -258,6 +269,8 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
+
+  // API : 다음 예문 조회
   Future<void> _fetchNextExam() async {
     if (_exam == null || _subject == null) return;
     try {
@@ -274,6 +287,8 @@ class _StudyPageState extends State<StudyPage> {
     } catch (_) {}
   }
 
+
+  // API : 이전 예문 조회
   Future<void> _fetchPrevExam() async {
     if (_exam == null || _subject == null) return;
     try {
@@ -290,11 +305,11 @@ class _StudyPageState extends State<StudyPage> {
     } catch (_) {}
   }
 
-  // ── 오디오
+  // ── 오디오 재생
   Future<void> _play(String? url) async {
     if (url == null || url.isEmpty) return;
 
-    // 상대경로(file:///upload/..., /upload/...) → http(s) 절대경로로 변환
+    // 상대경로를 절대경로로 변환
     final resolved = buildUrl(url);
 
     try {
@@ -305,10 +320,11 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
-  // ── 완료 처리
+  // 학습 완료 처리
   Future<void> _complete() async {
     final id = _subject?.studyNo;
     if (id == null || id <= 0) return;
+
 
     final prefs = await SharedPreferences.getInstance();
 
@@ -320,12 +336,13 @@ class _StudyPageState extends State<StudyPage> {
     }
     await prefs.setStringList('studies', prev);
 
+    // 스낵바로 완료 안내
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('학습이 완료되었습니다!')),
     );
 
-    // 이동
+    // 완료 목록 화면으로 이동
     Navigator.pushNamed(context, '/successList'); // 완료 목록으로 이동
   }
 
@@ -358,9 +375,9 @@ class _StudyPageState extends State<StudyPage> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // 주제 목록 화면 (마이페이지 스타일로)
-  // ─────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
+  // 주제 목록 화면
+  // ───────────────────────────────────────────────────────────────────────────
   Widget _buildList() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
@@ -395,6 +412,7 @@ class _StudyPageState extends State<StudyPage> {
           ),
           const SizedBox(height: 8),
 
+          // 주제 선택 카드
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -409,6 +427,7 @@ class _StudyPageState extends State<StudyPage> {
               ],
             ),
             child: _subjects.isEmpty
+            // 주제가 하나도 없을 때 안내 메세지
                 ? const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(
@@ -421,6 +440,7 @@ class _StudyPageState extends State<StudyPage> {
                 ),
               ),
             )
+            // 주제가 있으면 Pill 버튼 리스트로 표시
                 : Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -449,9 +469,9 @@ class _StudyPageState extends State<StudyPage> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // 주제 상세 + 예문 학습 화면 (마이페이지 스타일로)
-  // ─────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
+  // 주제 상세 + 예문 학습 화면
+  // ───────────────────────────────────────────────────────────────────────────
   Widget _buildDetail() {
     final t = _subject!;
     final title = t.themeSelected ?? t.themeKo ?? '제목 없음';
@@ -470,6 +490,8 @@ class _StudyPageState extends State<StudyPage> {
             ),
           ),
           const SizedBox(height: 6),
+
+
           const Text(
             "설명을 읽고 예문을 들으며 자연스럽게 익혀봐요.",
             style: TextStyle(
@@ -489,7 +511,8 @@ class _StudyPageState extends State<StudyPage> {
           ),
           const SizedBox(height: 8),
 
-          // 제목/해설 카드
+
+          // 현재 예문 카드 표시
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -555,6 +578,7 @@ class _StudyPageState extends State<StudyPage> {
 
           const SizedBox(height: 20),
 
+          // 학습 완료 버튼( SharedPreferences 기록 )
           const Text(
             "학습 완료",
             style: TextStyle(
@@ -607,9 +631,11 @@ class _StudyPageState extends State<StudyPage> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 컴포넌트들
+// 컴포넌트들 - Pill 버튼, Exam 카드, 에러 뷰
 // ─────────────────────────────────────────────────────────────────────────────
 
+
+// 주제 목록에서 사용하는 알약 스타일 버튼
 class _PillButton extends StatelessWidget {
   final String label;
   final bool active;
@@ -623,6 +649,7 @@ class _PillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 상태에 따라서 색상 변경
     final bg = active ? const Color(0xFFFFEEE9) : Colors.white;
     final fg = active ? const Color(0xFFFF7F79) : const Color(0xFF444444);
     final br = active ? const Color(0xFFFFC7C2) : const Color(0xFFE5E7EB);
@@ -661,12 +688,13 @@ class _PillButton extends StatelessWidget {
   }
 }
 
+// 예문을 보여주는 카드
 class _ExamCard extends StatelessWidget {
   final ExamDto exam;
-  final VoidCallback onPlayKo;
-  final VoidCallback onPlayEn;
-  final VoidCallback onPrev;
-  final VoidCallback onNext;
+  final VoidCallback onPlayKo; // 한국어 발음 재생 콜백
+  final VoidCallback onPlayEn; // 영어 발음 재생 콜백
+  final VoidCallback onPrev; // 이전 예문
+  final VoidCallback onNext; // 다음 예문
 
   const _ExamCard({
     required this.exam,
@@ -695,6 +723,7 @@ class _ExamCard extends StatelessWidget {
         ],
       ),
       child: Column(
+        // 예문에 이미지가 있는 경우 표시
         children: [
           if (exam.imagePath != null && exam.imagePath!.isNotEmpty)
             ClipRRect(
@@ -713,6 +742,7 @@ class _ExamCard extends StatelessWidget {
             ),
           const SizedBox(height: 12),
 
+          // 예문 텍스트
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -726,6 +756,8 @@ class _ExamCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
+
+          // 오디오 버튼 2개
           Row(
             children: [
               Expanded(
@@ -756,6 +788,8 @@ class _ExamCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
+
+          // 이전, 다음 예문 버튼
           Row(
             children: [
               Expanded(
@@ -790,11 +824,17 @@ class _ExamCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 에러 화면 공통 위젯
+// ─────────────────────────────────────────────────────────────────────────────
+
 
 class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
+  final String message; // 에러 메세지
+  final VoidCallback onRetry; // 다시 시도 콜백
+
+
   const _ErrorView({required this.message, required this.onRetry});
+
 
   @override
   Widget build(BuildContext context) {

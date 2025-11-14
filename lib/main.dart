@@ -14,49 +14,63 @@ import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// 성공 목록 / 테스트 목록 페이지
+// 완수한 학습 목록 페이지
 import 'package:saykoreanapp_f/pages/study/successList.dart';
+// 테스트 목록 페이지
 import 'package:saykoreanapp_f/pages/test/testList.dart';
 
-// ─────────────────────────────────────────────
-
-
+// ─────────────────────────────────────────────────────────────────────────────
 // 전역 네비게이터 키
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+// ─────────────────────────────────────────────────────────────────────────────
 
 // 현재 라우트명 구하기
+// bottom tab에서 활성 탭 표시용으로 사용
 String? currentRouteName() {
-  final nav = appNavigatorKey.currentState;
-  if (nav == null) return null;
-  return ModalRoute.of(nav.context)?.settings.name;
+  final nav = appNavigatorKey.currentState; // 현재 네비게이터 상태
+  if (nav == null) return null; // 아직 빌드가 안됐다면 null 처리
+  return ModalRoute.of(nav.context)?.settings.name; // 현재 route 이름 반환
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 // 안전한 페이지 이동 함수 (하단 탭용)
 void goNamed(String routeName, {Object? arguments}) {
   final nav = appNavigatorKey.currentState;
   if (nav == null) return;
-  final current = currentRouteName();
-  if (current == routeName && arguments == null) return;
-  nav.pushNamedAndRemoveUntil(routeName, (route) => false, arguments: arguments);
+  final current = currentRouteName(); // 현재 화면 이름
+  if (current == routeName && arguments == null) return; // 같은 페이지면 무시
+
+  // 새로운 route로 이동
+  nav.pushNamedAndRemoveUntil(
+    routeName,
+    (route) => false,
+    arguments: arguments,
+  );
 }
 
-// any → int? 변환 유틸
+// ─────────────────────────────────────────────────────────────────────────────
+
+// any 타입을 int?로 안전하게 변환하는 유틸
 int? _toInt(dynamic v) {
-  if (v is int) return v;
-  if (v is num) return v.toInt();
-  if (v is String) return int.tryParse(v);
-  return null;
+  if (v is int) return v; // 이미 int면 그대로
+  if (v is num) return v.toInt(); // num이면 toInt()
+  if (v is String) return int.tryParse(v); // String이면 파싱
+  return null; // 그 외는 null
 }
 
-// ─────────────────────────────────────────────
-
+// ─────────────────────────────────────────────────────────────────────────────
+// 앱 진입점
+// ─────────────────────────────────────────────────────────────────────────────
 void main() {
   runApp(MyApp());
 }
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 최상위 위젯
+// ─────────────────────────────────────────────────────────────────────────────
 class MyApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -67,12 +81,15 @@ class MyApp extends StatelessWidget {
 
       // 인자 필요한 라우트는 여기서 처리
       onGenerateRoute: (settings) {
+        // testList는 studyNo 인자가 필요함
         if (settings.name == "/testList") {
           final studyNo = _toInt(settings.arguments);
 
           return MaterialPageRoute(
             builder: (_) => (studyNo == null)
+            // 인자 없으면 에러 페이지로
                 ? const _RouteArgErrorPage(message: "studyNo가 필요합니다.")
+                // 정상이라면 TestListPage 표시
                 : TestListPage(),
             settings: settings,
           );
@@ -93,77 +110,87 @@ class MyApp extends StatelessWidget {
         );
       },
 
+      // ───────────────────────────────────────────────────────────────────────
+      // 이름 기반 정적 라우트 매핑
       routes: {
-        "/"       : (context) => StartPage(),
-        "/home"   : (context) => HomePage(),
-        "/login"  : (context) => LoginPage(),
-        "/signup" : (context) => SignupPage(),
-        "/find"   : (context) => FindPage(),
-        "/info"   : (context) => MyPage(),
-        "/update" : (context) => MyInfoUpdatePage(),
-        "/game"   : (context) => GamePage(),
-        "/study"  : (context) => StudyPage(),
+        "/": (context) => StartPage(), // 시작화면
+        "/home": (context) => HomePage(), // 홈
+        "/login": (context) => LoginPage(), // 로그인
+        "/signup": (context) => SignupPage(), // 회원가입
+        "/find": (context) => FindPage(), // 계정/비번 찾기
+        "/info": (context) => MyPage(), // 내정보(마이페이지)
+        "/update": (context) => MyInfoUpdatePage(), // 내정보 수정
+        "/game": (context) => GamePage(), // 게임
+        "/study": (context) => StudyPage(), // 학습
         // "/test"   : (context) => TestPage(testNo: testNo),
-        "/ranking": (context) => Ranking(),
-        "/friends": (context) => FriendsPage(myUserNo: 4),
+        "/ranking": (context) => Ranking(), // 순위
+        "/friends": (context) => FriendsPage(myUserNo: 1), // 친구 목록
 
-        // 필요하면 성공 목록도 이름으로 이동
+        // 필요하면 성공 목록도 이름으로 이동 ( 완수한 학습 목록 )
         "/successList": (context) => SuccessListPage(),
       },
     );
   }
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // 인자 누락 시 에러 페이지
+// ─────────────────────────────────────────────────────────────────────────────
 class _RouteArgErrorPage extends StatelessWidget {
   final String message;
+
   const _RouteArgErrorPage({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("오류")),
-      body: Center(child: Text(message)),
+      appBar: AppBar(title: const Text("오류")), // 상단 바
+      body: Center(child: Text(message)), // 전달된 에러 메세지 표시
     );
   }
 }
 
-// ─────────────────────────────────────────────
-// 푸터 바 (네가 쓰던 버전 그대로)
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 하단 푸터바
+// ─────────────────────────────────────────────────────────────────────────────
 class _FooterBar extends StatelessWidget {
-  static const Color _bgTop    = Color(0xFFFFF9F0); // 크림
+  static const Color _bgTop = Color(0xFFFFF9F0); // 크림
   static const Color _bgBottom = Color(0xFFFFF1E8); // 옅은 핑크
-  static const Color _active   = Color(0xFFFFAAA5); // 코랄핑크
-  static const Color _inactive = Color(0x80FFAAA5); // 비활성(50%)
+  static const Color _active = Color(0xFFFFAAA5); // 코랄핑크
+  static const Color _inactive = Color(0x80FFAAA5); // 비활성 탭 (50%)
 
   const _FooterBar();
 
+  // 공통 탭 버튼 위젯
   Widget _btn({
-    required String label,
-    required String svg,
-    required String routeName,
-    required bool active,
+    required String label, // 텍스트
+    required String svg, // SVG 경로
+    required String routeName, // 이동할 라우트 이름
+    required bool active, // 선택 여부
   }) {
-    final color = active ? _active : _inactive;
+    final color = active ? _active : _inactive; // 상태에 따른 색상 선택
     return Expanded(
       child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => goNamed(routeName),
+        behavior: HitTestBehavior.opaque, // 빈 영역도 터치되도록
+        onTap: () => goNamed(routeName), // 탭 클릭 시 페이지 이동
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+
+              // 아이콘 영역
               SizedBox(
-                height: 30, width: 30,
+                height: 30,
+                width: 30,
                 child: SvgPicture.asset(
                   svg,
                   colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 ),
               ),
               const SizedBox(height: 6),
+
+              // 아이콘 아래 텍스트
               Text(
                 label,
                 style: TextStyle(
@@ -180,7 +207,8 @@ class _FooterBar extends StatelessWidget {
     );
   }
 
-  // 시험 버튼 전용 위젯 (저장된 studyNo 읽어서 /testList로 이동)
+  // 시험 버튼 전용 위젯
+  // sharedPreferences에서 studies 리스트 읽
   Widget _testBtn({required bool active}) {
     final color = active ? _active : _inactive;
     return Expanded(
@@ -191,7 +219,7 @@ class _FooterBar extends StatelessWidget {
           final studies = prefs.getStringList('studies') ?? [];
 
           if (studies.isEmpty) {
-            // 아직 완수한 주제가 없다면 안내 + 원하는 곳으로 보내기
+            // 아직 완수한 주제가 없을 때
             final ctx = appNavigatorKey.currentContext;
             if (ctx != null) {
               ScaffoldMessenger.of(ctx).showSnackBar(
@@ -209,6 +237,8 @@ class _FooterBar extends StatelessWidget {
           final lastStr = studies.last;
           final studyNo = int.tryParse(lastStr);
 
+
+          // 변환 실패시 안내
           if (studyNo == null) {
             final ctx = appNavigatorKey.currentContext;
             if (ctx != null) {
@@ -221,7 +251,7 @@ class _FooterBar extends StatelessWidget {
             return;
           }
 
-         // studyNo 인자 전달
+          // studyNo 인자 전달
           goNamed('/testList', arguments: studyNo);
         },
         child: Padding(
@@ -230,7 +260,8 @@ class _FooterBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                height: 30, width: 30,
+                height: 30,
+                width: 30,
                 child: SvgPicture.asset(
                   'assets/icons/test.svg',
                   colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
@@ -255,6 +286,7 @@ class _FooterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 현재 routeName을 기준으로 어떤 탭이 활성이지 판단
     final current = currentRouteName() ?? '';
 
     return SafeArea(
@@ -287,7 +319,7 @@ class _FooterBar extends StatelessWidget {
                   _btn(
                     label: '홈',
                     svg: 'assets/icons/home.svg',
-                    routeName: '/home',         // 홈 화면으로 이동
+                    routeName: '/', // 홈 화면으로 이동
                     active: current == '/home',
                   ),
                   _btn(
@@ -306,7 +338,7 @@ class _FooterBar extends StatelessWidget {
                   // 시험 (완수한 주제 기준)
                   _testBtn(active: current == '/testList'),
 
-                  // ⭐ 여기 추가: 게임 버튼
+                  // 게임 버튼
                   _btn(
                     label: '게임',
                     svg: 'assets/icons/game.svg',
@@ -329,10 +361,9 @@ class _FooterBar extends StatelessWidget {
                 ],
               ),
             ),
-  ),
+          ),
         ),
       ),
     );
   }
 }
-

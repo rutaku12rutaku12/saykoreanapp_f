@@ -7,9 +7,6 @@ import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api.dart';
 
-
-
-
 class LoginPage extends StatefulWidget {
 
   @override
@@ -32,14 +29,25 @@ class _LoginState extends State<LoginPage>{
       print(sendData);
       // baseUrl + path만 사용
       final response = await ApiClient.dio.post(
-        '/saykorean/login', // 슬래시로 시작하는 path만 적기
+        '/saykorean/login',     // 슬래시로 시작하는 path만 적기
         data: sendData,
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+          validateStatus: (status) {
+            // 500 에러도 받아서 확인
+            return status! < 600;
+          },
+        ),
       );
+
+      print("응답 상태: ${response.statusCode}");
+      print("응답 데이터: ${response.data}");
+
       final data = response.data;
       print(data);
 
-      if (data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
-        final token = data['token'];
+      if (response.statusCode == 200 && response.data != null && response.data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
+        final token = response.data['token'];
         // 1. 전역변수 호출
         final prefs = await SharedPreferences.getInstance();
         // 2. 전역변수 값 추가
@@ -51,10 +59,20 @@ class _LoginState extends State<LoginPage>{
           MaterialPageRoute(builder: (content) => HomePage()),
         );
       } else {
-        print("로그인 실패");
+        print("로그인 실패: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('로그인 실패: ${response.statusCode}')),
+        );
       }
     } catch (e) {
       print("로그인 오류 : $e");
+      if (e is DioException) {
+        print("응답 데이터: ${e.response?.data}");
+        print("상태 코드: ${e.response?.statusCode}");
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('로그인 중 오류가 발생했습니다.')),
+      );
     }
   } // c end
 

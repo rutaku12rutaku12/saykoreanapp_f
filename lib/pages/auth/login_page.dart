@@ -43,7 +43,7 @@ class _LoginState extends State<LoginPage>{
         // 2. 전역변수 값 추가
         await prefs.setString( 'result', data.toString() );
 
-        // * 로그인 성공 시 페이지 전환
+        // * 로그인 성공 시 페이지 전환 //
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (content) => HomePage()),

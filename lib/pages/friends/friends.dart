@@ -43,7 +43,7 @@ class _FriendsPageState extends State<FriendsPage>
     try{
       final list = await _api.getFriendList(userNo: widget.myUserNo);
       setState(() {
-        _friends = list.where((e) => e.frenStatus == 1).toList();
+        _friends = list;
       });
     }catch(e){
       _showError("친구 목록 불러오기 실패\n$e");
@@ -57,20 +57,13 @@ class _FriendsPageState extends State<FriendsPage>
   Future<void> _loadRequests() async {
     setState(() => _loadingRequests = true);
     try {
-      final list = await _api.getFriendList(userNo: widget.myUserNo);
+      final list = await _api.fetchRequests(widget.myUserNo);
+      print("서버에서 받은 요청 개수: ${list.length}");
+      print("서버에서 받은 raw 데이터: $list");
 
       setState(() {
-        _requests = list
-            .where((e) =>
-        e.frenStatus == 0 &&
-            e.receiver == widget.myUserNo) // 내가 받은 요청만
-            .map((e) => FriendRequest(
-          frenNo: e.frenNo,
-          frenStatus: e.frenStatus,
-          frenUpdate: e.frenUpdate,
-          offer: e.offer,
-          receiver: e.receiver,
-        )).toList();
+        _requests = list;
+        print("_requests 길이: ${_requests.length}");
       });
     } catch (e) {
       _showError("요청 목록 불러오기 실패\n$e");
@@ -118,14 +111,45 @@ class _FriendsPageState extends State<FriendsPage>
   }
 
   // 요청 수락
-  Future<void> _accept(FriendRequest req) async {
+  Future<void> _accept(FriendRequest r) async {
     try {
-      await _api.acceptFriend(offer: req.offer, receiver: widget.myUserNo);
+      await _api.acceptFriend(offer: r.offer, receiver: widget.myUserNo);
       _showSnack('친구 요청을 수락했습니다.');
+
+      //화면 상태에서 즉시 제거
+      setState(() {
+        _requests.removeWhere((e) => e.frenNo == r.frenNo);
+      });
+      //친구 목록 새로 갱신
       await _loadFriends();
-      await _loadRequests();
+      // await _loadRequests();
     } catch (e) {
       _showError('요청 수락에 실패했습니다.\n$e');
+    }
+  }
+
+  // 거절
+  Future<void> _refusal(FriendRequest r) async {
+    try {
+      final ok = await _api.refusalFriend(
+        offer: r.offer,
+        receiver: widget.myUserNo,
+      );
+
+      if (ok) {
+        _showSnack("요청을 거절했습니다.");
+
+        // 화면 상태에서 즉시 제거
+        setState(() {
+          _requests.removeWhere((e) => e.offer == r.offer && e.receiver == r.receiver);
+        });
+        // 목록 갱신
+        // await _loadRequests();
+      } else {
+        _showError("이미 처리된 요청이거나 존재하지 않습니다.");
+      }
+    } catch (e) {
+      _showError("거절 실패\n$e");
     }
   }
 
@@ -237,22 +261,14 @@ class _FriendsPageState extends State<FriendsPage>
               mainAxisSize: MainAxisSize.min, //
               children: [
                 //수락
-                IconButton(onPressed: () => _accept(r), icon: const Icon(Icons.check, color: Colors.green)
+                IconButton(
+                    onPressed: () => _accept(r)
+                    , icon: const Icon(Icons.check, color: Colors.green)
                 ),
                 //거절
-                IconButton(icon: const Icon(Icons.close, color: Colors.red),
-                  onPressed: () async {
-                    try {
-                      await _api.deleteFriend(
-                      offer: r.offer,
-                      receiver: widget.myUserNo,
-                      );
-                      _showSnack("요청을 거절했습니다.");
-                      _loadRequests();
-                      } catch (e) {
-                      _showError("거절 실패\n$e");
-                    }
-                  },
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  onPressed: () => _refusal(r),
                 )
               ],
             )

@@ -105,7 +105,7 @@ class MyApp extends StatelessWidget {
         "/study"  : (context) => StudyPage(),
         // "/test"   : (context) => TestPage(testNo: testNo),
         "/ranking": (context) => Ranking(),
-        "/friends": (context) => FriendsPage(myUserNo: 1),
+        "/friends": (context) => FriendsPage(myUserNo: 4),
 
         // 필요하면 성공 목록도 이름으로 이동
         "/successList": (context) => SuccessListPage(),

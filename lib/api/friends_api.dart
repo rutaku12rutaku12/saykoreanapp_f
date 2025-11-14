@@ -1,18 +1,13 @@
 // lib/api/friends_api.dart
 
 import 'package:dio/dio.dart';
+import 'package:saykoreanapp_f/api.dart';
 import '../models/friend.dart';
 import '../models/friend_request.dart';
+import '../api.dart';
 
 class FriendsApi {
-  FriendsApi()
-      : _dio = Dio(BaseOptions(
-    baseUrl: "http://10.0.2.2:8080", // TODO: 서버 URL
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 5),
-  ));
-
-  final Dio _dio;
+  final Dio _dio = ApiClient.dio;
 
   /// 친구 요청
   ///
@@ -46,6 +41,15 @@ class FriendsApi {
     );
   }
 
+  /// 친구 거절
+  Future<bool> refusalFriend({
+    required int offer, required int receiver,
+  }) async {
+    final res = await _dio.delete("/refusal",
+        queryParameters: {"offer" : offer, "receiver" :receiver});
+    return res.data == true;
+  }
+
   /// 친구 삭제
   Future<void> deleteFriend({
     required int offer,
@@ -74,6 +78,20 @@ class FriendsApi {
     );
   }
 
+  //요청 목록
+  Future<List<FriendRequest>> fetchRequests(int myUserNo) async {
+    final res = await _dio.get(
+      "/friends/requests/recv",
+      queryParameters: {"userNo": myUserNo},
+    );
+
+    print("서버 응답 : ${res.data}");
+
+    return (res.data as List)
+        .map((e) => FriendRequest.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
   /// 친구 목록 조회
   ///
   /// PUT /friends/list?userNo=1
@@ -85,7 +103,7 @@ class FriendsApi {
       "/friends/list",
       queryParameters: {
         "userNo": userNo,
-      },
+      },//
     );
     print("서버 응답: ${res.data}");
 

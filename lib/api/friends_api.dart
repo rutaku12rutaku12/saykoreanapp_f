@@ -1,18 +1,13 @@
 // lib/api/friends_api.dart
 
 import 'package:dio/dio.dart';
+import 'package:saykoreanapp_f/api.dart';
 import '../models/friend.dart';
 import '../models/friend_request.dart';
+import '../api.dart';
 
 class FriendsApi {
-  FriendsApi()
-      : _dio = Dio(BaseOptions(
-    baseUrl: "http://10.0.2.2:8080", // TODO: 서버 URL
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 5),
-  ));
-
-  final Dio _dio;
+  final Dio _dio = ApiClient.dio;
 
   /// 친구 요청
   ///
@@ -93,11 +88,7 @@ class FriendsApi {
     print("서버 응답 : ${res.data}");
 
     return (res.data as List)
-        .where((e) => e["friend"] != null) // ★null 필터링
-        .map((e) {
-      final friendJson = Map<String, dynamic>.from(e["frend"]);   // ← ★ 핵심
-      return FriendRequest.fromJson(friendJson);
-    })
+        .map((e) => FriendRequest.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
 

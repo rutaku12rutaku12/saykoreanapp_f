@@ -1,179 +1,245 @@
-import 'dart:io';
-
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:saykoreanapp_f/api.dart'; // ApiClient.dio
 import 'package:saykoreanapp_f/pages/test/test.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// baseUrl 감지 (다른 파일과 동일하게 맞추기)
-String _detectBaseUrl() {
-  final env = const String.fromEnvironment('API_HOST');
-  if (env.isNotEmpty) return env;
-  if (kIsWeb) return 'http://localhost:8080';
-  if (Platform.isAndroid) return 'http://10.0.2.2:8080';
-  return 'http://localhost:8080';
-}
-
-final Dio dio = Dio(BaseOptions(
-  baseUrl: _detectBaseUrl(),
-  connectTimeout: const Duration(seconds: 6),
-  receiveTimeout: const Duration(seconds: 12),
-));
-
-// ─────────────────────────────────────────────────────────────────────────────
-
 class TestListPage extends StatefulWidget {
-  final int studyNo;
-  const TestListPage({super.key, required this.studyNo});
+  const TestListPage({super.key});
 
   @override
   State<TestListPage> createState() => _TestListPageState();
 }
 
 class _TestListPageState extends State<TestListPage> {
-  bool loading = false;
-  String msg = "";
-  List<dynamic> tests = [];
-  int _langNo = 1; // 언어번호
+  bool _loading = false;
+  String? _error;
+  int _langNo = 1;
+  List<dynamic> _tests = const [];
 
   @override
   void initState() {
     super.initState();
-    _initAndLoad();
+    _bootstrap();
   }
 
-  Future<void> _initAndLoad() async {
+
+
+  Future<void> _bootstrap() async {
+    final prefs = await SharedPreferences.getInstance();
+    print("🐰 stored studies = ${prefs.getStringList('studies')}");
     setState(() {
-      loading = true;
-      msg = "";
+      _loading = true;
+      _error = null;
     });
 
     try {
-      // StudyPage에서 쓰던 selectedLangNo 그대로 사용
       final prefs = await SharedPreferences.getInstance();
+
+      // 언어 번호(React의 selectedLangNo 대응)
       _langNo = prefs.getInt('selectedLangNo') ?? 1;
 
-      await _loadTests();
-    } catch (e) {
+      // 학습 완료한 studyNo 리스트 (StudyPage._complete 에서 저장한 값과 동일)
+      final storedIds = prefs.getStringList('studies') ?? const <String>[];
+
+      final List<int> ids = storedIds
+          .map((s) => int.tryParse(s))
+          .where((n) => n != null && n! > 0)
+          .cast<int>()
+          .toList();
+
+      print("TestListPage bootstrap, completed studyIds = $ids, langNo = $_langNo");
+
+      if (ids.isEmpty) {
+        setState(() => _tests = []);
+        return;
+      }
+
+      // 각 studyNo에 대한 테스트 목록 병렬 조회
+      final futures = ids.map((id) => _fetchTestsByStudy(id));
+      final results = await Future.wait(futures, eagerError: false);
+
+      // List<List<..>> 를 하나의 List로 flatten
+      final merged = <dynamic>[];
+      for (final list in results) {
+        merged.addAll(list);
+      }
+
       setState(() {
-        msg = "테스트 목록 로드 중 오류가 발생했어요 😢";
+        _tests = merged;
+      });
+    } catch (e, st) {
+      print("TestListPage _bootstrap error: $e");
+      print(st);
+      setState(() {
+        _error = '테스트 목록을 불러오는 중 문제가 발생했어요.';
       });
     } finally {
       if (mounted) {
-        setState(() => loading = false);
+        setState(() {
+          _loading = false;
+        });
       }
     }
   }
 
-  Future<void> _loadTests() async {
+  // /saykorean/test/by-study?studyNo=...&langNo=...
+  Future<List<dynamic>> _fetchTestsByStudy(int studyNo) async {
     try {
-      final res = await dio.get(
+      print("_fetchTestsByStudy(studyNo=$studyNo, langNo=$_langNo)");
+      final res = await ApiClient.dio.get(
         '/saykorean/test/by-study',
         queryParameters: {
-          'studyNo': widget.studyNo,
-          'langNo': _langNo, // 백엔드 시그니처에 맞게 langNo까지 전송
+          'studyNo': studyNo,
+          'langNo': _langNo,
         },
       );
 
-      final list = (res.data is List) ? (res.data as List) : <dynamic>[];
-      setState(() => tests = list);
-    } catch (e) {
-      setState(() => msg = "테스트 목록을 불러올 수 없어요 😢");
+      print("▶ by-study($studyNo) status = ${res.statusCode}");
+      print("▶ by-study($studyNo) data   = ${res.data}");
+
+      if (res.data is List) {
+        return res.data as List;
+      }
+      return const [];
+    } catch (e, st) {
+      print("_fetchTestsByStudy error(studyNo=$studyNo): $e");
+      print(st);
+      // 하나 실패해도 다른 studyNo들은 계속
+      return const [];
     }
+  }
+
+  void _onTapTest(dynamic t) {
+    final rawTestNo = t['testNo'];
+    final testNo = (rawTestNo is int)
+        ? rawTestNo
+        : (rawTestNo is num)
+        ? rawTestNo.toInt()
+        : int.tryParse(rawTestNo?.toString() ?? "0") ?? 0;
+
+    print("go TestPage: testNo=$testNo");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TestPage(testNo: testNo),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final cream = const Color(0xFFFFF9F0);
-    final brown = const Color(0xFF6B4E42);
+    const cream = Color(0xFFFFF9F0);
+    const brown = Color(0xFF6B4E42);
+
+    print("TestListPage build(), tests.length=${_tests.length}");
 
     return Scaffold(
       backgroundColor: cream,
       appBar: AppBar(
-        title: Text("테스트 목록 (study #${widget.studyNo})"),
+        title: const Text('내 테스트 목록'),
         backgroundColor: cream,
-        foregroundColor: brown,
         elevation: 0,
+        foregroundColor: brown,
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : tests.isEmpty
-          ? Center(
-        child: Text(
-          msg.isEmpty ? "등록된 테스트가 없어요" : msg,
-          style: const TextStyle(color: Colors.grey),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: _buildBody(),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _bootstrap,
+              child: const Text('다시 시도'),
+            ),
+          ],
         ),
-      )
-          : ListView.separated(
-        padding: const EdgeInsets.all(12),
-        itemCount: tests.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (context, i) {
-          final t = tests[i];
+      );
+    }
 
-          // testNo 안전 캐스팅
-          final rawTestNo = t['testNo'];
-          final testNo = (rawTestNo is int)
-              ? rawTestNo
-              : (rawTestNo is num)
-              ? rawTestNo.toInt()
-              : int.tryParse(rawTestNo?.toString() ?? "0") ?? 0;
+    if (_tests.isEmpty) {
+      return const Center(
+        child: Text('완수한 주제의 테스트가 아직 없습니다.'),
+      );
+    }
 
-          // 언어별 CASE 컬럼이 있다면 testTitleSelected 우선 사용
-          final title =
-          (t['testTitleSelected'] ?? t['testTitle'] ?? "테스트 $testNo")
-              .toString();
-          final desc = (t['testDesc'] ?? "").toString();
+    return ListView.separated(
+      itemCount: _tests.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final t = _tests[index];
 
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: const BorderSide(color: Color(0xFFE5E7EB)),
+        final rawTestNo = t['testNo'];
+        final testNo = (rawTestNo is int)
+            ? rawTestNo
+            : (rawTestNo is num)
+            ? rawTestNo.toInt()
+            : int.tryParse(rawTestNo?.toString() ?? "0") ?? 0;
+
+        final title = (t['testTitleSelected'] ??
+            t['testTitle'] ??
+            '테스트 #$testNo')
+            .toString();
+        final desc = (t['testDesc'] ?? '').toString();
+
+        return SizedBox(
+          height: 56,
+          child: ElevatedButton(
+            onPressed: () => _onTapTest(t),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF6B4E42),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
             ),
-            elevation: 0,
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-              title: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF3F3F46),
-                ),
-              ),
-              subtitle: desc.isNotEmpty
-                  ? Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  desc,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF6B7280),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              )
-                  : null,
-              trailing: const Icon(
-                Icons.chevron_right,
-                color: Color(0xFF9CA3AF),
+                  if (desc.isNotEmpty)
+                    Text(
+                      desc,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                ],
               ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TestPage(testNo: testNo),
-                  ),
-                );
-              },
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

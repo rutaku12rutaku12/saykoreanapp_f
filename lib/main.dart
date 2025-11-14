@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (_) => (studyNo == null)
                 ? const _RouteArgErrorPage(message: "studyNo가 필요합니다.")
-                : TestListPage(studyNo: studyNo),
+                : TestListPage(),
             settings: settings,
           );
         }

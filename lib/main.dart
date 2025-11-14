@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
+import 'package:saykoreanapp_f/pages/friends/friends.dart';
 import 'package:saykoreanapp_f/pages/game/game.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
@@ -106,6 +107,7 @@ class MyApp extends StatelessWidget {
         "/study"  : (context) => StudyPage(),
         // "/test"   : (context) => TestPage(testNo: testNo),
         "/ranking": (context) => Ranking(),
+        "/friends": (context) => FriendsPage(myUserNo: 1),
 
         // 필요하면 성공 목록도 이름으로 이동
         "/successList": (context) => SuccessListPage(),
@@ -294,6 +296,9 @@ class _FooterBar extends StatelessWidget {
                   _testBtn(active: current == '/testList'),
                   _btn(label: '순위',  svg: 'assets/icons/rank.svg',
                       routeName: '/ranking', active: current == '/ranking'),
+                  _btn(
+                    label: '친구', svg: 'assets/icons/friends.svg',
+                    routeName: '/friends', active: current == '/friends',),
                 ],
               ),
             ),

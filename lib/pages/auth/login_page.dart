@@ -37,11 +37,13 @@ class _LoginState extends State<LoginPage>{
       );
       final data = response.data;
       print(data);
+
       if (data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
+        final token = data['token'];
         // 1. 전역변수 호출
         final prefs = await SharedPreferences.getInstance();
         // 2. 전역변수 값 추가
-        await prefs.setString( 'result', data.toString() );
+        await prefs.setString( 'token', token.toString() );
 
         // * 로그인 성공 시 페이지 전환 //
         Navigator.pushReplacement(
@@ -52,7 +54,7 @@ class _LoginState extends State<LoginPage>{
         print("로그인 실패");
       }
     } catch (e) {
-      print(e);
+      print("로그인 오류 : $e");
     }
   } // c end
 

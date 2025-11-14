@@ -32,7 +32,8 @@ dependencies:
   flutter:
     sdk: flutter
   dio: ^5.9.0
-  webview_flutter: ^4.4.2  # 최신 버전
+  webview_flutter: ^4.4.2  # WebView 지원 (게임 관련 의존성)
+  http: ^1.1.0              # HTTP 통신 (게임 관련 의존성)
   shared_preferences: ^2.5.3 # 로컬 저장
   fluttertoast: ^9.0.0 # 토스트 메시지 지원
   flutter_dotenv: ^6.0.0 # .env 파일로 UPR 관리
@@ -66,6 +67,8 @@ flutter:
  assets:
     - .env
     - assets/game/
+    - assets/game/receive
+    - assets/game/watermelon
     - assets/icons/
     - assets/icons/home.svg
     - assets/icons/user.svg

@@ -15,7 +15,7 @@ class _GamePageState extends State<GamePage> {
 
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadFlutterAsset('assets/game/game.html');
+      ..loadFlutterAsset('assets/game/receive/game.html');
   }
 
   @override

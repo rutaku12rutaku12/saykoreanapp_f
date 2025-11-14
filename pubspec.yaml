@@ -36,10 +36,6 @@ dependencies:
   http: ^1.1.0              # HTTP 통신 (게임 관련 의존성)
   shared_preferences: ^2.5.3 # 로컬 저장
   fluttertoast: ^9.0.0 # 토스트 메시지 지원
-  flutter_dotenv: ^6.0.0 # .env 파일로 UPR 관리
-  cookie_jar: ^4.0.8 # 쿠키 관리
-  dio_cookie_manager: ^3.3.0 # dio와 쿠키 연결 관리
-  path_provider: ^2.1.5 # 로컬 파일 경로 제공 플러그인
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

@@ -87,13 +87,17 @@ class FriendsApi {
   Future<List<FriendRequest>> fetchRequests(int myUserNo) async {
     final res = await _dio.get(
       "/friends/requests/recv",
-      queryParameters: {
-        "userNo": myUserNo,   // <= 이게 꼭 들어가 있어야 함!!!
-      },
+      queryParameters: {"userNo": myUserNo},
     );
 
+    print("서버 응답 : ${res.data}");
+
     return (res.data as List)
-        .map((e) => FriendRequest.fromJson(e))
+        .where((e) => e["friend"] != null) // ★null 필터링
+        .map((e) {
+      final friendJson = Map<String, dynamic>.from(e["frend"]);   // ← ★ 핵심
+      return FriendRequest.fromJson(friendJson);
+    })
         .toList();
   }
 

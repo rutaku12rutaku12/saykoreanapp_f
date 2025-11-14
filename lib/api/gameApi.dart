@@ -15,11 +15,11 @@ class GameApi {
   static String? _sessionCookie;
 
   // 로그인 후 세션 쿠키를 저장하는 메소드
-  static Future<void> saveSessionCookie(String cookie) async {
-    _sessionCookie = cookie;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs = setString('session_cookie' , cookie);
-
-  }
+  // static Future<void> saveSessionCookie(String cookie) async {
+  //   _sessionCookie = cookie;
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs = setString('session_cookie' , cookie);
+  //
+  // }
 
 }

@@ -101,7 +101,7 @@ class MyApp extends StatelessWidget {
         "/login"  : (context) => LoginPage(),
         "/signup" : (context) => SignupPage(),
         "/find"   : (context) => FindPage(),
-        "/info"   : (context) => Mypage(),
+        "/info"   : (context) => MyPage(),
         "/update" : (context) => MyInfoUpdatePage(),
         "/game"   : (context) => GamePage(),
         "/study"  : (context) => StudyPage(),

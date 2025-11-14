@@ -18,6 +18,9 @@ class ApiClient {
       baseUrl: _detectBaseUrl(),
       connectTimeout: const Duration(seconds: 6),
       receiveTimeout: const Duration(seconds: 12),
+      headers: {
+        'X-Client-Type': 'flutter'
+      }
     ),
   );
 

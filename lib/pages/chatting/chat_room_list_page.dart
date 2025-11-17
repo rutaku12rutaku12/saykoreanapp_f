@@ -12,7 +12,7 @@ class ChatRoomListPage extends StatefulWidget {
 
 class _ChatRoomListPageState extends State<ChatRoomListPage> {
   final api = ChattingApi();
-  List<ChatRoom> rooms = [];
+  List<Map<String,dynamic>> rooms = [];
 
   @override
   void initState() {
@@ -39,17 +39,18 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
           itemBuilder: (_, i) {
             final r = rooms[i];
             return ListTile(
-              title: Text(r.friendName),
-              subtitle: Text(r.lastMessage ?? '대화 없음'),
-              trailing: Text(r.lastTime ?? ''),
+              title: Text(r['friendName']),
+              subtitle: Text(r['lastMessage'] ?? '대화 없음'),
+              trailing: Text(r['lastTime'] ?? ''),
               onTap: () {
                 Navigator.pushNamed(
                   context,
-                  "/chat",
+                  "/chatRoom",
                   arguments: {
-                    "roomNo": r.roomNo,
-                    "friendName": r.friendName,
-                    "friendNo": r.friendNo,
+                    "roomNo": r['roomNo'],
+                    "friendName": r['friendName'],
+                    "friendNo": r['friendNo'],
+                    "myUserNo" : widget.myUserNo, //중요
                   },
                 );
               },

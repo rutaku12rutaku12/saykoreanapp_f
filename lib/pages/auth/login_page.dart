@@ -74,10 +74,11 @@ class _LoginState extends State<LoginPage>{
         await prefs.setInt('myUserNo', userNo);
 
         // * 로그인 성공 시 페이지 전환 //
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (content) => HomePage()),
-        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (content) => HomePage()),
+        // );
+        Navigator.pushReplacementNamed(context, '/home');
       } else {
         print("로그인 실패: ${response.statusCode}");
         ScaffoldMessenger.of(context).showSnackBar(

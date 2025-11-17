@@ -187,30 +187,25 @@ class _FriendsPageState extends State<FriendsPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("친구"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_add),
-            onPressed: _sendRequest,
-          ),
-        ],
-        bottom: TabBar(
+    return Column(
+      children: [
+        TabBar(
           controller: _tabController,
           tabs: const [
             Tab(text: "친구 목록"),
             Tab(text: "받은 요청"),
           ],
         ),
+        Expanded(
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildFriendsTab(),
+            _buildRequestsTab(),
+          ],
+        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildFriendsTab(),
-          _buildRequestsTab(),
-        ],
-      ),
+    ],
     );
   }
 

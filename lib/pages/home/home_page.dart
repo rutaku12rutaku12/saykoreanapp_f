@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -41,17 +42,6 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text("로그인된 유저 번호: $myUserNo"),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  "/friends",
-                  arguments: myUserNo,   // ⭐ 여기서 userNo 전달
-                );
-              },
-              child: Text("친구 목록으로 이동"),
-            ),
           ],
         ),
       ),

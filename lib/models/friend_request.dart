@@ -6,6 +6,7 @@ class FriendRequest {
   final String frenUpdate;
   final int offer;
   final int receiver;
+  final String friendName;
 
   FriendRequest({
     required this.frenNo,
@@ -13,6 +14,7 @@ class FriendRequest {
     required this.frenUpdate,
     required this.offer,
     required this.receiver,
+    required this.friendName,
   });
 
   factory FriendRequest.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class FriendRequest {
       frenUpdate: json['frenUpdate'] as String? ?? '',
       offer: json['offer'] as int,
       receiver: json['receiver'] as int,
+      friendName: json['friendName'] as String? ?? '',
     );
   }
 }

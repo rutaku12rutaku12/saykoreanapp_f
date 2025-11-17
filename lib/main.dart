@@ -4,7 +4,6 @@ import 'package:flutter_svg/flutter_svg.dart'; // SVG 아이콘용
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
-import 'package:saykoreanapp_f/pages/friends/friends.dart';
 import 'package:saykoreanapp_f/pages/game/game.dart';
 import 'package:saykoreanapp_f/pages/game/game_list_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
@@ -14,6 +13,9 @@ import 'package:saykoreanapp_f/pages/start/start_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// 채팅 관련
+import 'package:saykoreanapp_f/pages/chatting/chat_list_wrapper_page.dart';
+import 'package:saykoreanapp_f/pages/chatting/chat_page.dart';
 
 // 완수한 학습 목록 페이지
 import 'package:saykoreanapp_f/pages/study/successList.dart';
@@ -96,6 +98,24 @@ class MyApp extends StatelessWidget {
           );
         }
 
+
+        // 개별 채팅방
+        if (settings.name == '/chatRoom') {
+          final args = settings.arguments as Map<String, dynamic>;
+          final roomNo = args['roomNo'] as int;
+          final friendName = args['friendName'] as String;
+          final myUserNo = args['myUserNo'] as int;
+
+          return MaterialPageRoute(
+            builder: (_) => ChatPage(
+              roomNo: roomNo,
+              friendName: friendName,
+              myUserNo: myUserNo,
+            ),
+            settings: settings,
+          );
+        }
+
         // 다른 라우트는 기존처럼 routes에서 처리
         return null;
       },
@@ -125,7 +145,22 @@ class MyApp extends StatelessWidget {
         "/study": (context) => StudyPage(), // 학습
         // "/test"   : (context) => TestPage(testNo: testNo),
         "/ranking": (context) => Ranking(), // 순위
-        "/friends": (context) => FriendsPage(myUserNo: 1), // 친구 목록
+        "/chat": (context) => FutureBuilder(
+          future: SharedPreferences.getInstance(),
+          builder: (context, snap) {
+            if (!snap.hasData) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final prefs = snap.data!;
+            final userNo = prefs.getInt("myUserNo");
+
+            if (userNo == null) return LoginPage();
+
+            return ChatListWrapperPage(myUserNo: userNo);
+          },
+        ),
 
         // 필요하면 성공 목록도 이름으로 이동 ( 완수한 학습 목록 )
         "/successList": (context) => SuccessListPage(),
@@ -173,7 +208,24 @@ class _FooterBar extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque, // 빈 영역도 터치되도록
-        onTap: () => goNamed(routeName), // 탭 클릭 시 페이지 이동
+
+        onTap: () async { // * 은주 수정함
+          if (routeName == '/chat') {
+            final prefs = await SharedPreferences.getInstance();
+            final myUserNo = prefs.getInt('myUserNo');
+
+            if (myUserNo == null) {
+              goNamed('/login');
+              return;
+            }
+
+            goNamed('/chat', arguments: myUserNo);
+          } else {
+            goNamed(routeName);
+          }
+        },// 탭 클릭 시 페이지 이동
+        //-------------------------------------FooterBar에서 userNo 이 전달되지 않아서 오류남
+
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
@@ -354,10 +406,10 @@ class _FooterBar extends StatelessWidget {
                     active: current == '/ranking',
                   ),
                   _btn(
-                    label: '친구',
+                    label: '채팅',
                     svg: 'assets/icons/friends.svg',
-                    routeName: '/friends',
-                    active: current == '/friends',
+                    routeName: '/chat',
+                    active: current == '/chat',
                   ),
                 ],
               ),

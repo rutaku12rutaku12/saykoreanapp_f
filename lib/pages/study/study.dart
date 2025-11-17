@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:saykoreanapp_f/pages/study/successList.dart';
+import 'package:saykoreanapp_f/pages/test/loading.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)

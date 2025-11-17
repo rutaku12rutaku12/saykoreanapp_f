@@ -1,9 +1,13 @@
+// lib/pages/test/test.dart
+
+import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api.dart'; // 전역 Dio: ApiClient.dio 사용
 
 class TestPage extends StatefulWidget {
   final int testNo;
+
   const TestPage({super.key, required this.testNo});
 
   @override
@@ -20,8 +24,8 @@ class _TestPageState extends State<TestPage> {
   String subjective = "";
   Map<String, dynamic>? feedback;
 
-  int? langNo;      // null 일 때는 아직 언어 안 정해진 상태
-  int? testRound;   // 회차
+  int? langNo; // null 일 때는 아직 언어 안 정해진 상태
+  int? testRound; // 회차
 
   // ─────────────────────────────────────────────────────────────
   @override
@@ -64,8 +68,8 @@ class _TestPageState extends State<TestPage> {
         "/saykorean/test/getnextround",
         queryParameters: {"testNo": widget.testNo},
       );
-      print("▶ getnextround status = ${roundRes.statusCode}");
-      print("▶ getnextround data   = ${roundRes.data}");
+      print("getnextround status = ${roundRes.statusCode}");
+      print("getnextround data   = ${roundRes.data}");
 
       int nextRound = 1;
       final data = roundRes.data;
@@ -121,25 +125,34 @@ class _TestPageState extends State<TestPage> {
   }
 
   // ─────────────────────────────────────────────────────────────
+  //
+  //   POST /saykorean/test/{testNo}/items/{testItemNo}/answer
+  //   body: { testRound, selectedExamNo, userAnswer, langNo }
+  //   resp: { score, isCorrect(1/0) }
+  //
   Future<void> submitAnswer({int? selectedExamNo}) async {
     if (items.isEmpty) return;
     if (testRound == null) return;
 
     final cur = items[idx] as Map<String, dynamic>;
+
+    // 백엔드와 동일 규칙: itemIndex % 3 로 타입 판별 (0/1 = 객관식, 2 = 주관식)
     final questionType = idx % 3; // 0=그림객관식, 1=음성객관식, 2=주관식
     final isSubjective = questionType == 2;
 
     final body = {
       "testRound": testRound,
-      "selectedExamNo": selectedExamNo ?? 0,
-      "userAnswer": selectedExamNo != null ? "" : subjective,
+      "selectedExamNo": selectedExamNo ?? 0, // 객관식: examNo, 주관식: 0
+      "userAnswer":
+      selectedExamNo != null ? "" : subjective, // 주관식만 userAnswer 사용
       "langNo": langNo,
+      // 🔥 userNo는 이제 안 보냄. AuthUtil이 JWT/세션에서 읽어감.
     };
 
     final url =
         "/saykorean/test/${widget.testNo}/items/${cur['testItemNo']}/answer";
 
-    // 주관식이면 로딩 페이지로 넘기기 (React와 동일 로직)
+    // 주관식: 로딩 페이지로 넘기기 (React와 동일 플로우)
     if (isSubjective && selectedExamNo == null) {
       print("주관식 → 로딩 페이지로 이동");
       if (!mounted) return;
@@ -158,7 +171,7 @@ class _TestPageState extends State<TestPage> {
       return;
     }
 
-    // 객관식은 바로 제출
+    // 객관식: 바로 제출
     try {
       setState(() => submitting = true);
       final res = await ApiClient.dio.post(url, data: body);
@@ -166,30 +179,33 @@ class _TestPageState extends State<TestPage> {
       print("▶ submitAnswer data   = ${res.data}");
 
       final data = res.data;
-      num rawScore = 0;
-      dynamic rawCorrect;
+
+      int score = 0;
+      bool isCorrect = false;
 
       if (data is Map) {
-        rawScore = (data["score"] is num) ? data["score"] as num : 0;
-        rawCorrect = data["isCorrect"] ?? data["correct"] ?? data["result"];
-      }
+        // score: number
+        final s = data["score"];
+        if (s is num) {
+          score = s.toInt();
+        }
 
-      bool isCorrect;
-      if (rawCorrect is bool) {
-        isCorrect = rawCorrect;
-      } else if (rawCorrect is num) {
-        isCorrect = rawCorrect == 1;
-      } else if (rawCorrect is String) {
-        isCorrect = (rawCorrect == "1" ||
-            rawCorrect.toLowerCase() == "true");
-      } else {
-        isCorrect = false;
+        // isCorrect: 1 or 0 (백엔드 계약)
+        final ic = data["isCorrect"];
+        if (ic is num) {
+          isCorrect = ic == 1;
+        } else if (ic is bool) {
+          isCorrect = ic;
+        } else if (ic is String) {
+          final v = ic.toLowerCase();
+          isCorrect = (v == "1" || v == "true");
+        }
       }
 
       setState(() {
         feedback = {
           "correct": isCorrect,
-          "score": rawScore.toInt(),
+          "score": score,
         };
       });
     } catch (e, st) {
@@ -228,16 +244,16 @@ class _TestPageState extends State<TestPage> {
 
     final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
 
-    // 문항 타입: 0=그림 객관식, 1=음성 객관식, 2=주관식
-    final questionType = idx % 3;
+    // 백엔드와 **동일 규칙**: itemIndex % 3 로 문항 타입 판별
+    final questionType = idx % 3; // 0=그림 객관식, 1=음성 객관식, 2=주관식
     final isImageQuestion = questionType == 0;
     final isAudioQuestion = questionType == 1;
     final isSubjective = questionType == 2;
     final isMultiple = !isSubjective;
 
     final hasImage = _safeSrc(cur?['imagePath']) != null;
-    final hasAudio = cur?['audios'] is List &&
-        (cur!['audios'] as List).isNotEmpty;
+    final hasAudio =
+        cur?['audios'] is List && (cur!['audios'] as List).isNotEmpty;
 
     print("🔍 문항 타입: idx=$idx, type=$questionType, "
         "image=$hasImage, audio=$hasAudio, subj=$isSubjective");
@@ -319,8 +335,7 @@ class _TestPageState extends State<TestPage> {
                       color: Colors.brown
                           .withOpacity(0.06),
                       blurRadius: 10,
-                      offset:
-                      const Offset(0, 5),
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
@@ -339,15 +354,13 @@ class _TestPageState extends State<TestPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // 🖼️ 그림 (1, 4, 7 ... 번째)
+                    // 그림 (0,3,6...) 번째 문항
                     if (isImageQuestion && hasImage)
                       ClipRRect(
                         borderRadius:
-                        BorderRadius.circular(
-                            12),
+                        BorderRadius.circular(12),
                         child: SizedBox(
-                          width:
-                          screenWidth * 0.8,
+                          width: screenWidth * 0.8,
                           child: AspectRatio(
                             aspectRatio: 3 / 3,
                             child: Image.network(
@@ -356,9 +369,8 @@ class _TestPageState extends State<TestPage> {
                                 'imagePath'])!,
                               ),
                               fit: BoxFit.cover,
-                              errorBuilder: (_,
-                                  __,
-                                  ___) =>
+                              errorBuilder:
+                                  (_, __, ___) =>
                               const Center(
                                 child: Text(
                                     '이미지를 불러올 수 없어요'),
@@ -368,9 +380,8 @@ class _TestPageState extends State<TestPage> {
                         ),
                       ),
 
-                    // 🎵 오디오 (2, 5, 8 ... 번째)
-                    if (isAudioQuestion &&
-                        hasAudio)
+                    // 오디오 (1,4,7...) 번째 문항
+                    if (isAudioQuestion && hasAudio)
                       Column(
                         children: [
                           for (final audio
@@ -383,12 +394,10 @@ class _TestPageState extends State<TestPage> {
                                 padding:
                                 const EdgeInsets
                                     .symmetric(
-                                    vertical:
-                                    6.0),
-                                child:
-                                OutlinedButton(
+                                    vertical: 6.0),
+                                child: OutlinedButton(
                                   onPressed: () {
-                                    // 필요하면 오디오 플레이 로직
+                                    // TODO: 오디오 플레이 로직
                                   },
                                   style: OutlinedButton
                                       .styleFrom(
@@ -407,10 +416,9 @@ class _TestPageState extends State<TestPage> {
                         ],
                       ),
 
-                    // 📝 주관식 예문 (3, 6, 9 ... 번째)
+                    // 주관식 예문 (2,5,8...) 번째 문항
                     if (isSubjective &&
-                        cur?['examSelected'] !=
-                            null)
+                        cur?['examSelected'] != null)
                       Container(
                         margin:
                         const EdgeInsets.only(
@@ -428,8 +436,7 @@ class _TestPageState extends State<TestPage> {
                         ),
                         child: Text(
                           cur!['examSelected'],
-                          style:
-                          const TextStyle(
+                          style: const TextStyle(
                             fontSize: 15,
                             color:
                             Color(0xFF4B5563),
@@ -550,8 +557,10 @@ class _TestPageState extends State<TestPage> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: (options as List).map<Widget>((opt) {
-              final map = opt as Map<String, dynamic>;
+            children:
+            (options as List).map<Widget>((opt) {
+              final map =
+              opt as Map<String, dynamic>;
               final label = map['examSelected'] ??
                   map['examKo'] ??
                   "보기 로드 실패";
@@ -560,7 +569,8 @@ class _TestPageState extends State<TestPage> {
                 onTap: feedback == null
                     ? () => submitAnswer(
                   selectedExamNo:
-                  map['examNo'] as int?,
+                  map['examNo']
+                  as int?,
                 )
                     : null,
               );
@@ -577,7 +587,8 @@ class _TestPageState extends State<TestPage> {
     const brown = Color(0xFF6B4E42);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment:
+      CrossAxisAlignment.stretch,
       children: [
         const Text(
           "한국어로 답을 입력해 보세요",
@@ -641,14 +652,17 @@ class _ChoiceButton extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius:
+      BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(
             vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(999),
+          border:
+          Border.all(color: borderColor),
+          borderRadius:
+          BorderRadius.circular(999),
         ),
         child: Text(
           label,

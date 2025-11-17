@@ -11,16 +11,19 @@ import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/setting/myPage.dart';
 import 'package:saykoreanapp_f/pages/start/start_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
+import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // 채팅 관련
 import 'package:saykoreanapp_f/pages/chatting/chat_list_wrapper_page.dart';
 import 'package:saykoreanapp_f/pages/chatting/chat_page.dart';
+import 'package:saykoreanapp_f/pages/study/successList.dart';
 
 // 완수한 학습 목록 페이지
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 // 테스트 목록 페이지
 import 'package:saykoreanapp_f/pages/test/testList.dart';
+import 'package:saykoreanapp_f/pages/test/loading.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 전역 네비게이터 키
@@ -145,6 +148,7 @@ class MyApp extends StatelessWidget {
         "/study": (context) => StudyPage(), // 학습
         // "/test"   : (context) => TestPage(testNo: testNo),
         "/ranking": (context) => Ranking(), // 순위
+        "loading": (context) => LoadingPage(), // 로딩
         "/chat": (context) => FutureBuilder(
           future: SharedPreferences.getInstance(),
           builder: (context, snap) {
@@ -163,7 +167,7 @@ class MyApp extends StatelessWidget {
         ),
 
         // 필요하면 성공 목록도 이름으로 이동 ( 완수한 학습 목록 )
-        "/successList": (context) => SuccessListPage(),
+        "/successList": (context) => SuccessListPage()
       },
     );
   }

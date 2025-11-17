@@ -9,14 +9,11 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-    // ⭐ compileOptions 블록을 이렇게
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
-    // ⭐ 별도로 설정
-    compileOptions.isCoreLibraryDesugaringEnabled = true
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
@@ -28,10 +25,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    }
 
-    // ⭐ defaultConfig 밖에서 설정
-    defaultConfig.multiDexEnabled = true
+        multiDexEnabled = true
+    }
 
     buildTypes {
         release {
@@ -45,5 +41,6 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    // ⭐ 버전을 2.0.4 → 2.1.3으로 변경
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
 }

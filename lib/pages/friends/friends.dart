@@ -42,6 +42,7 @@ class _FriendsPageState extends State<FriendsPage>
     setState(() => _loadingFriends = true);
     try{
       final list = await _api.getFriendList(userNo: widget.myUserNo);
+      print("최종 파싱된 Friend 리스트:");
       setState(() {
         _friends = list;
       });
@@ -74,39 +75,48 @@ class _FriendsPageState extends State<FriendsPage>
 
 
   // 친구 요청 보내기
-  Future<void> _sendRequest() async{
+  Future<void> _sendRequest() async {
     TextEditingController receiverCtl = TextEditingController();
 
     final ok = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("친구 요청"),
-          content: TextField(
-            controller: receiverCtl,
-            decoration: const InputDecoration(
-              labelText: "상대방 userNo",
-            ),
-            keyboardType: TextInputType.number,
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("친구 요청"),
+        content: TextField(
+          controller: receiverCtl,
+          decoration: const InputDecoration(
+            labelText: "상대방 이메일",
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("취소")),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("보내기")),
-          ],
+          keyboardType: TextInputType.emailAddress,
         ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("취소")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("보내기")),
+        ],
+      ),
     );
 
-    if(ok != true) return;
+    if (ok != true) return;
 
-    final receiver = int.tryParse(receiverCtl.text.trim());
-    if(receiver == null){
-      _showError("정확한 유저 번호를 입력하세요");
+    final email = receiverCtl.text.trim();
+    if (email.isEmpty) {
+      _showError("이메일을 입력하세요.");
       return;
     }
-    try{
-      await _api.addFriend(offer: widget.myUserNo, receiver: receiver);
+
+    try {
+      await _api.addFriend(
+        offer: widget.myUserNo,
+        email: email,
+      );
       _showSnack("친구 요청을 보냈습니다.");
       _loadRequests();
-    }catch(e){_showError("친구 요청 실패\n$e");
+    } catch (e) {
+      _showError("친구 요청 실패\n$e");
     }
   }
 
@@ -221,12 +231,11 @@ class _FriendsPageState extends State<FriendsPage>
         itemBuilder: (_, i) {
           final f = _friends[i];
 
-          final int friendUserNo =
-          f.offer == widget.myUserNo ? f.receiver : f.offer;
+          // final int friendUserNo =
+          // f.offer == widget.myUserNo ? f.receiver : f.offer;
 
           return ListTile(
-            title: Text("유저번호 : $friendUserNo"),
-            subtitle: Text("업데이트 : ${f.frenUpdate}"),
+            title: Text(f.friendName),
             trailing: IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () => _delete(f),
@@ -255,8 +264,7 @@ class _FriendsPageState extends State<FriendsPage>
           final r = _requests[i];
 
           return ListTile(
-            title: Text("보낸 사람 userNo : ${r.offer}"),
-            subtitle: Text("상태 : 요청중"),
+            title: Text(r.friendName),
             trailing: Row(
               mainAxisSize: MainAxisSize.min, //
               children: [

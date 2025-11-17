@@ -1,0 +1,23 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- 말풍선 본체 -->
+  <path d="M10 10
+       H38
+       C40.2 10 42 11.8 42 14
+       V26
+       C42 28.2 40.2 30 38 30
+       H22
+       L15 37
+       V30
+       H10
+       C7.8 30 6 28.2 6 26
+       V14
+       C6 11.8 7.8 10 10 10
+       Z" fill="#f9b7bd"></path>
+
+  <!-- 텍스트 라인 1 -->
+  <rect x="15" y="15" width="18" height="2.4" rx="1.2" fill="#fde3e6"></rect>
+  <!-- 텍스트 라인 2 -->
+  <rect x="15" y="19" width="15" height="2.4" rx="1.2" fill="#fde3e6"></rect>
+  <!-- 텍스트 라인 3 -->
+  <rect x="15" y="23" width="12" height="2.4" rx="1.2" fill="#fde3e6"></rect>
+</svg>

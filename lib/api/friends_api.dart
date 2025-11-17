@@ -14,13 +14,13 @@ class FriendsApi {
   /// POST /friends/add?offer=1&receiver=2
   Future<void> addFriend({
     required int offer,
-    required int receiver,
+    required String email,
   }) async {
     await _dio.post(
       "/friends/add",
       queryParameters: {
         "offer": offer,
-        "receiver": receiver,
+        "email" : email,
       },
     );
   }
@@ -99,7 +99,7 @@ class FriendsApi {
   Future<List<Friend>> getFriendList({
     required int userNo,
   }) async {
-    final res = await _dio.put(
+    final res = await _dio.get(
       "/friends/list",
       queryParameters: {
         "userNo": userNo,
@@ -109,9 +109,6 @@ class FriendsApi {
 
     final list = res.data as List;
 
-    return list.map((item){
-      final friendJson = item["friend"]; // 이걸 꺼내야한다고 함
-      return Friend.fromJson(friendJson); // 여기에 넣어야 제대로 읽힌다고 함
-    }).toList();
+    return list.map((item) => Friend.fromJson(item)).toList();
   }
 }

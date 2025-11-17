@@ -7,6 +7,18 @@ import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api.dart';
 
+// 은주
+import 'dart:convert';
+
+// JWT → payload 추출
+Map<String, dynamic> _decodeJwt(String token) {
+  final parts = token.split('.');
+  final payload = base64Url.normalize(parts[1]);
+  return json.decode(utf8.decode(base64Url.decode(payload)));
+}
+
+//------------------------------------------------------
+
 class LoginPage extends StatefulWidget {
 
   @override
@@ -48,10 +60,18 @@ class _LoginState extends State<LoginPage>{
 
       if (response.statusCode == 200 && response.data != null && response.data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
         final token = response.data['token'];
+
+        // 🔥 1) JWT → userNo 추출
+        final decoded = _decodeJwt(token);
+        final userNo = decoded['userNo'];
+
         // 1. 전역변수 호출
         final prefs = await SharedPreferences.getInstance();
         // 2. 전역변수 값 추가
         await prefs.setString( 'token', token.toString() );
+
+        // * 은주 추가 코드
+        await prefs.setInt('myUserNo', userNo);
 
         // * 로그인 성공 시 페이지 전환 //
         Navigator.pushReplacement(

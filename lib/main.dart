@@ -444,7 +444,7 @@ class _FooterBar extends StatelessWidget {
                   _btn(
                     label: '홈',
                     svg: 'assets/icons/home.svg',
-                    routeName: '/', // 홈 화면으로 이동
+                    routeName: '/home', // 홈 화면으로 이동
                     active: current == '/home',
                   ),
                   _btn(

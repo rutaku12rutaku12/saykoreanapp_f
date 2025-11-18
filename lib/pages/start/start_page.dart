@@ -1,4 +1,4 @@
-// start_page.dart — 그대로 복붙해서 StartPage 대체
+// start_page.dart — 테마 대응 버전
 import 'package:flutter/material.dart';
 
 class StartPage extends StatelessWidget {
@@ -11,12 +11,14 @@ class StartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    final bg = theme.scaffoldBackgroundColor; // 테마에서 배경 가져오기
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF9F0), // 크림톤 배경
+      backgroundColor: bg, // 고정색 → 테마 기반 색
       body: Stack(
         children: [
-          // ── 상단 물결 배경 (_WavePainter 사용도 가능!!!!)
+          // ── 상단 물결 배경 (PNG)
           Positioned(
             top: 0,
             left: 0,
@@ -28,7 +30,7 @@ class StartPage extends StatelessWidget {
             ),
           ),
 
-          // 대안: 커스텀 페인터 물결 (PNG 없을 때 사용)
+          // 대안: 커스텀 페인터 물결 (PNG 없을 때 사용하고 싶으면 이 부분만 남기면 됨)
           Positioned(
             top: 0,
             left: 0,
@@ -36,7 +38,8 @@ class StartPage extends StatelessWidget {
             height: size.height * 0.22,
             child: CustomPaint(painter: _WavePainter()),
           ),
-          // Stack(children: [...]) 안 — 하단 물결 추가
+
+          // 하단 물결
           Positioned(
             left: 0,
             right: 0,
@@ -45,79 +48,64 @@ class StartPage extends StatelessWidget {
             child: CustomPaint(painter: _BottomPinkWavePainter()),
           ),
 
-          // ── 메인 카드
+          // ── 메인 카드 영역
           SafeArea(
             child: Center(
-              // child: Container(
-                // width: size.width * 0.88,
-                // constraints: const BoxConstraints(minHeight: 520),
-                // padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
-                // decoration: BoxDecoration(
-                //   color: const Color(0xFFFFF4E9), // 아주 옅은 베이지
-                //   borderRadius: BorderRadius.circular(24),
-                //   border: Border.all(color: const Color(0x26A57B71), width: 1.2),
-                //   boxShadow: const [
-                //     BoxShadow(
-                //       color: Color(0x1A000000),
-                //       blurRadius: 18,
-                //       offset: Offset(0, 8),
-                //     ),
-                //   ],
-                // ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 타이틀: "재밌는 한국어" (부드러운 그라데이션/멀티컬러)
-                    _TitleFancy(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 타이틀: "재밌는 한국어"
+                  _TitleFancy(),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                    // 마스코트
-                    AspectRatio(
-                      aspectRatio: 1.6, // 이미지 비율
-                      child: Image.asset(
-                        _mascot,
-                        fit: BoxFit.contain,
-                      ),
+                  // 마스코트
+                  AspectRatio(
+                    aspectRatio: 1.6, // 이미지 비율
+                    child: Image.asset(
+                      _mascot,
+                      fit: BoxFit.contain,
                     ),
+                  ),
 
-                    const SizedBox(height: 22),
+                  const SizedBox(height: 22),
 
-                    // 로그인 / 회원가입 버튼
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _PrimaryButton(
-                            label: '로그인',
-                            onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                          ),
+                  // 로그인 / 회원가입 버튼
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _PrimaryButton(
+                          label: '로그인',
+                          onPressed: () => Navigator.pushReplacementNamed(
+                              context, '/login'),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _GhostButton(
-                            label: '회원가입',
-                            onPressed: () => Navigator.pushReplacementNamed(context, '/signup'),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // 안내문
-                    const Text(
-                      '계정이 없으신가요? 회원가입을 눌러 시작해 보세요.',
-                      style: TextStyle(
-                        color: Color(0x995C4A42),
-                        fontSize: 12.5,
                       ),
-                      textAlign: TextAlign.center,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _GhostButton(
+                          label: '회원가입',
+                          onPressed: () => Navigator.pushReplacementNamed(
+                              context, '/signup'),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // 안내문
+                  const Text(
+                    '계정이 없으신가요? 회원가입을 눌러 시작해 보세요.',
+                    style: TextStyle(
+                      color: Color(0x995C4A42),
+                      fontSize: 12.5,
                     ),
-                  ],
-                ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-          // ),
+          ),
         ],
       ),
     );
@@ -129,7 +117,7 @@ class _TitleFancy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const cGreen = Color(0xFFA8E6CF); // 민트-블루
-    const cPink  = Color(0xFFFFAAA5); // 코랄-핑크
+    const cPink = Color(0xFFFFAAA5); // 코랄-핑크
     const cBrown = Color(0xFF6B4E42); // 갈색 텍스트
 
     return RichText(
@@ -214,7 +202,8 @@ class _GhostButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: Color(0xFFE5D5CC), width: 1.2),
           foregroundColor: const Color(0xFF6B4E42),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
         onPressed: onPressed,
@@ -281,6 +270,3 @@ class _BottomPinkWavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
-
-

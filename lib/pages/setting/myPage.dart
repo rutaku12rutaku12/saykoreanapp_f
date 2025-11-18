@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
@@ -9,6 +8,9 @@ import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:saykoreanapp_f/pages/setting/language.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// themeModeNotifier 가 정의된 파일 import (예: main.dart)
+import 'package:saykoreanapp_f/main.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -27,28 +29,57 @@ class _MyPageState extends State<MyPage> {
   String userDate = "";
   bool isLoading = true;
 
+  bool _isDark = false; // 다크 모드 여부
+
   // 2. 해당 페이지 열렸을때 실행되는 함수
   @override
-  void initState() { loginCheck(); }
+  void initState() {
+    super.initState();
+    _initThemeFromGlobal();
+    loginCheck();
+  }
+
+  void _initThemeFromGlobal() {
+    final mode = themeModeNotifier.value;
+    setState(() {
+      _isDark = (mode == ThemeMode.dark);
+    });
+  }
+
+  Future<void> _toggleTheme(bool value) async {
+    setState(() {
+      _isDark = value;
+    });
+
+    // 전역 테마 변경 → 전체 앱 테마 변경
+    themeModeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
+
+    // (옵션) SharedPreferences에 저장해서 앱 재실행 후에도 유지하고 싶으면:
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setString('themeMode', value ? 'dark' : 'light');
+  }
 
   // 3. 로그인 상태를 확인하는 함수
   bool? isLogin; // Dart 문법 중에 타입? 은 null 포함할 수 있다는 뜻
   void loginCheck() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    if( token != null && token.isNotEmpty ){ // 전역 변수에 (로그인)토큰이 존재하면
+    if (token != null && token.isNotEmpty) {
       setState(() {
-        isLogin = true; print("로그인 중");
-        onInfo( token ); // 로그인 중일때 로그인 정보 요청 함수 실행
+        isLogin = true;
+        print("로그인 중");
+        onInfo(token);
       });
-    }else{ // 비로그인 중일때 페이지 전환/이동
-      // Navigator.pushReplacement( context , MaterialPageRoute(builder: (context)=> 이동할위젯명() ) );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage() ) );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
     }
   }
 
   // 4. 로그인된 (회원) 정보 요청, 로그인 중일때 실행
-  void onInfo( token ) async {
+  void onInfo(token) async {
     try {
       final response = await ApiClient.dio.get(
         "/saykorean/info",
@@ -68,14 +99,13 @@ class _MyPageState extends State<MyPage> {
         });
       } else if (response.statusCode == 400) {
         print("인증 실패 - 로그인 페이지로 이동");
-        // 로그인 x -> 로그인 페이지로 이동
         if (mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => LoginPage()),
           );
         }
-      } else{
+      } else {
         print("기타 오류 : ${response.statusCode}");
         setState(() {
           nickName = "정보 로드 실패";
@@ -85,7 +115,6 @@ class _MyPageState extends State<MyPage> {
       }
     } catch (e) {
       print("로그인 확인 오류: $e");
-      // 오류 발생 시 로그인 페이지로 이동
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -98,14 +127,15 @@ class _MyPageState extends State<MyPage> {
   @override
   Widget build(BuildContext context) {
     const brown = Color(0xFF6B4E42);
-    const bg = Color(0xFFFFF9F0);
+    final bg = Theme.of(context).scaffoldBackgroundColor;
 
     // 로딩 중일 때
     if (isLoading) {
       return Scaffold(
         backgroundColor: bg,
-        body: Center(
+        body: const Center(
           child: CircularProgressIndicator(
+            // 색은 고정 브라운 유지
             color: brown,
           ),
         ),
@@ -170,7 +200,7 @@ class _MyPageState extends State<MyPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: [
+                      children: const [
                         Icon(Icons.person, color: brown, size: 20),
                         SizedBox(width: 8),
                         Text(
@@ -182,18 +212,18 @@ class _MyPageState extends State<MyPage> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       nickName.isNotEmpty ? nickName : "정보 없음",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: brown,
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Row(
-                      children: [
+                      children: const [
                         Icon(Icons.calendar_today, color: brown, size: 20),
                         SizedBox(width: 8),
                         Text(
@@ -205,10 +235,10 @@ class _MyPageState extends State<MyPage> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       userDate.isNotEmpty ? userDate : "정보 없음",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: brown,
@@ -221,7 +251,7 @@ class _MyPageState extends State<MyPage> {
               const SizedBox(height: 24),
 
               // 1. 계정 설정 카드
-              _SectionTitle("계정 설정"),
+              const _SectionTitle("계정 설정"),
               const SizedBox(height: 8),
               _SettingCard(
                 icon: Icons.person_outline,
@@ -240,7 +270,7 @@ class _MyPageState extends State<MyPage> {
               const SizedBox(height: 24),
 
               // 2. 학습 설정 카드들
-              _SectionTitle("학습 설정"),
+              const _SectionTitle("학습 설정"),
               const SizedBox(height: 8),
               _SettingCard(
                 icon: Icons.category_outlined,
@@ -272,8 +302,75 @@ class _MyPageState extends State<MyPage> {
 
               const SizedBox(height: 24),
 
+              // 앱 설정 - 다크 모드
+              const _SectionTitle("앱 설정"),
+              const SizedBox(height: 8),
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.brown.withOpacity(0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFE5CF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _isDark ? Icons.dark_mode : Icons.light_mode,
+                        color: brown,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "다크 모드",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: brown,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "눈에 편한 어두운 테마로 전환해요.",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF9C7C68),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _isDark,
+                      activeColor: brown,
+                      onChanged: _toggleTheme,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
               // 3. 학습 기록 / 완수 목록
-              _SectionTitle("학습 기록"),
+              const _SectionTitle("학습 기록"),
               const SizedBox(height: 8),
               _SettingCard(
                 icon: Icons.emoji_events_outlined,
@@ -308,13 +405,8 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        color: Color(0xFF7C5A48),
-      ),
+    return const Text(
+      "",
     );
   }
 }

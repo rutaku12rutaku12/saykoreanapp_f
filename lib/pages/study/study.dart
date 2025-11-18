@@ -37,8 +37,6 @@ String buildUrl(String? path) {
       .toString();
 }
 
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // DTO
 class StudyDto {
@@ -119,7 +117,6 @@ class ExamDto {
   final String? koAudioPath; // 한국어 오디오 경로
   final String? enAudioPath; // 영어 오디오 경로
 
-
   ExamDto({
     required this.examNo,
     this.examSelected,
@@ -127,7 +124,6 @@ class ExamDto {
     this.koAudioPath,
     this.enAudioPath,
   });
-
 
   // JSON -> ExamDto 변환
   factory ExamDto.fromJson(Map<String, dynamic> j) => ExamDto(
@@ -269,7 +265,6 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
-
   // API : 다음 예문 조회
   Future<void> _fetchNextExam() async {
     if (_exam == null || _subject == null) return;
@@ -286,7 +281,6 @@ class _StudyPageState extends State<StudyPage> {
       _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } catch (_) {}
   }
-
 
   // API : 이전 예문 조회
   Future<void> _fetchPrevExam() async {
@@ -325,7 +319,6 @@ class _StudyPageState extends State<StudyPage> {
     final id = _subject?.studyNo;
     if (id == null || id <= 0) return;
 
-
     final prefs = await SharedPreferences.getInstance();
 
     // 순서 유지 + 중복 방지
@@ -349,14 +342,13 @@ class _StudyPageState extends State<StudyPage> {
   // ── UI
   @override
   Widget build(BuildContext context) {
-    const cream = Color(0xFFFFF9F0);
     const brown = Color(0xFF6B4E42);
+    final bg = Theme.of(context).scaffoldBackgroundColor; // 테마 기반 배경
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: cream,
-        elevation: 0,
+        backgroundColor: bg,
         centerTitle: true,
         title: const Text(
           '학습',
@@ -401,7 +393,6 @@ class _StudyPageState extends State<StudyPage> {
             ),
           ),
           const SizedBox(height: 18),
-
           const Text(
             "주제 선택",
             style: TextStyle(
@@ -416,7 +407,7 @@ class _StudyPageState extends State<StudyPage> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white, // 카드 배경은 그대로 화이트 유지
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
@@ -445,7 +436,8 @@ class _StudyPageState extends State<StudyPage> {
               spacing: 10,
               runSpacing: 10,
               children: _subjects.map((s) {
-                final label = s.themeSelected ?? s.themeKo ?? '제목 없음';
+                final label =
+                    s.themeSelected ?? s.themeKo ?? '제목 없음';
                 return _PillButton(
                   label: label,
                   active: false,
@@ -490,8 +482,6 @@ class _StudyPageState extends State<StudyPage> {
             ),
           ),
           const SizedBox(height: 6),
-
-
           const Text(
             "설명을 읽고 예문을 들으며 자연스럽게 익혀봐요.",
             style: TextStyle(
@@ -500,7 +490,6 @@ class _StudyPageState extends State<StudyPage> {
             ),
           ),
           const SizedBox(height: 18),
-
           const Text(
             "주제 설명",
             style: TextStyle(
@@ -511,12 +500,11 @@ class _StudyPageState extends State<StudyPage> {
           ),
           const SizedBox(height: 8),
 
-
           // 현재 예문 카드 표시
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white, // 카드 배경 유지
               border: Border.all(color: const Color(0xFFE5E7EB)),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
@@ -556,7 +544,6 @@ class _StudyPageState extends State<StudyPage> {
           ),
 
           const SizedBox(height: 20),
-
           const Text(
             "예문 학습",
             style: TextStyle(
@@ -633,7 +620,6 @@ class _StudyPageState extends State<StudyPage> {
 // ─────────────────────────────────────────────────────────────────────────────
 // 컴포넌트들 - Pill 버튼, Exam 카드, 에러 뷰
 // ─────────────────────────────────────────────────────────────────────────────
-
 
 // 주제 목록에서 사용하는 알약 스타일 버튼
 class _PillButton extends StatelessWidget {
@@ -723,7 +709,6 @@ class _ExamCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        // 예문에 이미지가 있는 경우 표시
         children: [
           if (exam.imagePath != null && exam.imagePath!.isNotEmpty)
             ClipRRect(
@@ -756,7 +741,6 @@ class _ExamCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-
           // 오디오 버튼 2개
           Row(
             children: [
@@ -787,7 +771,6 @@ class _ExamCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 10),
-
 
           // 이전, 다음 예문 버튼
           Row(
@@ -827,24 +810,23 @@ class _ExamCard extends StatelessWidget {
 // 에러 화면 공통 위젯
 // ─────────────────────────────────────────────────────────────────────────────
 
-
 class _ErrorView extends StatelessWidget {
   final String message; // 에러 메세지
   final VoidCallback onRetry; // 다시 시도 콜백
 
-
   const _ErrorView({required this.message, required this.onRetry});
-
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = Theme.of(context).cardColor; // 다크테마 대응
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(

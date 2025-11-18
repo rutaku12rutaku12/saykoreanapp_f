@@ -72,7 +72,7 @@ class _LoadingPageState extends State<LoadingPage> {
     const brown = Color(0xFF6B4E42);
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

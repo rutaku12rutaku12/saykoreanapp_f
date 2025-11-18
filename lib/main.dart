@@ -22,11 +22,13 @@ import 'package:saykoreanapp_f/pages/chatting/chat_list_wrapper_page.dart';
 import 'package:saykoreanapp_f/pages/chatting/chat_page.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 
-// 완수한 학습 목록 페이지
-import 'package:saykoreanapp_f/pages/study/successList.dart';
 // 테스트 목록 페이지
 import 'package:saykoreanapp_f/pages/test/testList.dart';
-import 'package:saykoreanapp_f/pages/test/loading.dart';
+
+
+// 앱 전체에서 공유할 테마 상태
+final ValueNotifier<ThemeMode> themeModeNotifier =
+ValueNotifier<ThemeMode>(ThemeMode.system);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 전역 네비게이터 키
@@ -99,99 +101,140 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      // debug 표시 없애기
-      debugShowCheckedModeBanner: false,
-      navigatorKey: appNavigatorKey,
-      initialRoute: "/",
+    // themeModeNotifier 값이 바뀔 때마다 MaterialApp 전체 리빌드
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeModeNotifier,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          // debug 표시 없애기
+          debugShowCheckedModeBanner: false,
+          navigatorKey: appNavigatorKey,
+          initialRoute: "/",
 
-      // 인자 필요한 라우트는 여기서 처리
-      onGenerateRoute: (settings) {
-        // testList는 studyNo 인자가 필요함
-        if (settings.name == "/testList") {
-          final studyNo = _toInt(settings.arguments);
+          // 여기서 전체 테마 모드 결정
+          themeMode: mode,
 
-          return MaterialPageRoute(
-            builder: (_) => (studyNo == null)
-            // 인자 없으면 에러 페이지로
-                ? const _RouteArgErrorPage(message: "studyNo가 필요합니다.")
-                // 정상이라면 TestListPage 표시
-                : TestListPage(),
-            settings: settings,
-          );
-        }
-
-
-        // 개별 채팅방
-        if (settings.name == '/chatRoom') {
-          final args = settings.arguments as Map<String, dynamic>;
-          final roomNo = args['roomNo'] as int;
-          final friendName = args['friendName'] as String;
-          final myUserNo = args['myUserNo'] as int;
-
-          return MaterialPageRoute(
-            builder: (_) => ChatPage(
-              roomNo: roomNo,
-              friendName: friendName,
-              myUserNo: myUserNo,
+          // 라이트 테마
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            scaffoldBackgroundColor: const Color(0xFFFFF9F0),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF6B4E42),
+              brightness: Brightness.light,
             ),
-            settings: settings,
-          );
-        }
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFFFFF9F0),
+              foregroundColor: Color(0xFF6B4E42),
+              elevation: 0,
+            ),
+          ),
 
-        // 다른 라우트는 기존처럼 routes에서 처리
-        return null;
-      },
-      builder: (context, child) {
-        final name = currentRouteName() ?? '';
-        // 특정 화면(로그인/회원가입/시작)은 푸터 숨기기
-        final hide = {'/', '/login', '/signup', '/find'}.contains(name);
+          // 다크 테마
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF6B4E42),
+              brightness: Brightness.dark,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF121212),
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+          ),
 
-        return Scaffold(
-          body: child,
-          bottomNavigationBar: hide ? null : const _FooterBar(),
-          backgroundColor: const Color(0xFFFFF9F0),
-        );
-      },
+          // 인자 필요한 라우트는 여기서 처리
+          onGenerateRoute: (settings) {
+            // testList는 studyNo 인자가 필요함
+            if (settings.name == "/testList") {
+              final studyNo = _toInt(settings.arguments);
 
-      // ───────────────────────────────────────────────────────────────────────
-      // 이름 기반 정적 라우트 매핑
-      routes: {
-        "/": (context) => StartPage(), // 시작화면
-        "/home": (context) => HomePage(), // 홈
-        "/login": (context) => LoginPage(), // 로그인
-        "/signup": (context) => SignupPage(), // 회원가입
-        "/find": (context) => FindPage(), // 계정/비번 찾기
-        "/info": (context) => MyPage(), // 내정보(마이페이지)
-        "/update": (context) => MyInfoUpdatePage(), // 내정보 수정
-        "/game": (context) => GameListPage(), // 게임 목록 페이지
-        "/study": (context) => StudyPage(), // 학습
-        // "/test"   : (context) => TestPage(testNo: testNo),
-        "/ranking": (context) => Ranking(), // 순위
-        "loading": (context) => LoadingPage(), // 로딩
-        "/chat": (context) => FutureBuilder(
-          future: SharedPreferences.getInstance(),
-          builder: (context, snap) {
-            if (!snap.hasData) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+              return MaterialPageRoute(
+                builder: (_) => (studyNo == null)
+                // 인자 없으면 에러 페이지로
+                    ? const _RouteArgErrorPage(message: "studyNo가 필요합니다.")
+                // 정상이라면 TestListPage 표시
+                    : TestListPage(),
+                settings: settings,
               );
             }
-            final prefs = snap.data!;
-            final userNo = prefs.getInt("myUserNo");
 
-            if (userNo == null) return LoginPage();
+            // 개별 채팅방
+            if (settings.name == '/chatRoom') {
+              final args = settings.arguments as Map<String, dynamic>;
+              final roomNo = args['roomNo'] as int;
+              final friendName = args['friendName'] as String;
+              final myUserNo = args['myUserNo'] as int;
 
-            return ChatListWrapperPage(myUserNo: userNo);
+              return MaterialPageRoute(
+                builder: (_) => ChatPage(
+                  roomNo: roomNo,
+                  friendName: friendName,
+                  myUserNo: myUserNo,
+                ),
+                settings: settings,
+              );
+            }
+
+            // 다른 라우트는 기존처럼 routes에서 처리
+            return null;
           },
-        ),
 
-        // 필요하면 성공 목록도 이름으로 이동 ( 완수한 학습 목록 )
-        "/successList": (context) => SuccessListPage()
+          builder: (context, child) {
+            final name = currentRouteName() ?? '';
+            // 특정 화면(로그인/회원가입/시작)은 푸터 숨기기
+            final hide = {'/', '/login', '/signup', '/find'}.contains(name);
+
+            return Scaffold(
+              body: child,
+              bottomNavigationBar: hide ? null : const _FooterBar(),
+
+              // 배경은 이제 테마에서 가져오게 (라이트/다크 자동 반영)
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            );
+          },
+
+          // ───────────────────────────────────────────────────────────────────
+          // 이름 기반 정적 라우트 매핑
+          routes: {
+            "/": (context) => StartPage(), // 시작화면
+            "/home": (context) => HomePage(), // 홈
+            "/login": (context) => LoginPage(), // 로그인
+            "/signup": (context) => SignupPage(), // 회원가입
+            "/find": (context) => FindPage(), // 계정/비번 찾기
+            "/info": (context) => MyPage(), // 내정보(마이페이지)
+            "/update": (context) => MyInfoUpdatePage(), // 내정보 수정
+            "/game": (context) => GameListPage(), // 게임 목록 페이지
+            "/study": (context) => StudyPage(), // 학습
+            "/ranking": (context) => Ranking(), // 순위
+            "loading": (context) => LoadingPage(), // 로딩
+            "/chat": (context) => FutureBuilder(
+              future: SharedPreferences.getInstance(),
+              builder: (context, snap) {
+                if (!snap.hasData) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final prefs = snap.data!;
+                final userNo = prefs.getInt("myUserNo");
+
+                if (userNo == null) return LoginPage();
+
+                return ChatListWrapperPage(myUserNo: userNo);
+              },
+            ),
+            "/successList": (context) => SuccessListPage(), // 완수한 학습 목록
+          },
+        );
       },
     );
   }
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 인자 누락 시 에러 페이지

@@ -40,7 +40,7 @@
         .game-container {
             width: 100%;
             max-width: 400px;
-            height: 800px; /* 명확한 높이 지정 */
+            height: 600px; /* 명확한 높이 지정 */
             max-height: 100vh; /* 화면을 넘지 않도록 */
             background: #fff;
             border-radius: 20px;
@@ -498,7 +498,7 @@
     const vowels = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ'];
     const doubleConsonants = ['ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ'];
     const doubleVowels = ['ㅐ', 'ㅒ', 'ㅔ', 'ㅖ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅢ'];
-    const finalConsonants = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅇ']; // 받침 가능 자음
+    const finalConsonants = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅇ'];
 
     const character = document.getElementById('character');
     const gameCanvas = document.getElementById('gameCanvas');
@@ -515,13 +515,12 @@
     let isMoving = false;
     let movingTimeout = null;
     let currentDirection = 'none';
-
     let keys = {};
-    document.addEventListener('keydown', (e) => { keys[e.key] = true; });
-    document.addEventListener('keyup', (e) => { keys[e.key] = false; });
-
     let touchDirection = 'none';
     let touchInterval = null;
+
+    document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+    document.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
     function moveLeft() {
         touchDirection = 'left';
@@ -576,7 +575,7 @@
             lastWordPart: null
         };
         updateUI();
-        updateHearts(); // 초기 하트 렌더링
+        updateHearts();
         gameLoop();
         spawnItems();
     }
@@ -587,7 +586,6 @@
         startGame();
     }
 
-    // 보스 기믹 시작
     function startBossMechanic() {
         const bossKeys = Object.keys(bossMechanics);
         const randomBoss = bossKeys[Math.floor(Math.random() * bossKeys.length)];
@@ -600,7 +598,6 @@
         gameState.bossPatternIndex = 0;
         gameState.lastWordPart = null;
 
-        // 보스 알림 표시
         document.getElementById('bossCharacter').src = boss.image;
         document.getElementById('bossTitle').textContent = `⚡ ${boss.name} ⚡`;
         document.getElementById('bossDescription').textContent = boss.description;
@@ -612,7 +609,6 @@
         }, 3000);
     }
 
-    // 보스 기믹 체크
     function checkBossMechanic(caughtItem) {
         if (!gameState.bossActive) return true;
 
@@ -626,7 +622,6 @@
                     gameState.bossProgress++;
                     gameState.bossPatternIndex++;
                     success = true;
-
                     if (gameState.bossProgress >= boss.targetCount) {
                         completeBoss();
                     }
@@ -646,7 +641,6 @@
                     gameState.bossProgress++;
                     gameState.lastWordPart = null;
                     success = true;
-
                     if (gameState.bossProgress >= boss.targetCount) {
                         completeBoss();
                     }
@@ -657,15 +651,12 @@
 
             case 'outlaw':
                 const elapsed = (Date.now() - gameState.bossStartTime) / 1000;
-
                 if (caughtItem.isDouble) {
                     gameState.bossActive = false;
                     showItemEffect('❌ 실패!');
                     return false;
                 }
-
                 success = true;
-
                 if (elapsed >= boss.duration) {
                     completeBoss();
                 }
@@ -675,7 +666,6 @@
                 if (caughtItem.type === 'consonant' && finalConsonants.includes(caughtItem.letter)) {
                     gameState.bossProgress++;
                     success = true;
-
                     if (gameState.bossProgress >= boss.targetCount) {
                         completeBoss();
                     }
@@ -711,7 +701,6 @@
         const boss = bossMechanics[gameState.currentBoss];
         gameState.score += boss.bonus;
         gameState.bossActive = false;
-
         showItemEffect(`✨ +${boss.bonus}점!`);
         updateUI();
         updateTurnIndicator();
@@ -725,14 +714,12 @@
 
         let itemType, letter, isDouble = false, isItem = false;
 
-        // 10% 확률로 아이템 드롭
         if (Math.random() < 0.1) {
             isItem = true;
             item.textContent = Math.random() < 0.5 ? '❤️' : '🛡️';
             item.className = 'falling-item item-powerup';
             item.dataset.itemType = item.textContent === '❤️' ? 'heart' : 'shield';
         } else if (gameState.bossActive && gameState.currentBoss === 'outlaw') {
-            // 혼종추방자 기믹: 이중자음/모음 포함
             if (Math.random() < 0.4) {
                 isDouble = true;
                 const doubles = [...doubleConsonants, ...doubleVowels];
@@ -807,7 +794,6 @@
                 gameState.currentTurn = gameState.currentTurn === 'consonant' ? 'vowel' : 'consonant';
                 gameState.turnCount++;
 
-                // 5턴마다 보스 기믹 발동
                 if (gameState.turnCount % 5 === 0 && gameState.turnCount > 0) {
                     startBossMechanic();
                 }
@@ -824,10 +810,7 @@
         effect.className = 'item-effect';
         effect.textContent = text;
         gameCanvas.appendChild(effect);
-
-        setTimeout(() => {
-            effect.remove();
-        }, 1000);
+        setTimeout(() => effect.remove(), 1000);
     }
 
     function gameLoop() {
@@ -879,22 +862,24 @@
 
         character.style.left = gameState.characterPosition + 'px';
 
+        // ✅ 충돌 판정 수정
         gameState.fallingItems.forEach((item, index) => {
             item.y += 3;
             item.element.style.top = item.y + 'px';
 
+            // ✅ 올바른 히트박스 계산
             const charRect = {
-                left: gameState.characterPosition,
-                right: gameState.characterPosition + 60,
-                top: 400,
+                left: gameState.characterPosition + 10,
+                right: gameState.characterPosition + 50,
+                top: 420,
                 bottom: 460
             };
 
             const itemRect = {
-                left: item.x,
-                right: item.x + 50,
-                top: item.y,
-                bottom: item.y + 50
+                left: item.x + 10,
+                right: item.x + 40,
+                top: item.y + 10,
+                bottom: item.y + 40
             };
 
             if (charRect.left < itemRect.right &&
@@ -902,9 +887,20 @@
                 charRect.top < itemRect.bottom &&
                 charRect.bottom > itemRect.top) {
 
+                const charCenterX = (charRect.left + charRect.right) / 2;
+                const charCenterY = (charRect.top + charRect.bottom) / 2;
+                const itemCenterX = (itemRect.left + itemRect.right) / 2;
+                const itemCenterY = (itemRect.top + itemRect.bottom) / 2;
+
+                const distance = Math.sqrt(
+                    Math.pow(charCenterX - itemCenterX, 2) +
+                    Math.pow(charCenterY - itemCenterY, 2)
+                );
+
+                if (distance > 25) return;
+
                 const isItem = item.element.dataset.isItem === 'true';
 
-                // 아이템 처리
                 if (isItem) {
                     const itemType = item.element.dataset.itemType;
                     if (itemType === 'heart') {
@@ -923,15 +919,22 @@
                     const letter = item.element.dataset.letter;
                     const isDouble = item.element.dataset.isDouble === 'true';
 
-                    // 보스 기믹 체크
                     const bossCheck = checkBossMechanic({
                         type: itemType,
                         letter: letter,
                         isDouble: isDouble
                     });
 
-                    // 일반 턴 체크
+                    // ✅ 중요: 일반 턴 체크 (보스 아닐 때만)
                     const isCorrect = !gameState.bossActive && itemType === gameState.currentTurn;
+
+                    console.log('충돌:', {
+                        itemType,
+                        currentTurn: gameState.currentTurn,
+                        bossActive: gameState.bossActive,
+                        bossCheck,
+                        isCorrect
+                    });
 
                     if (bossCheck || isCorrect) {
                         gameState.score += 10;
@@ -945,14 +948,12 @@
                             startTurnCountdown();
                         }
                     } else {
-                        // 실드가 있으면 실드 소모
                         if (gameState.shield > 0) {
                             gameState.shield--;
                             showItemEffect('🛡️ -1');
                         } else {
                             gameState.hearts--;
                             updateHearts();
-
                             if (gameState.hearts <= 0) {
                                 gameOver();
                             }
@@ -961,9 +962,7 @@
                     }
                 }
 
-                setTimeout(() => {
-                    item.element.remove();
-                }, 100);
+                setTimeout(() => item.element.remove(), 100);
                 gameState.fallingItems.splice(index, 1);
                 updateUI();
             }
@@ -990,7 +989,6 @@
             heartsElement.innerHTML += '<span class="heart" style="opacity: 0.3;">🖤</span>';
         }
 
-        // 실드 표시
         if (gameState.shield > 0) {
             for (let i = 0; i < gameState.shield; i++) {
                 heartsElement.innerHTML += '<span class="heart">🛡️</span>';
@@ -1014,7 +1012,6 @@
         saveGameResult();
     }
 
-    // 게임 결과 저장 (Flutter로 전송)
     function saveGameResult() {
         let gameResult = 0;
         if (gameState.score >= 500) {

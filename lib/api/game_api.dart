@@ -52,9 +52,9 @@ class GameApi {
     
     // [JWT 토큰 모드] 토큰이 있으면 Authorization 헤더 추가
     // ⚠️ Spring의 TEST_MODE = false로 전환 시 주석 해제
-    // if (_jwtToken != null) {
-    //   return {'Authorization': 'Bearer $_jwtToken'};
-    // }
+    if (_jwtToken != null) {
+      return {'Authorization': 'Bearer $_jwtToken'};
+    }
     return headers;
   }
 

@@ -6,7 +6,6 @@ import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
-import 'package:saykoreanapp_f/pages/game/game.dart';
 import 'package:saykoreanapp_f/pages/game/game_list_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';

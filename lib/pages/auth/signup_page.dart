@@ -118,7 +118,7 @@ class _SignupState extends State<SignupPage> {
   } // f end
 
   // 이메일 중복 확인 메소드
-  void checkEamil () async{
+  void checkEmail () async{
     try{
       final response = await ApiClient.dio.get(
         "/saykorean/checkemail",
@@ -157,7 +157,7 @@ class _SignupState extends State<SignupPage> {
                     labelText: "이메일", border: OutlineInputBorder()),
               ),// 입력 위젯, 이메일(id)
               SizedBox(height: 20,),
-              ElevatedButton(onPressed: checkEamil, child: Text("중복 확인")),
+              ElevatedButton(onPressed: checkEmail, child: Text("중복 확인")),
 
               SizedBox(height: 20,),
               TextField(
@@ -189,7 +189,7 @@ class _SignupState extends State<SignupPage> {
                   print("입력한 번호: ${phone.number}");
                 }, // 입력 위젯, 전화번호
               ),
-              ElevatedButton(onPressed: checkEamil, child: Text("중복 확인")),
+              ElevatedButton(onPressed: checkEmail, child: Text("중복 확인")),
               SizedBox(height: 20,),
 
               // // 리캡챠

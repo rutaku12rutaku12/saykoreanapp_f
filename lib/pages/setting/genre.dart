@@ -53,7 +53,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SayKorean Genres',
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.teal),
+      themeMode: ThemeMode.system,              // ← 시스템 테마 따라가기
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        colorSchemeSeed: Colors.teal,
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorSchemeSeed: Colors.teal,
+      ),
       home: const GenrePage(),
     );
   }

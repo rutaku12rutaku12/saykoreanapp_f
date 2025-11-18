@@ -37,22 +37,27 @@ class _FriendsPageState extends State<FriendsPage>
     _loadRequests();
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   // 친구 목록 (frenStatus == 1)
-  Future<void> _loadFriends() async{
+  Future<void> _loadFriends() async {
     setState(() => _loadingFriends = true);
-    try{
+    try {
       final list = await _api.getFriendList(userNo: widget.myUserNo);
       print("최종 파싱된 Friend 리스트:");
       setState(() {
         _friends = list;
       });
-    }catch(e){
+    } catch (e) {
       _showError("친구 목록 불러오기 실패\n$e");
-    }finally{
+    } finally {
       setState(() => _loadingFriends = false);
-      }
     }
-
+  }
 
   // 요청 목록 (내가 receiver 이고 frenStatus==0)
   Future<void> _loadRequests() async {
@@ -73,10 +78,9 @@ class _FriendsPageState extends State<FriendsPage>
     }
   }
 
-
   // 친구 요청 보내기
   Future<void> _sendRequest() async {
-    TextEditingController receiverCtl = TextEditingController();
+    final receiverCtl = TextEditingController();
 
     final ok = await showDialog<bool>(
       context: context,
@@ -91,11 +95,13 @@ class _FriendsPageState extends State<FriendsPage>
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("취소")),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("취소"),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("보내기")),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("보내기"),
+          ),
         ],
       ),
     );
@@ -126,13 +132,12 @@ class _FriendsPageState extends State<FriendsPage>
       await _api.acceptFriend(offer: r.offer, receiver: widget.myUserNo);
       _showSnack('친구 요청을 수락했습니다.');
 
-      //화면 상태에서 즉시 제거
+      // 화면 상태에서 즉시 제거
       setState(() {
         _requests.removeWhere((e) => e.frenNo == r.frenNo);
       });
-      //친구 목록 새로 갱신
+      // 친구 목록 갱신
       await _loadFriends();
-      // await _loadRequests();
     } catch (e) {
       _showError('요청 수락에 실패했습니다.\n$e');
     }
@@ -151,10 +156,9 @@ class _FriendsPageState extends State<FriendsPage>
 
         // 화면 상태에서 즉시 제거
         setState(() {
-          _requests.removeWhere((e) => e.offer == r.offer && e.receiver == r.receiver);
+          _requests
+              .removeWhere((e) => e.offer == r.offer && e.receiver == r.receiver);
         });
-        // 목록 갱신
-        // await _loadRequests();
       } else {
         _showError("이미 처리된 요청이거나 존재하지 않습니다.");
       }
@@ -184,28 +188,50 @@ class _FriendsPageState extends State<FriendsPage>
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: "친구 목록"),
-            Tab(text: "받은 요청"),
-          ],
-        ),
-        Expanded(
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildFriendsTab(),
-            _buildRequestsTab(),
-          ],
-        ),
+    // 🔥 테마 기반 배경 (라이트/다크 둘 다)
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        title: const Text("친구"),
+        // AppBar 도 테마 배경 사용
+        backgroundColor: bg,
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _sendRequest,
+            icon: const Icon(Icons.person_add_alt_1_outlined),
+            tooltip: "친구 요청 보내기",
+          ),
+        ],
       ),
-    ],
+      body: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor:
+            Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            tabs: const [
+              Tab(text: "친구 목록"),
+              Tab(text: "받은 요청"),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildFriendsTab(),
+                _buildRequestsTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -225,9 +251,6 @@ class _FriendsPageState extends State<FriendsPage>
         itemCount: _friends.length,
         itemBuilder: (_, i) {
           final f = _friends[i];
-
-          // final int friendUserNo =
-          // f.offer == widget.myUserNo ? f.receiver : f.offer;
 
           return ListTile(
             title: Text(f.friendName),
@@ -261,20 +284,20 @@ class _FriendsPageState extends State<FriendsPage>
           return ListTile(
             title: Text(r.friendName),
             trailing: Row(
-              mainAxisSize: MainAxisSize.min, //
+              mainAxisSize: MainAxisSize.min,
               children: [
-                //수락
+                // 수락
                 IconButton(
-                    onPressed: () => _accept(r)
-                    , icon: const Icon(Icons.check, color: Colors.green)
+                  onPressed: () => _accept(r),
+                  icon: const Icon(Icons.check, color: Colors.green),
                 ),
-                //거절
+                // 거절
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.red),
                   onPressed: () => _refusal(r),
-                )
+                ),
               ],
-            )
+            ),
           );
         },
       ),

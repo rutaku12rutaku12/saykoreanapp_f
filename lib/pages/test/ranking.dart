@@ -31,7 +31,6 @@ class Ranking extends StatefulWidget {
 
 class _RankingState extends State<Ranking> {
   static const Color _brown = Color(0xFF6B4E42);
-  static const Color _bg = Color(0xFFFFF9F0);
 
   // [RK-03] 랭킹 분야별 조회 type
   // - accuracy    : 정답왕
@@ -265,10 +264,13 @@ class _RankingState extends State<Ranking> {
 
   @override
   Widget build(BuildContext context) {
+    // 🔥 여기서부터 테마 기반 배경 사용
+    final bg = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: _bg,
+        backgroundColor: bg,
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -430,12 +432,13 @@ class _RankCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final nick = rankData["nickName"] ?? "-";
     final isTop3 = index < 3;
+    final cardColor = Theme.of(context).cardColor; // 🔥 다크테마 카드색
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(

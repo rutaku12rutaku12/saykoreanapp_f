@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'study.dart'; // ← 경로는 프로젝트 구조에 맞게 수정
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // 학습 완료한 주제 목록 페이지
 // ─────────────────────────────────────────────────────────────────────────────
-
 class SuccessListPage extends StatefulWidget {
   const SuccessListPage({super.key});
 
   @override
   State<SuccessListPage> createState() => _SuccessExamListPageState();
 }
-
 
 class _SuccessExamListPageState extends State<SuccessListPage> {
   bool _loading = false; // 전체 로딩 상태
@@ -26,7 +23,6 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
     super.initState();
     _bootstrap(); // 초기화
   }
-
 
   // SharedPreferences, 서버 호출해서 완료 주제 목록 구성
   Future<void> _bootstrap() async {
@@ -60,8 +56,7 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
       final futures = ids.map((id) => _fetchStudyDetail(id));
       final results = await Future.wait(futures, eagerError: false);
 
-
-      // null이 아닌 StudyNo만 필터링
+      // null이 아닌 StudyDto만 필터링
       final list = results.whereType<StudyDto>().toList();
 
       setState(() {
@@ -80,7 +75,6 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
       }
     }
   }
-
 
   Future<StudyDto?> _fetchStudyDetail(int studyNo) async {
     try {
@@ -113,27 +107,26 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
 
   @override
   Widget build(BuildContext context) {
-    const cream = Color(0xFFFFF9F0);
     const brown = Color(0xFF6B4E42);
+    final bg = Theme.of(context).scaffoldBackgroundColor; // 🔥 테마 기반 배경
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: bg, // 🔥
       appBar: AppBar(
         title: const Text('완수한 주제 목록'),
-        backgroundColor: cream,
+        backgroundColor: bg, // 🔥
         elevation: 0,
         foregroundColor: brown,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: _buildBody(),
+        child: _buildBody(context), // 🔥 context 넘겨줌
       ),
     );
   }
 
-
   // 로딩/에러/데이터 유무에 따라 다른 UI
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) { // 🔥 context 받기
     // 1) 로딩 중
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -160,7 +153,6 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
       );
     }
 
-
     // 3) 완료한 주제가 하나도 없는 경우
     if (_studies.isEmpty) {
       return const Center(
@@ -169,6 +161,8 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
     }
 
     // 4) 정상적으로 목록이 있는 경우에는 리스트 출력
+    final cardColor = Theme.of(context).cardColor; // 🔥 다크/라이트 공통 카드색
+
     return ListView.separated(
       itemCount: _studies.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -184,7 +178,7 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
           child: ElevatedButton(
             onPressed: () => _onTapStudy(s),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: cardColor,              // 🔥 카드색 사용
               foregroundColor: const Color(0xFF6B4E42),
               elevation: 0,
               shape: RoundedRectangleBorder(

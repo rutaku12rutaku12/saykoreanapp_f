@@ -127,22 +127,22 @@ class _LoginState extends State<LoginPage>{
             SizedBox(height: 20,),
             ElevatedButton(onPressed: onLogin, child: Text("로그인")),
             SizedBox(height: 20,),
-            TextButton(onPressed: () =>
+            ElevatedButton(onPressed: () =>
             {
               Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (context) => FindPage()))
             }, child: Text("이메일 찾기/비밀번호 찾기 ")),
             SizedBox(height: 20,),
-            TextButton(onPressed: () =>
+            ElevatedButton(onPressed: () =>
             {
               Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (context) => SignupPage())),
             }, child: Text("회원가입") ),
 
             SizedBox( height: 20,),
-            TextButton(onPressed: (){}, child: Text("카카오로그인 예정")),
+            ElevatedButton(onPressed: (){}, child: Text("카카오로그인 예정")),
             SizedBox( height: 20,) ,
-            TextButton(onPressed: (){}, child: Text("구글 로그인 예정")),
+            ElevatedButton(onPressed: (){}, child: Text("구글 로그인 예정")),
           ],
         ), // c end
       ), // c end

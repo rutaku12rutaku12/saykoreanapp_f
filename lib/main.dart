@@ -15,6 +15,7 @@ import 'package:saykoreanapp_f/pages/start/start_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
+import 'package:saykoreanapp_f/utils/if_login.dart';
 import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // 채팅 관련
@@ -157,7 +158,7 @@ class MyApp extends StatelessWidget {
                 // 인자 없으면 에러 페이지로
                     ? const _RouteArgErrorPage(message: "studyNo가 필요합니다.")
                 // 정상이라면 TestListPage 표시
-                    : TestListPage(),
+                    : IfLogin(child: TestListPage()),
                 settings: settings,
               );
             }
@@ -170,10 +171,11 @@ class MyApp extends StatelessWidget {
               final myUserNo = args['myUserNo'] as int;
 
               return MaterialPageRoute(
-                builder: (_) => ChatPage(
+                builder: (_) => IfLogin(child: ChatPage(
                   roomNo: roomNo,
                   friendName: friendName,
                   myUserNo: myUserNo,
+                  ),
                 ),
                 settings: settings,
               );
@@ -200,18 +202,21 @@ class MyApp extends StatelessWidget {
           // ───────────────────────────────────────────────────────────────────
           // 이름 기반 정적 라우트 매핑
           routes: {
+            // 비로그인 접속 가능
             "/": (context) => StartPage(), // 시작화면
-            "/home": (context) => HomePage(), // 홈
             "/login": (context) => LoginPage(), // 로그인
             "/signup": (context) => SignupPage(), // 회원가입
             "/find": (context) => FindPage(), // 계정/비번 찾기
-            "/info": (context) => MyPage(), // 내정보(마이페이지)
-            "/update": (context) => MyInfoUpdatePage(), // 내정보 수정
-            "/game": (context) => GameListPage(), // 게임 목록 페이지
-            "/study": (context) => StudyPage(), // 학습
-            "/ranking": (context) => Ranking(), // 순위
-            "loading": (context) => LoadingPage(), // 로딩
-            "/chat": (context) => FutureBuilder(
+
+            // 로그인 후 접속 가능
+            "/home": (context) => IfLogin(child: HomePage()), // 홈
+            "/info": (context) => IfLogin(child: MyPage()), // 내정보(마이페이지)
+            "/update": (context) => IfLogin(child: MyInfoUpdatePage()), // 내정보 수정
+            "/game": (context) => IfLogin(child: GameListPage()), // 게임 목록 페이지
+            "/study": (context) => IfLogin(child: StudyPage()), // 학습
+            "/ranking": (context) => IfLogin(child: Ranking()), // 순위
+            "loading": (context) => IfLogin(child: LoadingPage()), // 로딩
+            "/chat": (context) => IfLogin(child: FutureBuilder(
               future: SharedPreferences.getInstance(),
               builder: (context, snap) {
                 if (!snap.hasData) {
@@ -226,8 +231,8 @@ class MyApp extends StatelessWidget {
 
                 return ChatListWrapperPage(myUserNo: userNo);
               },
-            ),
-            "/successList": (context) => SuccessListPage(), // 완수한 학습 목록
+            )),
+            "/successList": (context) => IfLogin(child: SuccessListPage()), // 완수한 학습 목록
           },
         );
       },

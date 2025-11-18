@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl_phone_field_v2/intl_phone_field.dart';
@@ -116,6 +117,24 @@ class _SignupState extends State<SignupPage> {
     }
   } // f end
 
+  // 이메일 중복 확인 메소드
+  void checkEamil () async{
+    try{
+      final response = await ApiClient.dio.get(
+        "/saykorean/checkemail",
+        options: Options(
+          validateStatus: (status) => true,
+        ),
+        queryParameters: { 'email' : emailCon.text }
+      );
+      if(response.statusCode == 200 && response.data != null){
+
+      }
+    }catch(e){print(e);}
+  }
+
+  // 전화번호 중복 확인 메소드
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,7 +155,10 @@ class _SignupState extends State<SignupPage> {
                 controller: emailCon,
                 decoration: InputDecoration(
                     labelText: "이메일", border: OutlineInputBorder()),
-              ), // 입력 위젯, 이메일(id)
+              ),// 입력 위젯, 이메일(id)
+              SizedBox(height: 20,),
+              ElevatedButton(onPressed: checkEamil, child: Text("중복 확인")),
+
               SizedBox(height: 20,),
               TextField(
                 controller: passwordCon,
@@ -167,6 +189,7 @@ class _SignupState extends State<SignupPage> {
                   print("입력한 번호: ${phone.number}");
                 }, // 입력 위젯, 전화번호
               ),
+              ElevatedButton(onPressed: checkEamil, child: Text("중복 확인")),
               SizedBox(height: 20,),
 
               // // 리캡챠
@@ -195,7 +218,12 @@ class _SignupState extends State<SignupPage> {
 
               ElevatedButton(onPressed: onSignup, child: const Text("회원가입")),
               SizedBox(height: 20,),
-              TextButton(onPressed: onSignup, child: const Text("이미 가입된 사용자면 로그인"))
+              ElevatedButton(onPressed: () =>
+              {
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => LoginPage())),
+              }, child: Text("이미 가입된 사용자면 로그인"))
+
             ],
           ),
         )

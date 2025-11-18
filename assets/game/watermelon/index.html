@@ -45,7 +45,7 @@
         #gameContainer {
             width: 100%;
             max-width: 400px;
-            height: 800px;
+            height: 600px;
             max-height: 100vh;
             background: #FFF9E6;
             border-radius: 20px;
@@ -347,12 +347,15 @@
 </head>
 
 <body>
+<!-- ❌ 오디오 태그 주석 처리 또는 삭제 -->
+<!--
 <audio id="bgm" loop volume="0.3">
     <source src="bgm.mp3" type="audio/mpeg">
 </audio>
 <audio id="dropSound">
     <source src="drop.mp3" type="audio/mpeg">
 </audio>
+-->
 
 <div id="gameContainer">
     <div id="topUI">
@@ -546,8 +549,9 @@
     const game = initGame();
     const { engine, world, render, width, height } = game;
 
-    const bgm = document.getElementById('bgm');
-    const dropSound = document.getElementById('dropSound');
+    // ❌ 오디오 관련 변수 주석 처리
+    // const bgm = document.getElementById('bgm');
+    // const dropSound = document.getElementById('dropSound');
 
     let score = 0;
     let currentCategory = 'fruit';
@@ -558,10 +562,11 @@
     let dropX = width / 2;
     let isDragging = false;
 
+    // ❌ 오디오 재생 코드 주석 처리
     document.addEventListener('click', () => {
-        if (bgm.paused) {
-            bgm.play().catch(e => console.log('BGM 재생 실패:', e));
-        }
+        // if (bgm.paused) {
+        //     bgm.play().catch(e => console.log('BGM 재생 실패:', e));
+        // }
     }, { once: true });
 
     function createBody(level, x, y) {
@@ -652,8 +657,9 @@
         const body = createBody(currentFruitLevel, x, 70);
         World.add(world, body);
 
-        dropSound.currentTime = 0;
-        dropSound.play().catch(e => console.log('효과음 재생 실패:', e));
+        // ❌ 효과음 재생 주석 처리
+        // dropSound.currentTime = 0;
+        // dropSound.play().catch(e => console.log('효과음 재생 실패:', e));
 
         currentFruitLevel = nextFruitLevel;
         nextFruitLevel = Math.floor(Math.random() * 5);

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 아이콘용
+import 'package:recaptcha_enterprise_flutter/recaptcha.dart';
+import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
 
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
@@ -13,6 +15,7 @@ import 'package:saykoreanapp_f/pages/start/start_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
+import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // 채팅 관련
 import 'package:saykoreanapp_f/pages/chatting/chat_list_wrapper_page.dart';
@@ -68,7 +71,24 @@ int? _toInt(dynamic v) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 앱 진입점
 // ─────────────────────────────────────────────────────────────────────────────
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  const String androidSiteKey = "6LeHHw8sAAAAAAqE6e3b2hu7w9azw3_3udTKbHcp";
+
+  final siteKey = androidSiteKey;
+
+  print("reCAPTCHA Site key used: $siteKey");
+
+  try{
+    RecaptchaClient client = await Recaptcha.fetchClient(siteKey);
+
+    RecaptchaManager.setClient(client);
+    print("reCAPTCHA Client initialized successfully.");
+  } catch (e) {
+    print("ERROR: Failed to initialize reCAPTCHA Client: $e");
+  }
+
   runApp(MyApp());
 }
 

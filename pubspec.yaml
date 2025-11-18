@@ -37,6 +37,8 @@ dependencies:
   shared_preferences: ^2.5.3 # 로컬 저장
   fluttertoast: ^9.0.0 # 토스트 메시지 지원
   web_socket_channel: ^2.4.0 # 웹소켓 채팅
+  intl_phone_field_v2: ^4.0.5 # 국제번호 드롭다운 // 웹은 국가 사진x
+  recaptcha_enterprise_flutter: ^18.8.1 # 리캡챠 // 현재 안드로이드만 가능, 폴더명에 _가 존재하여 ios 키 생성 불가
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

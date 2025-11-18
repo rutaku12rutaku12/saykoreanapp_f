@@ -1,16 +1,21 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl_phone_field_v2/intl_phone_field.dart';
+import 'package:intl_phone_field_v2/phone_number.dart';
+import 'package:recaptcha_enterprise_flutter/recaptcha_action.dart';
+import 'package:saykoreanapp_f/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 
+import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
+
 class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _SignupState();
   }
 }
-
-
 
 class _SignupState extends State<SignupPage> {
   // * 입력 컨트롤러, 각 입력창에서 입력받은 값을 제어
@@ -20,63 +25,94 @@ class _SignupState extends State<SignupPage> {
   TextEditingController nickNameCon = TextEditingController();
   TextEditingController phoneCon = TextEditingController();
 
+  // [추가] reCAPTCHA V2 체크박스 상태를 흉내 낼 변수
+  bool _isRecaptchaChecked = false;
+
+  // 서버 전송용 국제번호 저장 변수
+  PhoneNumber? emailPhoneNumber;
+
   // * 등록 버튼 클릭 시
   void onSignup() async {
-    // 1. 자바에게 보낼 데이터 준비
+    // // [추가] V2처럼 사용자가 체크했는지 확인
+    // if (!_isRecaptchaChecked) {
+    //   Fluttertoast.showToast(msg: "reCAPTCHA를 확인해 주세요.", backgroundColor: Colors.orange);
+    //   return;
+    // }
+
+    // 1. [수정] 로딩 화면을 가장 먼저 표시
+    showDialog(
+      context: context,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false, // 팝업창(로딩화면) 외 바깥 클릭 차단
+    );
+
+    String recaptchaToken = '';
+
+    try {
+      // 2. reCAPTCHA 토큰 요청 (Signup 액션)
+      // V2 방식의 UX를 위해 체크는 했지만, 토큰 요청은 Enterprise SDK를 그대로 사용
+      recaptchaToken = await RecaptchaManager.getClient().execute(RecaptchaAction.SIGNUP());
+      print('reCAPTCHA Token successfully generated: $recaptchaToken');
+    } catch (e) {
+      // 3. [수정] 토큰 생성 실패 시, 로딩 화면을 안전하게 닫고 사용자에게 알림
+      Navigator.pop(context); // 로딩 닫기 (이제는 안전함)
+      Fluttertoast.showToast(msg: "보안 검증 실패. 다시 시도해 주세요. [$e]", backgroundColor: Colors.red, toastLength: Toast.LENGTH_LONG);
+      print('reCAPTCHA execution error: $e');
+      return; // 회원가입 진행을 중단
+    }
+
+    // 4. 자바에게 보낼 데이터 준비
+    final plusPhone = emailPhoneNumber?.completeNumber ?? phoneCon.text;
+    print(recaptchaToken);
     final sendData = {
       'name': nameCon.text,
       'email': emailCon.text,
       'password': passwordCon.text,
       'nickName': nickNameCon.text,
-      'phone': phoneCon.text,
-      //'recaptcha' : captchaValue
+      'phone': plusPhone,
+      // 'recaptcha':recaptchaToken,
     };
     print(sendData);
-
-    // * Rest API 통신 간의 로딩 화면 표시, showDialog() : 팝업 창 띄우기 위한 위젯
-    showDialog(
-      context: context,
-      builder: (context) => Center(child: CircularProgressIndicator(),),
-      barrierDismissible: false, // 팝업창(로딩화면) 외 바깥 클릭 차단
-    );
-
-    // 2.
+    // 이 시점부터는 API 통신이 시작되므로, 로딩 화면을 유지합니다.
     try {
-      Dio dio = Dio();
-      final response = await dio.post(
-          "http://192.168.40.22:8080/saykorean/signup", data: sendData);
+      final response = await ApiClient.dio.post(
+          "/saykorean/signup", data: sendData);
       final data = response.data;
 
-      Navigator.pop(context); // 가장 앞(가장 최근에 열린)에 있는 위젯 닫기 (showDialog(): 팝업 창)
+      Navigator.pop(context); // 로딩 화면 닫기
 
       if (data) {
         print("회원가입 성공");
 
         Fluttertoast.showToast(
-          msg: "회원가입 성공 했습니다.",
           // 출력할 내용
-          toastLength: Toast.LENGTH_LONG,
+          msg: "회원가입 성공 했습니다.",
           // 메시지 유지기간
-          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_LONG,
           // 메시지 위치 : 앱 적용
-          timeInSecForIosWeb: 3,
+          gravity: ToastGravity.BOTTOM,
           // 자세한 유지시간 (sec)
-          backgroundColor: Colors.redAccent,
+          timeInSecForIosWeb: 10,
           // 배경색
-          textColor: Colors.green,
+          backgroundColor: Color(0xFFA8E6CF),
           // 글자색상
-          fontSize: 16, // 글자 크기
+          textColor: Color(0xFF6B4E42),
+          // 글자 크기
+          fontSize: 16,
         );
 
         // * 페이지 전환
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => LoginPage()));
+            context, MaterialPageRoute(builder: (context) => const LoginPage()));
       }
       else {
         print("회원가입 실패");
+        Fluttertoast.showToast(msg: "회원가입 실패", backgroundColor: Colors.red);
       }
     } catch (e) {
+      Navigator.pop(context); // 오류 발생 시 로딩 화면 닫기
       print(e);
+      Fluttertoast.showToast(msg: "서버 통신 오류가 발생했습니다.", backgroundColor: Colors.red);
     }
   } // f end
 
@@ -115,21 +151,51 @@ class _SignupState extends State<SignupPage> {
                     labelText: "닉네임", border: OutlineInputBorder()),
               ), // 입력 위젯, 닉네임
               SizedBox(height: 20,),
-              TextField(
+              IntlPhoneField(
                 controller: phoneCon,
                 decoration: InputDecoration(
-                    labelText: "전화번호", border: OutlineInputBorder()),
-              ), // 입력 위젯, 전화번호
+                  labelText: '전화번호',
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(),
+                  ),
+                ),
+                initialCountryCode: 'KR',
+                autovalidateMode: AutovalidateMode.disabled,
+                validator: (value) => null, // 자리수 검증 제거// ,
+                onChanged: (phone) {
+                  emailPhoneNumber = phone;
+                  print("입력한 번호: ${phone.number}");
+                }, // 입력 위젯, 전화번호
+              ),
               SizedBox(height: 20,),
-              ElevatedButton(onPressed: onSignup, child: Text("회원가입")),
+
+              // // 리캡챠
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.start,
+              //   children: [
+              //     Checkbox(
+              //       value: _isRecaptchaChecked,
+              //       onChanged: (bool? newValue) {
+              //         setState(() {
+              //           _isRecaptchaChecked = newValue ?? false;
+              //         });
+              //       },
+              //     ),
+              //     const Text("로봇이 아닙니다."),
+              //     const Spacer(),
+              //     // 실제 reCAPTCHA 로고를 흉내냄 (실제로는 Enterprise 버전이 백그라운드에 있음)
+              //     Image.network(
+              //       "https://placehold.co/100x40/DDDDDD/000000?text=reCAPTCHA",
+              //       errorBuilder: (context, error, stackTrace) => const Text("reCAPTCHA Logo", style: TextStyle(fontSize: 12)),
+              //       height: 40,
+              //     )
+              //   ],
+              // ),
               SizedBox(height: 20,),
-              TextButton(onPressed: () =>
-              {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginPage())
-                )
-              }, child: Text("이미 가입된 사용자 이면 _로그인"))
+
+              ElevatedButton(onPressed: onSignup, child: const Text("회원가입")),
+              SizedBox(height: 20,),
+              TextButton(onPressed: onSignup, child: const Text("이미 가입된 사용자면 로그인"))
             ],
           ),
         )

@@ -20,7 +20,8 @@ class ApiClient {
       connectTimeout: const Duration(seconds: 6),
       receiveTimeout: const Duration(seconds: 12),
       headers: {
-        'X-Client-Type': 'flutter'
+        'X-Client-Type': 'flutter',
+        'Content-Type': 'application/json'
       },
     ),
   )..interceptors.add(

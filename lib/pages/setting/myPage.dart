@@ -1,6 +1,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
 import 'package:saykoreanapp_f/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';

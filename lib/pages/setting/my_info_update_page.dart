@@ -4,6 +4,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl_phone_field_v2/intl_phone_field.dart';
 import 'package:intl_phone_field_v2/phone_number.dart';
 import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/pages/auth/login_page.dart';
+import 'package:saykoreanapp_f/pages/setting/myPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyInfoUpdatePage extends StatefulWidget {
   @override
@@ -108,9 +111,14 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
       print(response);
       print(response.data);
       if(response.statusCode == 200 && response.data != null
-          && response.data){
-      Fluttertoast.showToast(msg: "수정이 완료되었습니다.",backgroundColor: Colors.greenAccent);}
-      else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.greenAccent);}
+          && response.data == 1) {
+        Fluttertoast.showToast(
+            msg: "수정이 완료되었습니다.", backgroundColor: Colors.greenAccent);
+        // 수정 후 내 정보로 이동
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MyPage()));
+      }else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.greenAccent);}
     }catch(e){print(e);}
   }
 
@@ -140,11 +148,16 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
       print(response);
       print(response.data);
       if(response.statusCode == 200 && response.data != null
-        && response.data){
+        && response.data == 1){
         Fluttertoast.showToast(msg: "수정이 완료되었습니다.",backgroundColor: Colors.greenAccent);
+        // 수정 후 내 정보로 이동
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context)=> MyPage() ));
       }else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.greenAccent);}
     }catch(e){print(e);}
   }
+
   // 탈퇴 메소드
   void deleteUserStatus () async {
     try{
@@ -168,10 +181,34 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
 
       if( response.statusCode == 200 && response.data == 1){
         Fluttertoast.showToast(msg: "회원 탈퇴가 완료되었습니다.",backgroundColor: Colors.greenAccent);
+        LogOut(); // 탈퇴 후 로그아웃(토큰제거, 로그인페이지로 이동)
       }else{
         Fluttertoast.showToast(msg: "비밀번호가 올바르지 않습니다.",backgroundColor: Colors.red);
       }
     }catch(e){print(e);}
+  }
+
+  // 로그아웃 메소드
+  void LogOut() async {
+    try {
+      final response = await ApiClient.dio.get(
+        '/saykorean/logout',
+        options: Options(
+          validateStatus: (status) => true,
+        ),
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('token');
+      await prefs.remove('myUserNo');
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override

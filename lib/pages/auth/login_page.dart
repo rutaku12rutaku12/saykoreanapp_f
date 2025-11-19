@@ -84,7 +84,8 @@ class _LoginState extends State<LoginPage>{
         //   MaterialPageRoute(builder: (content) => HomePage()),
         // );
         Navigator.pushReplacementNamed(context, '/home');
-      } else {
+      }
+      else {
         print("로그인 실패: ${response.statusCode}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('로그인 실패: ${response.statusCode}')),

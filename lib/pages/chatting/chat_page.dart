@@ -29,9 +29,10 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
 
-   // WebSocket URL 생성
+    // WebSocket URL 생성
     final wsUrl =
-    "${ApiClient.detectWsUrl()}?roomNo=${widget.roomNo}&userNo=${widget.myUserNo}";
+        "${ApiClient.detectWsUrl()}?roomNo=${widget.roomNo}&userNo=${widget
+        .myUserNo}";
     print("WebSocket Connect URL : $wsUrl");
 
     // WebSocket 연결
@@ -40,16 +41,50 @@ class _ChatPageState extends State<ChatPage> {
     //메시지 수신 리스너
     _channel.stream.listen((data) {
       final decoded = jsonDecode(data as String);
-      setState(() {
-        _messages.add(decoded); // {sendNo, message, time}
-      });
+
+      final type = decoded["type"] ?? "";
+
+      //히스토리 처리
+      if (type == "HISTORY") {
+        final List<dynamic> list = decoded["messages"] ?? [];
+
+        setState(() {
+          _messages.clear();
+          _messages.addAll(
+            list.map((e) =>
+            {
+              'messageNo': e['messageNo'],
+              'sendNo': e['sendNo'],
+              'message': e['chatMessage'],
+              'time': e['chatTime'],
+            }),
+          );
+        });
+        _scrollToBottom();
+        return;
+      }
+
+      // 실시간 메세지
+      if (type == "CHAT") {
+        setState(() {
+          _messages.add({
+            'messageNo': decoded['messageNo'],
+            'sendNo': decoded['sendNo'],
+            'message': decoded['message'],
+            'time': decoded['time']
+          });
+        });
+        _scrollToBottom();
+      }
+    });
+  }
 
       // 자동 스크롤 맨 알래로
-      Future.delayed(Duration(milliseconds: 100), () {
-        if (_scroll.hasClients){
-          _scroll.jumpTo(_scroll.position.maxScrollExtent);
-        }
-      });
+      void _scrollToBottom() {
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (_scroll.hasClients) {
+            _scroll.jumpTo(_scroll.position.maxScrollExtent);
+          }
 
       // // 새로운 메시지 알림
       // if(decoded["type"] == "message" &&
@@ -58,7 +93,7 @@ class _ChatPageState extends State<ChatPage> {
       // }
     });
   }
-
+//----------------------------------------------
   @override
   void dispose() {
     _channel.sink.close();
@@ -70,7 +105,12 @@ class _ChatPageState extends State<ChatPage> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    _channel.sink.add(jsonEncode({'content': text}));
+    // 서버는 "message"로 받음 (content x)
+    final payload = {
+      "message" : text,
+    };
+
+    _channel.sink.add(jsonEncode(payload));
     _controller.clear();
   }
 

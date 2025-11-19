@@ -12,17 +12,18 @@ class FriendsApi {
   /// 친구 요청
   ///
   /// POST /friends/add?offer=1&receiver=2
-  Future<void> addFriend({
+  Future<Map<String, dynamic>> addFriend({
     required int offer,
     required String email,
   }) async {
-    await _dio.post(
+    final res = await _dio.post(
       "/friends/add",
       queryParameters: {
         "offer": offer,
         "email" : email,
       },
     );
+    return res.data as Map<String, dynamic>;
   }
 
   /// 친구 수락
@@ -86,6 +87,18 @@ class FriendsApi {
     );
 
     print("서버 응답 : ${res.data}");
+
+    return (res.data as List)
+        .map((e) => FriendRequest.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  // 보낸 요청 목록
+  Future<List<FriendRequest>> getSentRequests(int myUserNo) async{
+    final res = await _dio.get(
+      "/friends/requests/send",
+      queryParameters: {"userNo": myUserNo}
+    );
 
     return (res.data as List)
         .map((e) => FriendRequest.fromJson(Map<String, dynamic>.from(e)))

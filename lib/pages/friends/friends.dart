@@ -26,15 +26,21 @@ class _FriendsPageState extends State<FriendsPage>
   List<FriendRequest> _requests = [];
   bool _loadingRequests = false;
 
+  // 요청 보낸 목록 탭 상태
+  List<FriendRequest> _sentRequests = [];
+  bool _loadingSent = false;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
     );
     _loadFriends();
-    _loadRequests();
+    _loadRequests(); // 받은요청
+    _loadSentRequests(); // 보낸요청
+
   }
 
   @override
@@ -78,6 +84,16 @@ class _FriendsPageState extends State<FriendsPage>
     }
   }
 
+  //보낸 요청 목록
+  Future<void> _loadSentRequests() async{
+    setState(() => _loadingSent = true);
+    try{
+      _sentRequests = await _api.getSentRequests(widget.myUserNo);
+    }finally{
+      setState(() => _loadingSent = false);
+    }
+}
+
   // 친구 요청 보내기
   Future<void> _sendRequest() async {
     final receiverCtl = TextEditingController();
@@ -115,13 +131,30 @@ class _FriendsPageState extends State<FriendsPage>
     }
 
     try {
-      await _api.addFriend(
+      // 서버에서 message + success 받음
+      final res = await _api.addFriend(
         offer: widget.myUserNo,
         email: email,
       );
-      _showSnack("친구 요청을 보냈습니다.");
-      _loadRequests();
-    } catch (e) {
+
+      final success = res["success"] as bool?;
+      final message = res["message"] as String?;
+
+      // message가 있으면 Alert 또는 SnackBar로 표시
+      if (message != null && message.isNotEmpty) {
+        if (success == true) {
+          _showSnack(message);
+        } else {
+          _showError(message);
+        }
+      }
+
+      //요청 갱신
+      if (success == true) {
+        _loadRequests();
+        _loadSentRequests();
+      }
+    } catch(e) {
       _showError("친구 요청 실패\n$e");
     }
   }
@@ -138,6 +171,8 @@ class _FriendsPageState extends State<FriendsPage>
       });
       // 친구 목록 갱신
       await _loadFriends();
+      await _loadRequests();
+      await _loadSentRequests();
     } catch (e) {
       _showError('요청 수락에 실패했습니다.\n$e');
     }
@@ -162,6 +197,9 @@ class _FriendsPageState extends State<FriendsPage>
       } else {
         _showError("이미 처리된 요청이거나 존재하지 않습니다.");
       }
+      await _loadRequests();
+      await _loadSentRequests();
+
     } catch (e) {
       _showError("거절 실패\n$e");
     }
@@ -219,6 +257,7 @@ class _FriendsPageState extends State<FriendsPage>
             tabs: const [
               Tab(text: "친구 목록"),
               Tab(text: "받은 요청"),
+              Tab(text: "보낸 요청")
             ],
           ),
           Expanded(
@@ -226,7 +265,8 @@ class _FriendsPageState extends State<FriendsPage>
               controller: _tabController,
               children: [
                 _buildFriendsTab(),
-                _buildRequestsTab(),
+                _buildRequestsTab(), //받은 요청
+                _buildSentRequestsTab() //보낸요청
               ],
             ),
           ),
@@ -298,6 +338,32 @@ class _FriendsPageState extends State<FriendsPage>
                 ),
               ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  //보낸 요청 목록
+  Widget _buildSentRequestsTab() {
+    if (_loadingSent) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_sentRequests.isEmpty) {
+      return const Center(child: Text("보낸 친구 요청이 없습니다."));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadSentRequests,
+      child: ListView.builder(
+        itemCount: _sentRequests.length,
+        itemBuilder: (context, index) {
+          final item = _sentRequests[index];
+          return ListTile(
+            title: Text(item.friendName),
+            subtitle: const Text("요청중"),
+            trailing: const Icon(Icons.hourglass_top),
           );
         },
       ),

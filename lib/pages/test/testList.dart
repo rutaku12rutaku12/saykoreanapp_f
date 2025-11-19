@@ -117,11 +117,17 @@ class _TestListPageState extends State<TestListPage> {
         ? rawTestNo.toInt()
         : int.tryParse(rawTestNo?.toString() ?? "0") ?? 0;
 
-    print("go TestPage: testNo=$testNo");
+    // ✅ testMode 추출 ( null인지 확인)
+    final testMode = t['testMode'] as String?;
+
+    print("go TestPage: testNo=$testNo , testMode=$testMode");
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => TestPage(testNo: testNo),
+        builder: (_) => TestPage(
+            testNo: testNo,
+            testMode: testMode, // ✅ testMode 전달
+        ),
       ),
     );
   }
@@ -196,7 +202,21 @@ class _TestListPageState extends State<TestListPage> {
             t['testTitle'] ??
             '테스트 #$testNo')
             .toString();
+
         final desc = (t['testDesc'] ?? '').toString();
+
+        // ✅ testMode에 따라 배지 표시
+        final testMode = t['testMode'] as String?;
+        String modeLabel = '';
+        Color modeColor = Colors.grey;
+
+        if (testMode == 'INFINITE') {
+          modeLabel = '♾️ 무한';
+          modeColor = const Color(0xFFFF9800);
+        } else if (testMode == 'HARD') {
+          modeLabel = '🔥 하드';
+          modeColor = const Color(0xFFF44336);
+        }
 
         return SizedBox(
           height: 56,
@@ -211,13 +231,22 @@ class _TestListPageState extends State<TestListPage> {
                 side: const BorderSide(color: Color(0xFFE5E7EB)),
               ),
             ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
+
+            // child: Align(
+            //   alignment: Alignment.centerLeft,
+            //   child: Column(
+
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                  Row(
+                  children: [
+                  Expanded(
+                  child: Text(
                     title,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -225,17 +254,48 @@ class _TestListPageState extends State<TestListPage> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (desc.isNotEmpty)
-                    Text(
-                      desc,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280),
+                ),
+
+                  // if (desc.isNotEmpty)
+                  //   Text(
+                  //     desc,
+                  //     overflow: TextOverflow.ellipsis,
+                  //     style: const TextStyle(
+                  //       fontSize: 12,
+                  //       color: Color(0xFF6B7280),
+                  //     ),
+                  //   ),
+
+                  // ✅ 모드 배지 표시
+                  if (modeLabel.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: modeColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: modeColor.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        modeLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: modeColor,
+                        ),
                       ),
                     ),
-                ],
-              ),
+                  ],
+                  ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         );

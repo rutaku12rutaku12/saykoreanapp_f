@@ -7,8 +7,9 @@ import 'package:saykoreanapp_f/api.dart'; // 전역 Dio: ApiClient.dio 사용
 
 class TestPage extends StatefulWidget {
   final int testNo;
+  final String? testMode; // 시험모드 추가 : "REGULAR" , "INFINITE" , "HARD"
 
-  const TestPage({super.key, required this.testNo});
+  const TestPage({super.key, required this.testNo, this.testMode});
 
   @override
   State<TestPage> createState() => _TestPageState();
@@ -80,26 +81,25 @@ class _TestPageState extends State<TestPage> {
       }
       setState(() => testRound = nextRound);
 
-      // [2] 문항 목록 조회
-      final res = await ApiClient.dio.get(
-        "/saykorean/test/findtestitem",
-        queryParameters: {
-          "testNo": widget.testNo,
-          "langNo": langNo,
-        },
-      );
-
-      print("▶ findtestitem status = ${res.statusCode}");
-      print("▶ findtestitem data   = ${res.data}");
-
-      List<dynamic> list;
-      if (res.data is List) {
-        list = res.data as List;
-      } else if (res.data is Map && res.data['list'] is List) {
-        list = res.data['list'] as List;
+      // [2] 문항 로드 - 모드 분기
+      print("🎯 testMode = ${widget.testMode}");
+      List<dynamic> list = [];
+      
+      if (widget.testMode == "INFINITE") {
+        // 무한모드 : 완료한 studyNo가 나오는 문항
+        print("♾️ 무한모드 문항 로드 시작");
+        list = await _loadInfiniteItems();
+      } else if (widget.testMode == "HARD") {
+        // 하드모드 : 전체 문항
+        print("🔥 하드모드 문항 로드 시작");
+        list = await _loadHardItems();
       } else {
-        list = [];
+        // 정규 시험
+        print("📝 정규 시험 문항 로드 시작");
+        list = await _loadRegularItems();
       }
+
+      print("✅ 로드된 문항 수: ${list.length}");
 
       setState(() {
         items = list;
@@ -116,6 +116,90 @@ class _TestPageState extends State<TestPage> {
     } finally {
       setState(() => loading = false);
     }
+  }
+      
+  // [3-1] 문항 목록 조회 : 정규 시험 문항 로드
+  Future<List<dynamic>> _loadRegularItems() async {
+      final res = await ApiClient.dio.get(
+        "/saykorean/test/findtestitem",
+        queryParameters: {
+          "testNo": widget.testNo,
+          "langNo": langNo,
+        },
+      );
+
+      print("▶ findtestitem status = ${res.statusCode}");
+      print("▶ findtestitem data   = ${res.data}");
+
+
+      if (res.data is List) {
+        return res.data as List;
+      } else if (res.data is Map && res.data['list'] is List) {
+        return res.data['list'] as List;
+      } else {
+        return [];
+      }
+  }
+
+
+  // 📚 [3-2] 문항 목록 조회 : 무한모드 문항 로드
+  Future<List<dynamic>> _loadInfiniteItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedIds = prefs.getStringList('studies') ?? const <String>[];
+
+    final List<int> studyNos = storedIds
+        .map((s) => int.tryParse(s))
+        .where((n) => n != null && n! > 0)
+        .cast<int>()
+        .toList();
+    
+    // 완료한 주제가 비어있으면
+    if (studyNos.isEmpty) {
+      print("⚠️ 무한모드 : 완료한 주제가 없습니다");
+      return [];
+    }
+
+    print("📚 무한모드 : studyNos = $studyNos}");
+
+    final res = await ApiClient.dio.get(
+      "/saykorean/test/infinite-items" ,
+      queryParameters: {
+        "langNo" : langNo ,
+        "studyNos" : studyNos.join(','),
+      },
+    );
+
+    print("▶ infinite-items status = ${res.statusCode}");
+    print("▶ infinite-items count  = ${(res.data as List?)?.length ?? 0}");
+
+    if (res.data is List) {
+      final list = res.data as List;
+      list.shuffle(); // 클라이언트에서 난수화
+      return list;
+    }
+    return [];
+  }
+
+  // 🔥 [3-3] 문항 목록 조회 : 하드모드 문항 로드
+  Future<List<dynamic>> _loadHardItems() async {
+    print("🔥 하드모드: 전체 문항 로드");
+
+    final res = await ApiClient.dio.get(
+      "/saykorean/test/hard-items" ,
+      queryParameters: {
+        "langNo" : langNo,
+      },
+    );
+
+    print("▶ hard-items status = ${res.statusCode}");
+    print("▶ hard-items count  = ${(res.data as List?)?.length ?? 0}");
+
+    if (res.data is List) {
+      final list = res.data as List;
+      list.shuffle(); // 클라이언트에서 난수화
+      return list;
+    }
+    return [];
   }
 
   // 문자열 안전 체크 (null / 빈문자열 방지용)
@@ -231,8 +315,41 @@ class _TestPageState extends State<TestPage> {
         feedback = null;
       });
     } else {
+      // 무한모드/하드모드에서는 틀리면 종료
+      if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
+          if (feedback != null && !feedback!['correct']) {
+            _showGameOverDialog();
+            return;
+          }
+      }
+      
       Navigator.pushNamed(context, "/testresult/${widget.testNo}");
     }
+  }
+
+  // 무한모드/하드모드 종료시 다이얼로그
+  void _showGameOverDialog() {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text("게임 오버"),
+          content: Text(
+            widget.testMode == "INFINITE"
+                ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
+                : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!"
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // 다이얼로드 닫기
+                  Navigator.pop(context); // 시험페이지 닫기
+                },
+                child: const Text("확인"),
+            ),
+          ],
+        )
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -265,9 +382,13 @@ class _TestPageState extends State<TestPage> {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: brown),
-        title: const Text(
-          '시험 보기',
-          style: TextStyle(
+        title: Text(
+          widget.testMode == "INFINITE"
+              ? '무한모드 시험'
+              : widget.testMode == "HARD"
+              ? '하드모드 시험'
+              : '시험 보기',
+          style: const TextStyle(
             color: brown,
             fontWeight: FontWeight.w700,
           ),
@@ -291,18 +412,24 @@ class _TestPageState extends State<TestPage> {
             CrossAxisAlignment.stretch,
             children: [
               // 상단 타이틀
-              const Text(
-                "오늘의 시험",
-                style: TextStyle(
+              Text(
+                widget.testMode == "INFINITE"
+                    ? "무한모드"
+                    : widget.testMode == "HARD"
+                    ? "하드모드"
+                    : "오늘의 시험",
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: brown,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                "문제를 풀고 자신의 실력을 확인해 보아요.",
-                style: TextStyle(
+              Text(
+                widget.testMode == "INFINITE" || widget.testMode == "HARD"
+                    ? "틀릴 때까지 계속 도전해요!"
+                    : "문제를 풀고 자신의 실력을 확인해 보아요.",
+                style: const TextStyle(
                   fontSize: 13,
                   color: Color(0xFF9C7C68),
                 ),
@@ -541,6 +668,13 @@ class _TestPageState extends State<TestPage> {
     final hasOptions =
         options is List && options.isNotEmpty;
 
+    int? _toInt(dynamic v) {
+      if (v == null) return null;
+      if (v is int) return v;
+      if (v is String) return int.tryParse(v);
+      return null;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -568,9 +702,7 @@ class _TestPageState extends State<TestPage> {
                 label: label.toString(),
                 onTap: feedback == null
                     ? () => submitAnswer(
-                  selectedExamNo:
-                  map['examNo']
-                  as int?,
+                  selectedExamNo: _toInt(map['examNo']),
                 )
                     : null,
               );

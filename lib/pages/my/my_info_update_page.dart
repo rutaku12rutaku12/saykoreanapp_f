@@ -28,9 +28,6 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
   // 서버 전송용 국제번호 저장 변수
   PhoneNumber? emailPhoneNumber;
 
-
-
-
   // 전화번호 중복 확인 메소드
   void checkPhone () async{
     try{
@@ -51,6 +48,65 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
       }else{Fluttertoast.showToast(msg: "전화번호 형식이 올바르지 않거나, 사용 중인 전화번호입니다.", backgroundColor: Colors.red);}
     }catch(e){
       print(e);}
+  }
+
+  // 사용자 정보 수정 메소드
+  void updateUserInfo () async {
+      if(nameCon.text.trim().isEmpty ||
+          nickCon.text.trim().isEmpty ||
+          phoneCon.text.trim().isEmpty)
+        { Fluttertoast.showToast(msg: "입력값을 채워주세요.",backgroundColor: Colors.red);
+          print("입력값을 채워주세요.");
+        return;}
+    try{
+      final plusPhone = emailPhoneNumber?.completeNumber ?? phoneCon.text;
+      final sendData = {"name": nameCon.text,"nickName":nickCon.text,"phone":plusPhone };
+      print(sendData);
+      final response = await ApiClient.dio.put(
+        "/saykorean/updateuserinfo",
+        data: sendData,
+        options: Options(
+          validateStatus: (status) => true,
+        ),
+      );
+      print(response);
+      print(response.data);
+      if(response.statusCode == 200 && response.data != null && response.data){
+      Fluttertoast.showToast(msg: "수정이 완료되었습니다.",backgroundColor: Colors.greenAccent);}
+      else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 넣어주세요.",backgroundColor: Colors.greenAccent);}
+    }catch(e){print(e);}
+  }
+
+  // 비밀번호 수정 메소드
+  void updatePwrd () async {
+    if(currentPassCon.text.trim().isEmpty ||
+    newPassCon.text.trim().isEmpty ||
+    checkPassCon.text.trim().isEmpty)
+    { Fluttertoast.showToast(msg: "입력값을 채워주세요.",backgroundColor: Colors.red);
+    print("입력값을 채워주세요.");
+    return;}
+    // if (newPassword != checkPassword) { return alert(t("myinfoupdate.checkNewPassword")) }
+    if( newPassCon.text != checkPassCon.text ){
+      print("비밀번호 불일치 , 새 비밀번호: ${newPassCon.text}, 비밀번호 확인: ${checkPassCon.text} ");
+      Fluttertoast.showToast(msg: "비밀번호가 다릅니다. 다시 확인해주세요.",backgroundColor: Colors.red);
+      return; 
+    }
+    try{
+      final sendData = {"currentPassword":currentPassCon.text,"newPassword":newPassCon.text};
+      final response = await ApiClient.dio.put(
+        "/saykorean/updatepwrd",
+        data: sendData,
+        options: Options(
+          validateStatus: (status) => true,
+        ),
+      );
+    }catch(e){print(e);}
+  }
+  // 탈퇴 메소드
+  void deleteUserStatus () async {
+    try{
+
+    }catch(e){print(e);}
   }
 
   @override
@@ -100,7 +156,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
               ),
               ElevatedButton(onPressed: checkPhone, child: Text("중복 확인")),
               SizedBox(height: 20,),
-              ElevatedButton(onPressed: (){}, child: Text("수정")),
+              ElevatedButton(onPressed: updateUserInfo, child: Text("수정")),
               SizedBox(height: 30,),
 
               Text("비밀번호 수정"),
@@ -125,12 +181,11 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
                     labelText: "새 비밀번호 확인", border: OutlineInputBorder()),
                 ),
               SizedBox(height: 10,),
-              ElevatedButton(onPressed: (){}, child: Text("수정")),
-              SizedBox(height: 30,),
+              ElevatedButton(onPressed: updatePwrd, child: Text("수정")),              SizedBox(height: 30,),
 
               Text("회원 탈퇴"),
               SizedBox(height: 20,),
-              ElevatedButton(onPressed: (){}, child: Text("탈퇴"))
+              ElevatedButton(onPressed: deleteUserStatus, child: Text("탈퇴"))
             ],
           ),
         ),

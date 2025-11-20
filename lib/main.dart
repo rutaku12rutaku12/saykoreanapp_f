@@ -14,6 +14,7 @@ import 'package:saykoreanapp_f/pages/auth/start_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
+import 'package:saykoreanapp_f/pages/test/test_mode_page.dart';
 import 'package:saykoreanapp_f/utils/if_login.dart';
 import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -157,7 +158,7 @@ class MyApp extends StatelessWidget {
                 // 인자 없으면 에러 페이지로
                     ? const _RouteArgErrorPage(message: "studyNo가 필요합니다.")
                 // 정상이라면 TestListPage 표시
-                    : IfLogin(child: TestListPage()),
+                    : IfLogin(child: TestModePage()),
                 settings: settings,
               );
             }

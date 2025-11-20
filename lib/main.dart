@@ -25,6 +25,9 @@ import 'package:saykoreanapp_f/pages/study/successList.dart';
 // 테스트 목록 페이지
 import 'package:saykoreanapp_f/pages/test/testList.dart';
 
+// 상점 페이지
+import 'package:saykoreanapp_f/pages/store/store.dart';
+
 
 // 앱 전체에서 공유할 테마 상태
 final ValueNotifier<ThemeMode> themeModeNotifier =
@@ -259,6 +262,7 @@ class MyApp extends StatelessWidget {
 
             // 로그인 후 접속 가능
             "/home": (context) => IfLogin(child: HomePage()), // 홈
+            "/store": (context) => StorePage(), // 스토어
             "/info": (context) => IfLogin(child: MyPage()), // 내정보(마이페이지)
             "/update": (context) => IfLogin(child: MyInfoUpdatePage()), // 내정보 수정
             "/game": (context) => IfLogin(child: GameListPage()), // 게임 목록 페이지
@@ -507,6 +511,12 @@ class _FooterBar extends StatelessWidget {
                     svg: 'assets/icons/study.svg',
                     routeName: '/study',
                     active: current == '/study',
+                  ),
+                  _btn(
+                    label: '스토어',
+                    svg: 'assets/icons/store_icon.svg',
+                    routeName: '/store',
+                    active: current == '/store'
                   ),
 
                   // 시험 (완수한 주제 기준)

@@ -6,7 +6,7 @@
   // - 하드모드 : 전체 DB의 모든 문항 (틀릴 때까지)
 
 import 'package:flutter/material.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/test/test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

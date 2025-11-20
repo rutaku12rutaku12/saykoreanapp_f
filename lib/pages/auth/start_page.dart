@@ -1,12 +1,36 @@
 // start_page.dart — 테마 대응 버전
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class StartPage extends StatelessWidget {
+class StartPage extends StatefulWidget {
   const StartPage({super.key});
+
+  @override
+  State<StartPage> createState() =>
+    _StartPageState();
+}
+
+class _StartPageState extends State<StartPage>{
+    @override
+  void initState() {
+    super.initState();
+    _checkLogin();
+  }
+  // 로그인 확인 메소드, Hot Restart 시작 시 토큰이 존재하면 homepage로 이동ㅕㄴ
+  Future<void> _checkLogin() async{
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if( token != null && token.isNotEmpty) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+  }
 
   // 이미지 파일
   static const _bgWave = 'assets/img/bgImg.png';
   static const _mascot = 'assets/img/mascot_pair.png';
+
+
+
 
   @override
   Widget build(BuildContext context) {

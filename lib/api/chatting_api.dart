@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import '../models/chat_room.dart';
 import '../models/message.dart';
-import '../api.dart';
+import 'api.dart';
 
 class ChattingApi {
   final Dio _dio = ApiClient.dio;

@@ -3,7 +3,7 @@
 import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:saykoreanapp_f/api.dart'; // 전역 Dio: ApiClient.dio 사용
+import 'package:saykoreanapp_f/api/api.dart'; // 전역 Dio: ApiClient.dio 사용
 
 class TestPage extends StatefulWidget {
   final int testNo;

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatPage extends StatefulWidget {

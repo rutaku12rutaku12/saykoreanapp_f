@@ -1,10 +1,10 @@
 // lib/api/friends_api.dart
 
 import 'package:dio/dio.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 import '../models/friend.dart';
 import '../models/friend_request.dart';
-import '../api.dart';
+import 'api.dart';
 
 class FriendsApi {
   final Dio _dio = ApiClient.dio;

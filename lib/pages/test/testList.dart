@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:saykoreanapp_f/api.dart'; // ApiClient.dio
+import 'package:saykoreanapp_f/api/api.dart'; // ApiClient.dio
 import 'package:saykoreanapp_f/pages/test/test.dart';
 
 class TestListPage extends StatefulWidget {

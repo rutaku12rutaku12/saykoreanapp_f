@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GameApi {

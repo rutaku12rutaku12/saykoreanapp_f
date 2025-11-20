@@ -1,7 +1,7 @@
 // lib/pages/home/home_page.dart
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

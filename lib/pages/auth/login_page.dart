@@ -1,12 +1,13 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 
 import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
 import 'package:recaptcha_enterprise_flutter/recaptcha_action.dart';
@@ -37,10 +38,12 @@ class _LoginState extends State<LoginPage>{
   TextEditingController emailCon = TextEditingController();
   TextEditingController pwdCont = TextEditingController();
 
-  // 2. 자바와 통신
   // user02@example.com , pass#02!
-  void onLogin() async {
+
+  // 로그인 메소드
+  Future<void> onLogin() async {
     print("onLogin.exe");
+    // 2. 자바와 통신
     try {
       final sendData = { "email": emailCon.text, "password": pwdCont.text};
       print(sendData);
@@ -84,6 +87,7 @@ class _LoginState extends State<LoginPage>{
         //   MaterialPageRoute(builder: (content) => HomePage()),
         // );
         Navigator.pushReplacementNamed(context, '/home');
+        await onAttend(userNo);
       }
       else {
         print("로그인 실패: ${response.statusCode}");
@@ -103,6 +107,26 @@ class _LoginState extends State<LoginPage>{
     }
   } // c end
 
+  // 출석 메소드
+  Future<void> onAttend(userNo) async {
+    try{
+      final sendData = {"userNo":userNo};
+      print(sendData);
+      final response = await ApiClient.dio.post(
+        '/saykorean/attend',
+        data: sendData,
+        options: Options(
+          validateStatus: (status) =>true,
+        ),
+      );
+      if(response.statusCode == 200 && response.data != null && response.data == 1){
+        Fluttertoast.showToast(msg: "출석이 완료되었습니다.",backgroundColor: Colors.greenAccent);
+      }
+      else if( response.statusCode == 222 ){
+        Fluttertoast.showToast(msg: "이미 출석이 완료되었습니다.",backgroundColor: Colors.red);
+      }else{Fluttertoast.showToast(msg: "출석 체크 중 오류가 발생하였습니다.",backgroundColor: Colors.red);}
+    }catch(e){print(e);}
+  }
 
 
   @override

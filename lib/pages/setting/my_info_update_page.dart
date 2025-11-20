@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl_phone_field_v2/intl_phone_field.dart';
 import 'package:intl_phone_field_v2/phone_number.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/setting/myPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/setting/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/setting/genre.dart';
@@ -27,6 +27,8 @@ class _MyPageState extends State<MyPage> {
   // 1. 상태변수
   String nickName = "";
   String userDate = "";
+  dynamic attendDay = null;
+  dynamic MaxStreak = null;
   bool isLoading = true;
 
   bool _isDark = false; // 다크 모드 여부
@@ -69,6 +71,7 @@ class _MyPageState extends State<MyPage> {
         isLogin = true;
         print("로그인 중");
         onInfo(token);
+        findAttend();
       });
     } else {
       Navigator.pushReplacement(
@@ -95,6 +98,7 @@ class _MyPageState extends State<MyPage> {
         setState(() {
           nickName = response.data['nickName'] ?? '';
           userDate = response.data['userDate'] ?? '';
+
           isLoading = false;
         });
       } else if (response.statusCode == 400) {
@@ -122,6 +126,28 @@ class _MyPageState extends State<MyPage> {
         );
       }
     }
+  }
+
+  // 출석 일수 조회 메소드
+  void findAttend() async {
+    try{
+      final response = await ApiClient.dio.get(
+          '/saykorean/attend',
+      options: Options(
+        validateStatus: (status) => true
+        ),
+      );
+      if (response.statusCode == 200 && response.data != null ){
+        List<dynamic> attendList = response.data;
+
+        setState(() {
+          attendDay = attendList.length;
+
+
+        });
+      }
+
+    }catch(e){print(e);}
   }
 
   @override
@@ -199,6 +225,7 @@ class _MyPageState extends State<MyPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 닉네임
                     Row(
                       children: const [
                         Icon(Icons.person, color: brown, size: 20),
@@ -221,6 +248,8 @@ class _MyPageState extends State<MyPage> {
                         color: brown,
                       ),
                     ),
+
+                    // 가입일자
                     const SizedBox(height: 16),
                     Row(
                       children: const [
@@ -238,6 +267,54 @@ class _MyPageState extends State<MyPage> {
                     const SizedBox(height: 4),
                     Text(
                       userDate.isNotEmpty ? userDate : "정보 없음",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: brown,
+                      ),
+                    ),const SizedBox(height: 16),
+
+                    // TODO 총 출석 일수
+                    Row(
+                      children: const [
+                        Icon(Icons.calendar_today, color: brown, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          "총 출석 일수",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF9C7C68),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      attendDay == null ? "${attendDay}일" : "정보 없음",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: brown,
+                      ),
+                    ),const SizedBox(height: 16),
+
+                    // TODO 현재 연속 출석 일수
+                    Row(
+                      children: const [
+                        Icon(Icons.calendar_today, color: brown, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          "현재 연속 출석 일수",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF9C7C68),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      MaxStreak == null ? "${MaxStreak}일" : "정보 없음",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -405,8 +482,12 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      "",
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        color: Color(0xFF9C7C68),
+      ),
     );
   }
 }

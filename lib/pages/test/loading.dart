@@ -1,7 +1,7 @@
 // lib/pages/test/loading.dart
 
 import 'package:flutter/material.dart';
-import 'package:saykoreanapp_f/api.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});

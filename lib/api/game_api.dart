@@ -13,34 +13,34 @@ class GameApi {
   static const String _gameLogPath = '/saykorean/gamelog';
 
   // JWT 토큰 저장소
-  static String? _jwtToken;
+  // static String? _jwtToken;
   
   // [*] JWT 토큰 관리
 
   // JWT 토큰 저장
-  static Future<void> saveToken(String token) async {
-    _jwtToken = token;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jwt_token', token);
-    print('✅ JWT 토큰 저장 완료');
-  }
+  // static Future<void> saveToken(String token) async {
+  //   _jwtToken = token;
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setString('jwt_token', token);
+  //   print('✅ JWT 토큰 저장 완료');
+  // }
 
   // JWT 토큰 로드
-  static Future<void> loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _jwtToken = prefs.getString('jwt_token');
-    if (_jwtToken != null) {
-      print('✅ JWT 토큰 로드 완료');
-    }
-  }
+  // static Future<void> loadToken() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   _jwtToken = prefs.getString('jwt_token');
+  //   if (_jwtToken != null) {
+  //     print('✅ JWT 토큰 로드 완료');
+  //   }
+  // }
 
   // JWT 토큰 삭제 (로그아웃)
-  static Future<void> clearToken() async {
-    _jwtToken = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
-    print(('✅ JWT 토큰 삭제 완료'));
-  }
+  // static Future<void> clearToken() async {
+  //   _jwtToken = null;
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.remove('jwt_token');
+  //   print(('✅ JWT 토큰 삭제 완료'));
+  // }
 
   // 인증 헤더 추가
   static Map<String , dynamic> _getAuthHeaders() {
@@ -52,9 +52,10 @@ class GameApi {
     
     // [JWT 토큰 모드] 토큰이 있으면 Authorization 헤더 추가
     // ⚠️ Spring의 TEST_MODE = false로 전환 시 주석 해제
-    if (_jwtToken != null) {
-      return {'Authorization': 'Bearer $_jwtToken'};
-    }
+    // ✅ 토큰이 있으면 기존 헤더에 추가
+    // if (_jwtToken != null) {
+    //   headers['Authorization'] = 'Bearer $_jwtToken';
+    // }
     return headers;
   }
 

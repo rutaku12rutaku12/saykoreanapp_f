@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../api/chatting_api.dart';
-import '../../models/chat_room.dart';
+import 'chat_page.dart';
 
 class ChatRoomListPage extends StatefulWidget {
   final int myUserNo;
@@ -12,7 +12,7 @@ class ChatRoomListPage extends StatefulWidget {
 
 class _ChatRoomListPageState extends State<ChatRoomListPage> {
   final api = ChattingApi();
-  List<Map<String,dynamic>> rooms = [];
+  List<Map<String, dynamic>> rooms = [];
 
   @override
   void initState() {
@@ -20,43 +20,52 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
     loadRooms();
   }
 
+  // 탭을 다시 열 때 자동 갱신
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    loadRooms();
+  }
+
   Future<void> loadRooms() async {
-    if (!mounted) return;
     try {
       final list = await api.getMyRooms(widget.myUserNo);
-      if (!mounted) return;
-      setState(() => rooms = list);
+      if (mounted) {
+        setState(() => rooms = list);
+      }
     } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: loadRooms,
-        child: ListView.builder(
-          itemCount: rooms.length,
-          itemBuilder: (_, i) {
-            final r = rooms[i];
-            return ListTile(
-              title: Text(r['friendName']),
-              subtitle: Text(r['lastMessage'] ?? '대화 없음'),
-              trailing: Text(r['lastTime'] ?? ''),
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  "/chatRoom",
-                  arguments: {
-                    "roomNo": r['roomNo'],
-                    "friendName": r['friendName'],
-                    "friendNo": r['friendNo'],
-                    "myUserNo" : widget.myUserNo, //중요
-                  },
-                );
-              },
-            );
-          },
-        ),
+    return RefreshIndicator(
+      onRefresh: loadRooms,
+      child: ListView.builder(
+        itemCount: rooms.length,
+        itemBuilder: (_, i) {
+          final r = rooms[i];
+
+          return ListTile(
+            title: Text(r['friendName']),
+            subtitle: Text(r['lastMessage'] ?? '대화 없음'),
+            trailing: Text(r['lastTime'] ?? ''),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChatPage(
+                    roomNo: r['roomNo'],
+                    friendName: r['friendName'],
+                    myUserNo: widget.myUserNo,
+
+                    // 🔥 메시지 오면 리스트 갱신
+                    onMessageSent: loadRooms,
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

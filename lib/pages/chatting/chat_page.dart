@@ -8,11 +8,14 @@ class ChatPage extends StatefulWidget {
   final String friendName;
   final int myUserNo;
 
+  final VoidCallback? onMessageSent; //
+
   const ChatPage({
     super.key,
     required this.roomNo,
     required this.friendName,
     required this.myUserNo,
+    this.onMessageSent,
   });
 
   @override
@@ -74,6 +77,9 @@ class _ChatPageState extends State<ChatPage> {
             'time': decoded['time']
           });
         });
+        // ChatRoomListPage 갱신 요청
+        widget.onMessageSent?.call();
+
         _scrollToBottom();
       }
     });

@@ -64,40 +64,52 @@ class _TestPageState extends State<TestPage> {
     });
 
     try {
-      // [1] 다음 회차 조회
-      final roundRes = await ApiClient.dio.get(
-        "/saykorean/test/getnextround",
-        queryParameters: {"testNo": widget.testNo},
-      );
-      print("getnextround status = ${roundRes.statusCode}");
-      print("getnextround data   = ${roundRes.data}");
 
-      int nextRound = 1;
-      final data = roundRes.data;
-      if (data is int) {
-        nextRound = data;
-      } else if (data is Map && data['testRound'] is int) {
-        nextRound = data['testRound'] as int;
-      }
-      setState(() => testRound = nextRound);
-
-      // [2] 문항 로드 - 모드 분기
+      // [1] 문항 로드 - 모드 분기 :: 2번째에서 1번째로
       print("🎯 testMode = ${widget.testMode}");
       List<dynamic> list = [];
-      
+
       if (widget.testMode == "INFINITE") {
         // 무한모드 : 완료한 studyNo가 나오는 문항
         print("♾️ 무한모드 문항 로드 시작");
         list = await _loadInfiniteItems();
+        // testRound 0 설정 ( 무한모드는 회차 개념 없음 )
+        setState(() {
+          testRound = 0;
+        });
       } else if (widget.testMode == "HARD") {
         // 하드모드 : 전체 문항
         print("🔥 하드모드 문항 로드 시작");
         list = await _loadHardItems();
+        // testRound 0 설정 ( 하드모드는 회차 개념 없음 )
+        setState(() {
+          testRound = 0;
+        });
       } else {
         // 정규 시험
-        print("📝 정규 시험 문항 로드 시작");
+        print("📝 정기 시험 문항 로드 시작");
+
+        // [2] 다음 회차 조회
+        final roundRes = await ApiClient.dio.get(
+          "/saykorean/test/getnextround",
+          queryParameters: {"testNo": widget.testNo},
+        );
+        print("getnextround status = ${roundRes.statusCode}");
+        print("getnextround data   = ${roundRes.data}");
+
+        int nextRound = 1;
+        final data = roundRes.data;
+        if (data is int) {
+          nextRound = data;
+        } else if (data is Map && data['testRound'] is int) {
+          nextRound = data['testRound'] as int;
+        }
+        setState(() => testRound = nextRound);
+
         list = await _loadRegularItems();
+
       }
+
 
       print("✅ 로드된 문항 수: ${list.length}");
 
@@ -118,7 +130,7 @@ class _TestPageState extends State<TestPage> {
     }
   }
       
-  // [3-1] 문항 목록 조회 : 정규 시험 문항 로드
+  // 📝 [3-1] 정기 시험 문항 로드
   Future<List<dynamic>> _loadRegularItems() async {
       final res = await ApiClient.dio.get(
         "/saykorean/test/findtestitem",
@@ -142,7 +154,7 @@ class _TestPageState extends State<TestPage> {
   }
 
 
-  // 📚 [3-2] 문항 목록 조회 : 무한모드 문항 로드
+  // ♾️ [3-2] 무한모드 문항 로드
   Future<List<dynamic>> _loadInfiniteItems() async {
     final prefs = await SharedPreferences.getInstance();
     final storedIds = prefs.getStringList('studies') ?? const <String>[];
@@ -180,7 +192,7 @@ class _TestPageState extends State<TestPage> {
     return [];
   }
 
-  // 🔥 [3-3] 문항 목록 조회 : 하드모드 문항 로드
+  // 🔥 [3-3] 하드모드 문항 로드
   Future<List<dynamic>> _loadHardItems() async {
     print("🔥 하드모드: 전체 문항 로드");
 
@@ -214,6 +226,8 @@ class _TestPageState extends State<TestPage> {
   //   body: { testRound, selectedExamNo, userAnswer, langNo }
   //   resp: { score, isCorrect(1/0) }
   //
+
+  // 답안 제출
   Future<void> submitAnswer({int? selectedExamNo}) async {
     if (items.isEmpty) return;
     if (testRound == null) return;
@@ -233,8 +247,13 @@ class _TestPageState extends State<TestPage> {
       // 🔥 userNo는 이제 안 보냄. AuthUtil이 JWT/세션에서 읽어감.
     };
 
+    // 무한/하드모드: testItemNo가 없을 수 있으므로 임시 처리
+    final testItemNo = cur['testItemNo'] ?? 0;
+
+    // ✅ 무한/하드모드는 testNo가 0이므로 testItemNo 기반 URL 생성
+    final effectiveTestNo = widget.testNo > 0 ? widget.testNo : 1;
     final url =
-        "/saykorean/test/${widget.testNo}/items/${cur['testItemNo']}/answer";
+        "/saykorean/test/$effectiveTestNo/items/$testItemNo/answer";
 
     // 주관식: 로딩 페이지로 넘기기 (React와 동일 플로우)
     if (isSubjective && selectedExamNo == null) {
@@ -246,7 +265,7 @@ class _TestPageState extends State<TestPage> {
         arguments: {
           "action": "submitAnswer",
           "payload": {
-            "testNo": widget.testNo,
+            "testNo": effectiveTestNo,
             "url": url,
             "body": body,
           },
@@ -308,6 +327,14 @@ class _TestPageState extends State<TestPage> {
   }
 
   void goNext() {
+    // ✅ 무한/하드모드 : 한 문제 틀리면 게임 오버
+    if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
+      if (feedback != null && !feedback!['correct']) {
+        _showGameOverDialog();
+        return;
+      }
+    }
+
     if (idx < items.length - 1) {
       setState(() {
         idx++;
@@ -315,19 +342,17 @@ class _TestPageState extends State<TestPage> {
         feedback = null;
       });
     } else {
-      // 무한모드/하드모드에서는 틀리면 종료
-      if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
-          if (feedback != null && !feedback!['correct']) {
-            _showGameOverDialog();
-            return;
-          }
+      // 정기시험 : 결과 ㅍ에ㅣ지로
+      if (widget.testMode == "REGULAR") {
+        Navigator.pushNamed(context, "/testresult/${widget.testNo}");
+      } else {
+        // 무한/하드모드 : 모든 문제 정답 시
+        _showVictoryDialog();
       }
-      
-      Navigator.pushNamed(context, "/testresult/${widget.testNo}");
     }
   }
 
-  // 무한모드/하드모드 종료시 다이얼로그
+  // 무한모드/하드모드 오답 시 종료 다이얼로그
   void _showGameOverDialog() {
     showDialog(
         context: context,
@@ -349,6 +374,31 @@ class _TestPageState extends State<TestPage> {
             ),
           ],
         )
+    );
+  }
+
+  // 무한모드/하드모드 모든 문제 정답 시 다이얼로그
+  void _showVictoryDialog() {
+    showDialog(
+        context: context, 
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text("🎉 완벽합니다!"),
+          content: Text(
+            widget.testMode == "INFINITE"
+                ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
+                : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!"
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text("확인"),
+            ),
+          ],
+        ),
     );
   }
 
@@ -384,10 +434,10 @@ class _TestPageState extends State<TestPage> {
         iconTheme: const IconThemeData(color: brown),
         title: Text(
           widget.testMode == "INFINITE"
-              ? '무한모드 시험'
+              ? '♾️ 무한모드'
               : widget.testMode == "HARD"
-              ? '하드모드 시험'
-              : '시험 보기',
+              ? '🔥 하드모드'
+              : '📝 정기시험',
           style: const TextStyle(
             color: brown,
             fontWeight: FontWeight.w700,
@@ -414,10 +464,10 @@ class _TestPageState extends State<TestPage> {
               // 상단 타이틀
               Text(
                 widget.testMode == "INFINITE"
-                    ? "무한모드"
+                    ? "♾️ 무한모드"
                     : widget.testMode == "HARD"
-                    ? "하드모드"
-                    : "오늘의 시험",
+                    ? "🔥 하드모드"
+                    : "📝 오늘의 시험",
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,

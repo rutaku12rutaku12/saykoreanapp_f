@@ -1,13 +1,3 @@
-<!-- 개선해야할 거
-    1) 다시 시작 시 하트가 검은색인 채로 렌더링 되는 문제
-    2) 터치 화살표바 시인성 개선 (버튼이 너무 커서 플레이어가 캐릭터 위치를 제대로 볼 수 없음)
-    3) 보스 기믹 추가    1. 운율수호자 (자음, 모음, 자음, 모음, 자음 순서대로 한글을 받아내야 합니다. 10번 연속으로 성공하면 기믹을 통과합니다.)
-                        2. 단어조각가 (자음과 모음을 단어가 되도록 받아야합니다. 3번 성공하면 기믹을 통과합니다.)
-                        3. 혼종추방자 (15초 동안 이중모음, 이중자음을 피하고 다른 것만 받아야함)
-                        4. 받침사랑꾼 ('받침'이 될 수 있는 자음만 7번 연속 받아야 통과)
-    4) 하트, 쉴드 등 아이템 추가
--->
-
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -26,7 +16,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            position: fixed; /* 스크롤 방지 */
+            position: fixed;
         }
 
         body {
@@ -40,8 +30,8 @@
         .game-container {
             width: 100%;
             max-width: 400px;
-            height: 600px; /* 명확한 높이 지정 */
-            max-height: 100vh; /* 화면을 넘지 않도록 */
+            height: 600px;
+            max-height: 100vh;
             background: #fff;
             border-radius: 20px;
             overflow: hidden;
@@ -86,7 +76,6 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* 보스 기믹 알림 */
         .boss-alert {
             position: absolute;
             top: 0;
@@ -179,7 +168,7 @@
 
         .game-canvas {
             width: 100%;
-            flex: 1; /* 남은 공간 모두 사용 */
+            flex: 1;
             position: relative;
             background-image: url('./repeat_bg.png');
             background-size: cover;
@@ -193,6 +182,31 @@
             width: 60px;
             height: 60px;
             transition: left 0.1s linear;
+        }
+
+        /* ✅ 보호막 이펙트 추가 */
+        .shield-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border: 4px solid #00ff00;
+            border-radius: 50%;
+            animation: shieldPulse 1s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shieldPulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
         }
 
         .falling-item {
@@ -312,7 +326,6 @@
             transform: scale(1.1);
         }
 
-        /* 개선된 모바일 컨트롤 - 시인성 향상 */
         .mobile-controls {
             position: absolute;
             bottom: 10px;
@@ -340,23 +353,55 @@
             transform: scale(0.95);
         }
 
-        /* 아이템 효과 표시 */
+        /* ✅ 보호막 획득 이펙트 개선 */
         .item-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5),
+                         0 0 20px rgba(0,255,0,0.5);
+            z-index: 80;
+            animation: effectFadeOut 1.5s forwards;
+        }
+
+        @keyframes effectFadeOut {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -100%) scale(1.5) rotate(360deg);
+            }
+        }
+
+        /* ✅ 데미지 이펙트 */
+        .damage-effect {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 48px;
             font-weight: bold;
-            color: #00ff00;
+            color: #ff0000;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             z-index: 80;
-            animation: effectFadeOut 1s forwards;
+            animation: damageShake 0.5s forwards;
         }
 
-        @keyframes effectFadeOut {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -80%) scale(1.5); }
+        @keyframes damageShake {
+            0%, 100% { transform: translate(-50%, -50%); opacity: 1; }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-45%, -50%); }
+            20%, 40%, 60%, 80% { transform: translate(-55%, -50%); }
+            100% { opacity: 0; }
         }
     </style>
 </head>
@@ -369,7 +414,6 @@
 <div class="game-container">
     <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
 
-    <!-- 시작 화면 -->
     <div class="start-screen" id="startScreen">
         <h2>🎮 토돌이 한글 받기</h2>
         <div class="instructions">
@@ -382,7 +426,6 @@
         <button class="btn" onclick="startGame()">게임 시작</button>
     </div>
 
-    <!-- 보스 기믹 알림 -->
     <div class="boss-alert" id="bossAlert">
         <img class="boss-character" id="bossCharacter" src="" alt="Boss">
         <div class="boss-title" id="bossTitle"></div>
@@ -390,7 +433,6 @@
         <div class="boss-progress" id="bossProgress"></div>
     </div>
 
-    <!-- 게임 헤더 -->
     <div class="game-header">
         <div class="score">점수: <span id="score">0</span></div>
         <div class="hearts" id="hearts">
@@ -400,10 +442,8 @@
         </div>
     </div>
 
-    <!-- 턴 표시 -->
     <div class="turn-indicator" id="turnIndicator">자음 턴</div>
 
-    <!-- 게임 캔버스 -->
     <div class="game-canvas" id="gameCanvas">
         <div class="character" id="character">
             <img id="standingTodoli" class="character-img" src="standing_todoli.png" alt="Standing Todoli" style="display: block;">
@@ -412,14 +452,12 @@
         </div>
     </div>
 
-    <!-- 게임 오버 화면 -->
     <div class="game-over-screen" id="gameOverScreen" style="display: none;">
         <h2>게임 오버!</h2>
         <div class="final-score">최종 점수: <span id="finalScore">0</span></div>
         <button class="btn" onclick="restartGame()">다시 시작</button>
     </div>
 
-    <!-- 모바일 터치 컨트롤 (개선됨) -->
     <div class="mobile-controls">
         <button onmousedown="moveLeft()" onmouseup="stopMove()" ontouchstart="moveLeft()" ontouchend="stopMove()">◀</button>
         <button onmousedown="moveRight()" onmouseup="stopMove()" ontouchstart="moveRight()" ontouchend="stopMove()">▶</button>
@@ -442,7 +480,6 @@
         }
     }
 
-    // 보스 기믹 데이터
     const bossMechanics = {
         rhythm: {
             name: '운율수호자',
@@ -583,6 +620,7 @@
     function restartGame() {
         gameOverScreen.style.display = 'none';
         document.querySelectorAll('.falling-item').forEach(item => item.remove());
+        document.querySelectorAll('.shield-glow').forEach(shield => shield.remove());
         startGame();
     }
 
@@ -805,12 +843,33 @@
         }, 1000);
     }
 
+    // ✅ 보호막 시각 효과 표시
+    function showShieldEffect() {
+        // 기존 보호막 제거
+        document.querySelectorAll('.shield-glow').forEach(el => el.remove());
+
+        if (gameState.shield > 0) {
+            const shieldGlow = document.createElement('div');
+            shieldGlow.className = 'shield-glow';
+            character.appendChild(shieldGlow);
+        }
+    }
+
     function showItemEffect(text) {
         const effect = document.createElement('div');
         effect.className = 'item-effect';
         effect.textContent = text;
         gameCanvas.appendChild(effect);
-        setTimeout(() => effect.remove(), 1000);
+        setTimeout(() => effect.remove(), 1500);
+    }
+
+    // ✅ 데미지 효과 표시
+    function showDamageEffect() {
+        const effect = document.createElement('div');
+        effect.className = 'damage-effect';
+        effect.textContent = '💔 -1';
+        gameCanvas.appendChild(effect);
+        setTimeout(() => effect.remove(), 500);
     }
 
     function gameLoop() {
@@ -862,12 +921,10 @@
 
         character.style.left = gameState.characterPosition + 'px';
 
-        // ✅ 충돌 판정 수정
         gameState.fallingItems.forEach((item, index) => {
             item.y += 3;
             item.element.style.top = item.y + 'px';
 
-            // ✅ 올바른 히트박스 계산
             const charRect = {
                 left: gameState.characterPosition + 10,
                 right: gameState.characterPosition + 50,
@@ -910,8 +967,9 @@
                             updateHearts();
                         }
                     } else if (itemType === 'shield') {
-                        gameState.shield = 3;
-                        showItemEffect('🛡️ 보호막!');
+                        gameState.shield = 1;
+                        showItemEffect('🛡️ 보호막 획득!');
+                        showShieldEffect(); // ✅ 보호막 시각 효과
                     }
                     item.element.style.background = 'rgba(0, 255, 0, 0.5)';
                 } else {
@@ -919,24 +977,25 @@
                     const letter = item.element.dataset.letter;
                     const isDouble = item.element.dataset.isDouble === 'true';
 
-                    const bossCheck = checkBossMechanic({
-                        type: itemType,
-                        letter: letter,
-                        isDouble: isDouble
-                    });
+                    // ✅ 보스 체크
+                    const bossCheck = gameState.bossActive ?
+                        checkBossMechanic({ type: itemType, letter: letter, isDouble: isDouble }) :
+                        true;
 
-                    // ✅ 중요: 일반 턴 체크 (보스 아닐 때만)
-                    const isCorrect = !gameState.bossActive && itemType === gameState.currentTurn;
+                    // ✅ 일반 턴 체크 (보스 아닐 때만)
+                    const isCorrectTurn = !gameState.bossActive && itemType === gameState.currentTurn;
 
-                    console.log('충돌:', {
+                    console.log('🎯 충돌 체크:', {
                         itemType,
                         currentTurn: gameState.currentTurn,
                         bossActive: gameState.bossActive,
                         bossCheck,
-                        isCorrect
+                        isCorrectTurn,
+                        final: (gameState.bossActive && bossCheck) || (!gameState.bossActive && isCorrectTurn)
                     });
 
-                    if (bossCheck || isCorrect) {
+                    // ✅ 최종 판정: (보스 중이면 보스 체크) 또는 (일반 턴이면 턴 체크)
+                    if ((gameState.bossActive && bossCheck) || (!gameState.bossActive && isCorrectTurn)) {
                         gameState.score += 10;
                         if (!gameState.bossActive) {
                             gameState.itemsCaught++;
@@ -948,11 +1007,17 @@
                             startTurnCountdown();
                         }
                     } else {
+                        // ✅ 잘못된 아이템을 먹었을 때
                         if (gameState.shield > 0) {
                             gameState.shield--;
-                            showItemEffect('🛡️ -1');
+                            showItemEffect('🛡️ 보호막 -1');
+                            if (gameState.shield === 0) {
+                                // 보호막 소진 시 시각 효과 제거
+                                document.querySelectorAll('.shield-glow').forEach(el => el.remove());
+                            }
                         } else {
                             gameState.hearts--;
+                            showDamageEffect(); // ✅ 데미지 이펙트
                             updateHearts();
                             if (gameState.hearts <= 0) {
                                 gameOver();

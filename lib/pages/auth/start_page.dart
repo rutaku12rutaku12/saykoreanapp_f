@@ -162,7 +162,6 @@ class _TitleFancy extends StatelessWidget {
       style: const TextStyle(
         fontSize: 40,
         fontWeight: FontWeight.w800,
-        color: color,
         height: 1.2,
         letterSpacing: 0.5,
         shadows: [

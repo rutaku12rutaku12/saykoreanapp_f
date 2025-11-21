@@ -30,8 +30,8 @@ class _MyPageState extends State<MyPage> {
   dynamic maxStreak;
   bool isLoading = true;
 
-  bool _isDark = false;      // 다크 모드 스위치
-  bool _isMint = false;      // 민트 모드 스위치
+  bool _isDark = false; // 다크 모드 스위치
+  bool _isMint = false; // 민트 모드 스위치
 
   bool? isLogin;
 
@@ -44,17 +44,16 @@ class _MyPageState extends State<MyPage> {
 
   Future<void> _initThemeFromGlobal() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedMode = prefs.getString('themeMode'); // light/dark/mint/null
+    final savedMode = prefs.getString('themeMode'); // light/dark/system
+    final savedColor = prefs.getString('themeColor'); // default/mint
 
     setState(() {
       _isDark = (savedMode == 'dark');
-      _isMint = (savedMode == 'mint');
+      _isMint = (savedColor == 'mint');
     });
   }
 
   Future<void> _toggleDark(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-
     setState(() {
       _isDark = value;
       if (value) {
@@ -63,22 +62,16 @@ class _MyPageState extends State<MyPage> {
     });
 
     if (value) {
-      await prefs.setString('themeMode', 'dark');
-      themeModeNotifier.value = ThemeMode.dark;
+      // 다크 모드 ON
+      await setThemeMode(ThemeMode.dark); // main.dart 전역 함수
+      await setThemeColor('default'); // 다크일 때는 민트 색상 OFF
     } else {
-      // 다크 끄면 기본 라이트 (민트 스위치는 따로 처리)
-      if (_isMint) {
-        await prefs.setString('themeMode', 'mint');
-      } else {
-        await prefs.setString('themeMode', 'light');
-      }
-      themeModeNotifier.value = ThemeMode.light;
+      // 다크 모드 OFF → 라이트 모드
+      await setThemeMode(ThemeMode.light);
     }
   }
 
   Future<void> _toggleMint(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-
     setState(() {
       _isMint = value;
       if (value) {
@@ -87,13 +80,12 @@ class _MyPageState extends State<MyPage> {
     });
 
     if (value) {
-      await prefs.setString('themeMode', 'mint');
-      // 민트는 라이트 베이스
-      themeModeNotifier.value = ThemeMode.light;
+      // 민트 ON → 라이트 + 민트 색상
+      await setThemeMode(ThemeMode.light);
+      await setThemeColor('mint');
     } else {
-      // 민트 OFF → 라이트(혹은 다크) 유지, 여기서는 라이트로
-      await prefs.setString('themeMode', _isDark ? 'dark' : 'light');
-      themeModeNotifier.value = _isDark ? ThemeMode.dark : ThemeMode.light;
+      // 민트 OFF → 기본 라이트 색상
+      await setThemeColor('default');
     }
   }
 
@@ -508,6 +500,8 @@ class _MyPageState extends State<MyPage> {
   }
 
   Widget _buildDarkToggleCard(Color brown) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -527,12 +521,12 @@ class _MyPageState extends State<MyPage> {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE5CF),
+              color: scheme.secondaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               _isDark ? Icons.dark_mode : Icons.light_mode,
-              color: brown,
+              color: scheme.onSecondaryContainer,
               size: 22,
             ),
           ),
@@ -572,6 +566,7 @@ class _MyPageState extends State<MyPage> {
   }
 
   Widget _buildMintToggleCard() {
+    final scheme = Theme.of(context).colorScheme;
     const mintDeep = Color(0xFF2F7A69);
 
     return Container(
@@ -594,12 +589,12 @@ class _MyPageState extends State<MyPage> {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFFE0FFF5), // 민트 느낌
+              color: scheme.secondaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.palette_rounded,
-              color: mintDeep,
+              color: scheme.onSecondaryContainer,
               size: 22,
             ),
           ),
@@ -648,6 +643,7 @@ class _MyPageState extends State<MyPage> {
 // ─────────────────────────────────────────────
 // 작은 컴포넌트들
 // ─────────────────────────────────────────────
+
 class _SectionTitle extends StatelessWidget {
   final String text;
   const _SectionTitle(this.text, {super.key});
@@ -681,6 +677,7 @@ class _SettingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const brown = Color(0xFF6B4E42);
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -700,14 +697,19 @@ class _SettingCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // 아이콘 네모
             Container(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFFFE5CF),
+                color: scheme.secondaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: brown, size: 22),
+              child: Icon(
+                icon,
+                color: scheme.onSecondaryContainer,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(

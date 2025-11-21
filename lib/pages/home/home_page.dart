@@ -77,12 +77,13 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    // StartPage와 동일한 구조
-    return Scaffold(
+    return Scaffold( //
       backgroundColor: bg,
       body: Stack(
         children: [
-          // ── 상단 물결 (라이트: PNG, 다크: 커스텀 웨이브)
+          // ── 상단 물결
+          // 라이트 모드: 아무것도 안 그림 (물결 제거)
+          // 다크 모드: 기존처럼 커스텀 웨이브 유지
           Positioned(
             top: 0,
             left: 0,
@@ -90,13 +91,12 @@ class _HomePageState extends State<HomePage> {
             height: size.height * 0.22,
             child: isDark
                 ? CustomPaint(painter: _WavePainterDark(scheme))
-                : Image.asset(
-              _bgWave,
-              fit: BoxFit.cover,
-            ),
+                : const SizedBox.shrink(),
           ),
 
-          // ── 하단 물결 (라이트/다크 분기)
+          // ── 하단 물결
+          // 라이트 모드: 물결 제거
+          // 다크 모드: 기존 커스텀 웨이브 유지
           Positioned(
             left: 0,
             right: 0,
@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage> {
             height: size.height * 0.18,
             child: isDark
                 ? CustomPaint(painter: _BottomWaveDark(scheme))
-                : CustomPaint(painter: _BottomWaveLight()),
+                : const SizedBox.shrink(),
           ),
 
           // ── 메인 컨텐츠 영역
@@ -115,12 +115,8 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 타이틀: "재밌는 한국어"
                     const _TitleFancy(),
-
                     const SizedBox(height: 16),
-
-                    // 마스코트
                     AspectRatio(
                       aspectRatio: 1.6,
                       child: Image.asset(
@@ -128,10 +124,8 @@ class _HomePageState extends State<HomePage> {
                         fit: BoxFit.contain,
                       ),
                     ),
-
                     const SizedBox(height: 32),
 
-                    // 로그인 상태일 때만 로그아웃 버튼 노출
                     if (isLogin)
                       SizedBox(
                         width: double.infinity,
@@ -188,6 +182,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

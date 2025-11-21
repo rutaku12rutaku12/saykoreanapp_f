@@ -6,10 +6,12 @@ import 'package:saykoreanapp_f/main.dart';
 // ------------------------------
 // 전역 테마 상태
 // ------------------------------
+
+// light / dark / system
 final ValueNotifier<ThemeMode> themeModeNotifier =
 ValueNotifier<ThemeMode>(ThemeMode.system);
 
-// light / dark / mint
+// light / dark / mint (커스텀 색 테마용)
 final ValueNotifier<String> customThemeNotifier =
 ValueNotifier<String>("light");
 
@@ -43,6 +45,7 @@ Future<void> main() async {
   // ------------------------------
   final savedCustomTheme = prefs.getString('customTheme');
   if (savedCustomTheme != null) {
+    // 필요하면 여기서 값 검증해도 됨 (예: ['light','dark','mint'] 안에 있을 때만 대입)
     customThemeNotifier.value = savedCustomTheme;
   }
 

@@ -1,6 +1,7 @@
 // lib/pages/test/loading.dart
 
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 
 class LoadingPage extends StatefulWidget {
@@ -23,52 +24,66 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   Future<void> _startGrading() async {
-    // TestPage에서 넘긴 arguments 받기
-    final args =
-    ModalRoute.of(context)?.settings.arguments as Map<dynamic, dynamic>?;
+    final rawArgs = ModalRoute.of(context)?.settings.arguments;
 
-    final action = args?['action'];
-    final payload = args?['payload'] as Map<dynamic, dynamic>?;
-
-    if (action != 'submitAnswer' || payload == null) {
-      setState(() {
-        _message = '잘못된 접근입니다.';
-      });
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) Navigator.pop(context);
+    if (rawArgs is! Map) {
+      if (mounted) {
+        Navigator.pop(context, {
+          'ok': false,
+          'error': '잘못된 접근입니다. (args 타입)',
+        });
+      }
       return;
     }
 
-    final String url = payload['url'] as String;
-    final dynamic body = payload['body'];
-    final int testNo = payload['testNo'] as int;
+    final args = rawArgs as Map;
+    final action = args['action'];
+    final payload = args['payload'];
+
+    if (action != 'submitAnswer' || payload is! Map) {
+      if (mounted) {
+        Navigator.pop(context, {
+          'ok': false,
+          'error': '잘못된 접근입니다. (payload)',
+        });
+      }
+      return;
+    }
+
+    final p = payload as Map;
+    final String url = p['url'] as String;
+    final dynamic body = p['body'];
 
     try {
       final res = await ApiClient.dio.post(url, data: body);
-      // print("▶ loading submitAnswer status = ${res.statusCode}");
-      // print("▶ loading submitAnswer data   = ${res.data}");
 
       if (!mounted) return;
 
-      // React처럼 채점 끝나면 결과 페이지로 이동
-      Navigator.pushReplacementNamed(
-        context,
-        "/testresult/$testNo",
-        arguments: res.data, // 필요하면 결과 페이지에서 arguments로 사용
-      );
+      Navigator.pop(context, {
+        'ok': true,
+        'data': res.data,
+        'statusCode': res.statusCode,
+      });
+    } on DioException catch (e) {
+      print('loading.dart DioException: '
+          'type=${e.type}, status=${e.response?.statusCode}, data=${e.response?.data}');
+
+      if (!mounted) return;
+      Navigator.pop(context, {
+        'ok': false,
+        'error': e.message ?? e.toString(),
+      });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _message = '채점 중 오류가 발생했습니다.';
+      Navigator.pop(context, {
+        'ok': false,
+        'error': e.toString(),
       });
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const cream = Color(0xFFFFF9F0);
     const brown = Color(0xFF6B4E42);
 
     return Scaffold(

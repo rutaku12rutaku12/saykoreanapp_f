@@ -8,6 +8,7 @@ import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api/api.dart';
+import 'package:saykoreanapp_f/pages/auth/social_login_webview.dart';
 
 import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
 import 'package:recaptcha_enterprise_flutter/recaptcha_action.dart';
@@ -164,10 +165,35 @@ class _LoginState extends State<LoginPage>{
                   MaterialPageRoute(builder: (context) => SignupPage())),
             }, child: Text("회원가입") ),
 
-            SizedBox( height: 20,),
-            ElevatedButton(onPressed: (){}, child: Text("카카오로그인 예정")),
-            SizedBox( height: 20,) ,
-            ElevatedButton(onPressed: (){}, child: Text("구글 로그인 예정")),
+            // SizedBox( height: 20,),
+            // ElevatedButton(
+            //     onPressed: () {
+            //       Navigator.push(
+            //         context,
+            //         MaterialPageRoute(
+            //           builder: (_) => SocialLoginWebView(
+            //             loginUrl: "http://10.0.2.2:8080/oauth2/authorization/kakao",
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //     child: Text("카카오 로그인")
+            // ),
+            //
+            // SizedBox(height: 20),
+            // ElevatedButton(
+            //     onPressed: () {
+            //       Navigator.push(
+            //         context,
+            //         MaterialPageRoute(
+            //           builder: (_) => SocialLoginWebView(
+            //             loginUrl: "http://10.0.2.2:8080/oauth2/authorization/google",
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //     child: Text("구글 로그인")
+            // ),
           ],
         ), // c end
       ), // c end

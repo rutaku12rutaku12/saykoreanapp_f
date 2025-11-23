@@ -61,24 +61,31 @@ class _StorePageState extends State<StorePage> {
   Future<int> _fetchPointBalance() async {
     try {
       final res = await ApiClient.dio.get(
-        '/saykorean/point/balance',
+        '/saykorean/store/point',
         options: Options(validateStatus: (status) => true),
       );
 
+      debugPrint('[Store] status = ${res.statusCode}, data = ${res.data}');
+
       if (res.statusCode == 200) {
         final data = res.data;
-        if (data is Map && data['point'] != null) {
-          return int.tryParse(data['point'].toString()) ?? 0;
-        } else if (data is int) {
+        if (data is int) {
           return data;
         }
+        if (data is String) {
+          return int.tryParse(data) ?? 0;
+        }
       }
+
+      // 200이 아닌 경우에도 뭘 받았는지 보고 싶으면 여기서도 출력
       return 0;
     } catch (e) {
       debugPrint('point balance fetch error: $e');
       return 0;
     }
   }
+
+
 
   // ─────────────────────────────────────────────────────────────────────────
   // 다크 테마 구매 API 호출

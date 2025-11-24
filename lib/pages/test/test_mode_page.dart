@@ -1,5 +1,5 @@
 // lib/pages/test/test_mode_page.dart
-//
+
 // ✅ 시험 모드 선택 페이지
 // - 정기시험 : 관리자가 만든 주제별 시험 목록
 // - 무한모드 : 완료한 주제의 모든 문항(틀릴 때까지)
@@ -201,7 +201,7 @@ class _TestModePageState extends State<TestModePage> {
 
     if (confirm != true) return;
 
-    // TestPage로 이동 (testNo는 0, testMode는 "HARD")
+    // Testpage로 이동 (testNo는 0, testMode는 "HARD")
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -235,12 +235,21 @@ class _TestModePageState extends State<TestModePage> {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
+    final bg = theme.scaffoldBackgroundColor;
+
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text('시험 모드 선택'),
+        title: Text(
+          '시험 모드 선택',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: scheme.onSurface,
+          ),
+        ),
+        backgroundColor: bg,
         elevation: 0,
-        // AppBar 색도 테마에게 맡기기 (이미 MyApp에서 지정)
+        foregroundColor: scheme.onSurface,
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -248,73 +257,7 @@ class _TestModePageState extends State<TestModePage> {
           ? _buildError(theme, scheme)
           : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 무한모드 카드
-            _buildModeCard(
-              theme: theme,
-              scheme: scheme,
-              icon: '♾️',
-              title: '무한모드',
-              description: '완료한 주제에서 틀릴 때까지 도전!',
-              color: const Color(0xFFFF9800),
-            ),
-            const SizedBox(height: 16),
-
-            // 하드모드 카드
-            _buildModeCard(
-              theme: theme,
-              scheme: scheme,
-              icon: '🔥',
-              title: '하드모드',
-              description: '전체 문항에서 틀릴 때까지 도전!',
-              color: const Color(0xFFF44336),
-            ),
-            const SizedBox(height: 32),
-
-            // 정기시험 섹션
-            Text(
-              '📚 정기시험',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isDark
-                    ? scheme.onSurface
-                    : const Color(0xFF6B4E42),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '주제별로 체계적인 학습을 진행해보세요',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark
-                    ? scheme.onSurface.withOpacity(0.7)
-                    : const Color(0xFF9C7C68),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 정기시험 목록
-            if (_regularTests.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Text(
-                    '완료한 주제의 정기시험이 없습니다.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurface.withOpacity(0.5),
-                    ),
-                  ),
-                ),
-              )
-            else
-              ..._regularTests.map((test) => _buildTestCard(
-                theme: theme,
-                scheme: scheme,
-                test: test,
-              )),
-          ],
-        ),
+        child: _buildContent(theme, scheme, isDark),
       ),
     );
   }
@@ -339,53 +282,126 @@ class _TestModePageState extends State<TestModePage> {
     );
   }
 
+  Widget _buildContent(ThemeData theme, ColorScheme scheme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 무한모드 카드 (포인트 컬러 = primary)
+        _buildModeCard(
+          theme: theme,
+          scheme: scheme,
+          isDark: isDark,
+          icon: '♾️',
+          title: '무한모드',
+          description: '완료한 주제에서 틀릴 때까지 도전!',
+          accentColor: scheme.primary,
+          onTap: _startInfiniteMode,
+        ),
+        const SizedBox(height: 16),
+
+        // 하드모드 카드 (포인트 컬러 = error)
+        _buildModeCard(
+          theme: theme,
+          scheme: scheme,
+          isDark: isDark,
+          icon: '🔥',
+          title: '하드모드',
+          description: '전체 문항에서 틀릴 때까지 도전!',
+          accentColor: scheme.error,
+          onTap: _startHardMode,
+        ),
+        const SizedBox(height: 32),
+
+        // 정기시험 섹션
+        Text(
+          '📚 정기시험',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: scheme.primary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '주제별로 체계적인 학습을 진행해보세요',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurface.withOpacity(0.6),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 정기시험 목록
+        if (_regularTests.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Text(
+                '완료한 주제의 정기시험이 없습니다.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            ),
+          )
+        else
+          ..._regularTests.map((test) => _buildTestCard(theme, scheme, test)),
+      ],
+    );
+  }
+
   Widget _buildModeCard({
     required ThemeData theme,
     required ColorScheme scheme,
+    required bool isDark,
     required String icon,
     required String title,
     required String description,
-    required Color color,
+    required Color accentColor,
+    required VoidCallback onTap,
   }) {
-    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = scheme.surface;
+    final iconBoxColor = scheme.primaryContainer;
+    final gradientStart = accentColor.withOpacity(0.1);
+    final gradientEnd = accentColor.withOpacity(0.02);
+    final titleColor = accentColor;
+    final descColor = scheme.onSurface.withOpacity(0.75);
 
     return Material(
-      color: isDark ? scheme.surface : scheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      elevation: 3,
+      color: cardColor,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 2,
       child: InkWell(
-        onTap: () {
-          if (title == '무한모드') {
-            _startInfiniteMode();
-          } else if (title == '하드모드') {
-            _startHardMode();
-          }
-        },
-        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             gradient: LinearGradient(
-              colors: [
-                color.withOpacity(0.10),
-                color.withOpacity(0.03),
-              ],
+              colors: [gradientStart, gradientEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: color.withOpacity(0.2),
+              color: accentColor.withOpacity(0.2),
             ),
           ),
           child: Row(
             children: [
+              // 아이콘 박스
               Container(
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
+                  color: iconBoxColor,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Center(
                   child: Text(
@@ -395,6 +411,8 @@ class _TestModePageState extends State<TestModePage> {
                 ),
               ),
               const SizedBox(width: 16),
+
+              // 텍스트 영역
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,7 +422,7 @@ class _TestModePageState extends State<TestModePage> {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: color,
+                        color: titleColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -412,15 +430,16 @@ class _TestModePageState extends State<TestModePage> {
                       description,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 14,
-                        color: scheme.onSurface.withOpacity(0.7),
+                        color: descColor,
                       ),
                     ),
                   ],
                 ),
               ),
+
               Icon(
                 Icons.arrow_forward_ios,
-                color: color,
+                color: accentColor,
                 size: 20,
               ),
             ],
@@ -430,35 +449,23 @@ class _TestModePageState extends State<TestModePage> {
     );
   }
 
-  Widget _buildTestCard({
-    required ThemeData theme,
-    required ColorScheme scheme,
-    required dynamic test,
-  }) {
+  Widget _buildTestCard(
+      ThemeData theme, ColorScheme scheme, dynamic test) {
     final testNo = test['testNo'] ?? 0;
     final title =
     (test['testTitleSelected'] ?? test['testTitle'] ?? '시험 #$testNo')
         .toString();
 
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = isDark ? scheme.surface : scheme.surface;
-    final borderColor =
-    isDark ? scheme.outline.withOpacity(0.4) : scheme.outlineVariant;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: cardColor,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(12),
-        elevation: 2,
+        elevation: 1,
         child: InkWell(
           onTap: () => _onTapRegularTest(test),
           borderRadius: BorderRadius.circular(12),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor),
-            ),
+          child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
@@ -481,7 +488,7 @@ class _TestModePageState extends State<TestModePage> {
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 16,
-                  color: scheme.onSurface.withOpacity(0.5),
+                  color: scheme.outline,
                 ),
               ],
             ),

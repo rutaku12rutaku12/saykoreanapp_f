@@ -111,8 +111,26 @@ class _RankingState extends State<Ranking> {
   }
 
   // 탭 버튼 (정확도 / 도전 / 끈기 / 게임 / 출석 / 포인트)
-  Widget _buildTabButton(String type, String label, String emoji) {
+  Widget _buildTabButton(
+      ThemeData theme,
+      ColorScheme scheme,
+      bool isDark,
+      String type,
+      String label,
+      String emoji,
+      ) {
     final bool isActive = _rankType == type;
+
+    final Color activeBg = scheme.primaryContainer; // 민트/브라운 테마에 맞게 자동
+    final Color inactiveBg =
+    isDark ? scheme.surface : scheme.surface; // 은은한 배경
+    final Color borderColor =
+    isActive ? scheme.primary : scheme.outlineVariant;
+    final Color activeTextColor =
+    isDark ? scheme.onPrimaryContainer : scheme.primary;
+    final Color inactiveTextColor =
+    scheme.onSurface.withOpacity(0.6);
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
@@ -128,17 +146,15 @@ class _RankingState extends State<Ranking> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: isActive ? const Color(0xFFFFE5CF) : Colors.white,
+              color: isActive ? activeBg : inactiveBg,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: isActive ? _brown : const Color(0xFFE0C9B5),
-              ),
+              border: Border.all(color: borderColor),
             ),
             child: Center(
               child: Text(
                 "$emoji $label",
                 style: TextStyle(
-                  color: isActive ? _brown : const Color(0xFF9C7C68),
+                  color: isActive ? activeTextColor : inactiveTextColor,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                   fontSize: 13,
                 ),
@@ -160,22 +176,28 @@ class _RankingState extends State<Ranking> {
     }
 
     if (_error != null) {
+      final theme = Theme.of(context);
+      final scheme = theme.colorScheme;
+
       return Padding(
         padding: const EdgeInsets.only(top: 16),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.red[50],
+            color: scheme.errorContainer,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: scheme.error.withOpacity(0.6)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.error_outline, color: Colors.red),
+              Icon(Icons.error_outline, color: scheme.error),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   _error!,
-                  style: const TextStyle(fontSize: 13),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onErrorContainer,
+                  ),
                 ),
               ),
             ],
@@ -185,12 +207,17 @@ class _RankingState extends State<Ranking> {
     }
 
     if (_rankings.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
+      final theme = Theme.of(context);
+      final scheme = theme.colorScheme;
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
         child: Center(
           child: Text(
             "랭킹 데이터가 아직 없어요.",
-            style: TextStyle(fontSize: 13, color: Color(0xFF9C7C68)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withOpacity(0.6),
+            ),
           ),
         ),
       );
@@ -211,51 +238,75 @@ class _RankingState extends State<Ranking> {
     );
   }
 
-  Widget _buildInfoBox() {
+  Widget _buildInfoBox(ThemeData theme, ColorScheme scheme, bool isDark) {
+    final bgColor =
+    isDark ? scheme.surfaceVariant : scheme.surfaceContainerHighest;
+    final borderColor = scheme.outlineVariant;
+    final titleColor = scheme.primary;
+    final textColor = scheme.onSurface.withOpacity(0.75);
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF2DE),
+        color: bgColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5C8AA)),
+        border: Border.all(color: borderColor),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             "📊 랭킹 기준 안내",
-            style: TextStyle(
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 13,
-              color: Color(0xFF7C5A48),
+              color: titleColor,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
             "• 정확도 랭킹(정답 왕): 정답 / 전체 문항 비율이 높은 순",
-            style: TextStyle(fontSize: 12, color: Color(0xFF9C7C68)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              color: textColor,
+            ),
           ),
           Text(
             "• 도전 랭킹(도전 왕): 많이 풀어본(시도한) 문항 수 기준",
-            style: TextStyle(fontSize: 12, color: Color(0xFF9C7C68)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              color: textColor,
+            ),
           ),
           Text(
             "• 끈기 랭킹(끈기 왕): 재도전 평균, 유니크 문항 수 등을 종합 평가",
-            style: TextStyle(fontSize: 12, color: Color(0xFF9C7C68)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              color: textColor,
+            ),
           ),
           Text(
             "• 게임 랭킹(게임 왕): 게임 플레이 수, 점수 등을 기준으로 집계",
-            style: TextStyle(fontSize: 12, color: Color(0xFF9C7C68)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              color: textColor,
+            ),
           ),
           Text(
             "• 출석 랭킹(출석 왕): 출석(접속) 일수가 많은 순",
-            style: TextStyle(fontSize: 12, color: Color(0xFF9C7C68)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              color: textColor,
+            ),
           ),
           Text(
             "• 포인트 랭킹(포인트 왕): 누적 포인트가 높은 순",
-            style: TextStyle(fontSize: 12, color: Color(0xFF9C7C68)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              color: textColor,
+            ),
           ),
         ],
       ),
@@ -264,8 +315,11 @@ class _RankingState extends State<Ranking> {
 
   @override
   Widget build(BuildContext context) {
-    // 🔥 여기서부터 테마 기반 배경 사용
-    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final bg = theme.scaffoldBackgroundColor;
 
     return Scaffold(
       backgroundColor: bg,
@@ -288,20 +342,18 @@ class _RankingState extends State<Ranking> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 "내 랭킹",
-                style: TextStyle(
-                  fontSize: 22,
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: _brown,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 "정확도 / 도전 / 끈기 / 게임 / 출석 / 포인트 랭킹으로 내 실력을 확인해요.",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF9C7C68),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurface.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 16),
@@ -309,26 +361,26 @@ class _RankingState extends State<Ranking> {
               // 탭 그룹 (2줄로 나눠서 6개)
               Row(
                 children: [
-                  _buildTabButton("accuracy", "정확도", "🏆"),
-                  _buildTabButton("challenge", "도전", "🔥"),
-                  _buildTabButton("persistence", "끈기", "💪"),
+                  _buildTabButton(theme, scheme, isDark, "accuracy", "정확도", "🏆"),
+                  _buildTabButton(theme, scheme, isDark, "challenge", "도전", "🔥"),
+                  _buildTabButton(theme, scheme, isDark, "persistence", "끈기", "💪"),
                 ],
               ),
               Row(
                 children: [
-                  _buildTabButton("game", "게임", "🎮"),
-                  _buildTabButton("attendance", "출석", "📅"),
-                  _buildTabButton("point", "포인트", "💰"),
+                  _buildTabButton(theme, scheme, isDark, "game", "게임", "🎮"),
+                  _buildTabButton(theme, scheme, isDark, "attendance", "출석", "📅"),
+                  _buildTabButton(theme, scheme, isDark, "point", "포인트", "💰"),
                 ],
               ),
 
               const SizedBox(height: 16),
               Text(
                 _getRankTitle(),
-                style: const TextStyle(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF7C5A48),
+                  color: scheme.primary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -338,7 +390,7 @@ class _RankingState extends State<Ranking> {
 
               // 기준 안내
               const SizedBox(height: 8),
-              _buildInfoBox(),
+              _buildInfoBox(theme, scheme, isDark),
             ],
           ),
         ),
@@ -432,7 +484,16 @@ class _RankCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final nick = rankData["nickName"] ?? "-";
     final isTop3 = index < 3;
-    final cardColor = Theme.of(context).cardColor; // 🔥 다크테마 카드색
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final cardColor = scheme.surface;
+    final borderColor = isTop3
+        ? scheme.secondary.withOpacity(0.7)
+        : scheme.outlineVariant.withOpacity(0.6);
+    final medalBg = isTop3
+        ? scheme.secondaryContainer
+        : scheme.surfaceVariant;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -442,13 +503,13 @@ class _RankCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.brown.withOpacity(0.07),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 6),
           ),
         ],
         border: Border.all(
-          color: isTop3 ? const Color(0xFFF5C37C) : Colors.transparent,
+          color: borderColor,
           width: isTop3 ? 1.2 : 0.8,
         ),
       ),
@@ -459,7 +520,7 @@ class _RankCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: isTop3 ? const Color(0xFFFFF0D5) : const Color(0xFFFFE5CF),
+              color: medalBg,
               borderRadius: BorderRadius.circular(12),
             ),
             alignment: Alignment.center,
@@ -477,18 +538,18 @@ class _RankCard extends StatelessWidget {
               children: [
                 Text(
                   "$nick",
-                  style: const TextStyle(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: brown,
+                    color: scheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _subtitleText(),
-                  style: const TextStyle(
+                  style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 12,
-                    color: Color(0xFF9C7C68),
+                    color: scheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -500,10 +561,10 @@ class _RankCard extends StatelessWidget {
           // 오른쪽 강조 지표
           Text(
             _rightHighlightText(),
-            style: const TextStyle(
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: brown,
+              color: scheme.primary,
             ),
           ),
         ],

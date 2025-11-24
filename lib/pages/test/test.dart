@@ -291,11 +291,12 @@ class _TestPageState extends State<TestPage> {
     final url =
         "/saykorean/test/$effectiveTestNo/items/$testItemNo/answer";
 
-    // 주관식: 로딩 페이지로 넘기기 (React와 동일 플로우)
+    // 주관식: 로딩 페이지로 넘기기
     if (isSubjective && selectedExamNo == null) {
       print("주관식 → 로딩 페이지로 이동");
       if (!mounted) return;
-      Navigator.pushNamed(
+
+      final result = await Navigator.pushNamed(
         context,
         "/loading",
         arguments: {
@@ -306,9 +307,49 @@ class _TestPageState extends State<TestPage> {
             "body": body,
           },
         },
-      );
-      return;
+      ) as Map<String, dynamic>?;
+
+      if (!mounted || result == null || result['ok'] != true) {
+        setState(() {
+          msg = "답안 제출 실패";
+          feedback = {
+            "correct": false,
+            "score": 0,
+          };
+        });
+        return;
+      }
+
+      final data = result['data'];
+
+      int score = 0;
+      bool isCorrect = false;
+
+      if (data is Map) {
+        final s = data["score"];
+        if (s is num) score = s.toInt();
+
+        final ic = data["isCorrect"];
+        if (ic is num) {
+          isCorrect = ic == 1;
+        } else if (ic is bool) {
+          isCorrect = ic;
+        } else if (ic is String) {
+          final v = ic.toLowerCase();
+          isCorrect = (v == "1" || v == "true");
+        }
+      }
+
+      setState(() {
+        feedback = {
+          "correct": isCorrect,
+          "score": score,
+        };
+      });
+
+      return; // 객관식 분기 안 타게 여기서 종료
     }
+
 
     // 객관식: 바로 제출
     try {
@@ -378,13 +419,21 @@ class _TestPageState extends State<TestPage> {
         feedback = null;
       });
     } else {
-      // 정기시험 : 결과 ㅍ에ㅣ지로
+      // 정기시험 : 결과 페이지로
       if (widget.testMode == "REGULAR") {
-        Navigator.pushNamed(context, "/testresult/${widget.testNo}");
+        Navigator.pushNamed(
+          context,
+          "/testresult",
+          arguments: {
+            "testNo": widget.testNo,
+            "testMode": widget.testMode ?? "REGULAR",
+          },
+        );
       } else {
         // 무한/하드모드 : 모든 문제 정답 시
         _showVictoryDialog();
       }
+
     }
   }
 

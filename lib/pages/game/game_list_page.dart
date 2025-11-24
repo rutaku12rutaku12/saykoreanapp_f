@@ -86,8 +86,8 @@ class _GameListPageState extends State<GameListPage> {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    // 라이트/다크에 따라 배경/제목 색상
-    final bgColor = isDark ? scheme.background : const Color(0xFFFFF9F0);
+    // ✅ 배경은 전역 테마가 정한 scaffoldBackgroundColor 사용
+    final bgColor = theme.scaffoldBackgroundColor;
     final titleColor = isDark ? scheme.onSurface : const Color(0xFF333333);
     final iconColor = titleColor;
 
@@ -184,10 +184,11 @@ class _GameListPageState extends State<GameListPage> {
           final gameColor = _getGameColor(gameNo);
           final gameIcon = _getGameIcon(gameNo);
 
-          // 카드/텍스트 색상: 크림톤 + 다크 서피스
-          final cardColor = isDark ? scheme.surface : const Color(0xFFFFF9F0);
+          // ✅ 카드/텍스트 색상: 테마 surface/surfaceContainer 사용
+          final cardColor =
+          isDark ? scheme.surface : scheme.surfaceContainer;
           final iconBoxColor =
-          isDark ? scheme.surfaceVariant : Colors.white;
+          isDark ? scheme.surfaceVariant : scheme.surface;
           final titleColor =
           isDark ? scheme.onSurface : const Color(0xFF333333);
           final subtitleColor = isDark
@@ -207,7 +208,6 @@ class _GameListPageState extends State<GameListPage> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    // gameColor 그라데이션 제거 → 크림톤 카드 + 살짝 테두리만
                     color: cardColor,
                     border: Border.all(
                       color: scheme.outline.withOpacity(0.12),

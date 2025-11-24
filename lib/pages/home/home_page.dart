@@ -15,7 +15,6 @@ class _HomePageState extends State<HomePage> {
   bool isLogin = false;
 
   // 이미지 파일 (StartPage와 동일)
-  static const _bgWave = 'assets/img/bgImg.png';
   static const _mascot = 'assets/img/mascot_pair.png';
 
   @override
@@ -63,11 +62,16 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final size   = MediaQuery.of(context).size;
-    final theme  = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final bg     = theme.scaffoldBackgroundColor;
-    final isDark = theme.brightness == Brightness.dark;
+    final size       = MediaQuery.of(context).size;
+    final theme      = Theme.of(context);
+    final scheme     = theme.colorScheme;
+    final bg         = theme.scaffoldBackgroundColor;
+    final isDark     = theme.brightness == Brightness.dark;
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    // 민트 테마 여부 (mintTheme에서 설정한 배경색으로 판별)
+    final bool isMintTheme =
+        bg.value == const Color(0xFFE7FFF6).value;
 
     // 로딩 중일 때
     if (myUserNo == null) {
@@ -77,26 +81,39 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    return Scaffold( //
+    // ── 모드별 로그아웃 버튼 색상
+    final Color logoutBg;
+    final Color logoutFg;
+
+    if (isDark) {
+      logoutBg = scheme.surfaceContainerHigh;
+      logoutFg = scheme.onSurface;
+    } else if (isMintTheme) {
+      logoutBg = const Color(0xFFD3F8EA); // 연민트
+      logoutFg = const Color(0xFF2F7A69); // 진한 민트
+    } else {
+      logoutBg = const Color(0xFFFFEEE9); // 연핑크
+      logoutFg = const Color(0xFF6B4E42); // 갈색
+    }
+
+    return Scaffold(
       backgroundColor: bg,
       body: Stack(
         children: [
-          // ── 상단 물결
-          // 라이트 모드: 아무것도 안 그림 (물결 제거)
-          // 다크 모드: 기존처럼 커스텀 웨이브 유지
+          // ── 상단 웨이브
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             height: size.height * 0.22,
             child: isDark
-                ? CustomPaint(painter: _WavePainterDark(scheme))
-                : const SizedBox.shrink(),
+                ? CustomPaint(painter: _TopWaveDark(scheme))
+                : (isMintTheme
+                ? const CustomPaint(painter: _TopWaveMint())
+                : const CustomPaint(painter: _TopWavePink())),
           ),
 
-          // ── 하단 물결
-          // 라이트 모드: 물결 제거
-          // 다크 모드: 기존 커스텀 웨이브 유지
+          // ── 하단 웨이브
           Positioned(
             left: 0,
             right: 0,
@@ -104,7 +121,35 @@ class _HomePageState extends State<HomePage> {
             height: size.height * 0.18,
             child: isDark
                 ? CustomPaint(painter: _BottomWaveDark(scheme))
-                : const SizedBox.shrink(),
+                : (isMintTheme
+                ? const CustomPaint(painter: _BottomWaveMint())
+                : const CustomPaint(painter: _BottomWavePink())),
+          ),
+
+          // ── 오른쪽 상단 아이콘 2개 (내정보 / 순위)
+          Positioned(
+            top: topPadding + 8, // 상태바 밑으로 살짝
+            right: 16,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HomeTopIconButton(
+                  icon: Icons.person_outline,
+                  label: '내정보',
+                  onTap: () {
+                    Navigator.pushNamed(context, '/info');
+                  },
+                ),
+                const SizedBox(width: 8),
+                _HomeTopIconButton(
+                  icon: Icons.emoji_events_outlined,
+                  label: '순위',
+                  onTap: () {
+                    Navigator.pushNamed(context, '/ranking');
+                  },
+                ),
+              ],
+            ),
           ),
 
           // ── 메인 컨텐츠 영역
@@ -132,8 +177,8 @@ class _HomePageState extends State<HomePage> {
                         height: 48,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFEEE9),
-                            foregroundColor: const Color(0xFF6B4E42),
+                            backgroundColor: logoutBg,
+                            foregroundColor: logoutFg,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
@@ -182,12 +227,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // 타이틀 "재밌는 한국어"
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 class _TitleFancy extends StatelessWidget {
   const _TitleFancy();
@@ -200,12 +244,60 @@ class _TitleFancy extends StatelessWidget {
 
     return RichText(
       textAlign: TextAlign.center,
-      text: TextSpan(
+      text: const TextSpan(
         children: [
-          _shadowSpan('재', cGreen),
-          _shadowSpan('밌', cPink),
-          _shadowSpan('는 ', cBrown),
-          const TextSpan(
+          TextSpan(
+            text: '재',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w800,
+              color: cGreen,
+              height: 1.2,
+              letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  color: Color(0x22000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          TextSpan(
+            text: '밌',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w800,
+              color: cPink,
+              height: 1.2,
+              letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  color: Color(0x22000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          TextSpan(
+            text: '는 ',
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.w800,
+              color: cBrown,
+              height: 1.2,
+              letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  color: Color(0x22000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          TextSpan(
             text: '한국어',
             style: TextStyle(
               fontSize: 40,
@@ -213,27 +305,14 @@ class _TitleFancy extends StatelessWidget {
               color: cBrown,
               height: 1.2,
               letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  color: Color(0x22000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static TextSpan _shadowSpan(String t, Color color) {
-    return TextSpan(
-      text: t,
-      style: TextStyle(
-        fontSize: 40,
-        fontWeight: FontWeight.w800,
-        color: color,
-        height: 1.2,
-        letterSpacing: 0.5,
-        shadows: const [
-          Shadow(
-            color: Color(0x22000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -241,16 +320,122 @@ class _TitleFancy extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 물결 Painter들 (라이트/다크 분리)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// 상단 웨이브 (라이트: 단색 핑크 / 민트: 단색 진한 민트 / 다크: 단색 다크)
+// ─────────────────────────────────────────────────────────────
 
-// 라이트 모드 하단 핑크 웨이브
-class _BottomWaveLight extends CustomPainter {
+class _TopWavePink extends CustomPainter {
+  const _TopWavePink();
+
   @override
   void paint(Canvas canvas, Size size) {
-    const c1 = Color(0x80FFAAA5);
+    const c = Color(0xFFFFE0DC); // 살짝 진한 핑크
+
+    final paint = Paint()..color = c;
+
+    final path = Path()
+      ..lineTo(0, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.5,
+        size.height * 0.65,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.75,
+        size.width,
+        size.height * 0.55,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _TopWaveMint extends CustomPainter {
+  const _TopWaveMint();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const c = Color(0xFFA8E6CF); // 진한 민트
+
+    final paint = Paint()..color = c;
+
+    final path = Path()
+      ..lineTo(0, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.5,
+        size.height * 0.65,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.75,
+        size.width,
+        size.height * 0.55,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _TopWaveDark extends CustomPainter {
+  final ColorScheme scheme;
+  _TopWaveDark(this.scheme);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = scheme.primaryContainer.withOpacity(0.9);
+
+    final paint = Paint()..color = c;
+
+    final path = Path()
+      ..lineTo(0, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.5,
+        size.height * 0.65,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.75,
+        size.width,
+        size.height * 0.55,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 하단 웨이브 (라이트: 핑크 / 민트: 진한 민트 / 다크: 기존)
+// ─────────────────────────────────────────────────────────────
+
+class _BottomWavePink extends CustomPainter {
+  const _BottomWavePink();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const c1 = Color(0x80FFAAA5); // 반투명 핑크
     const c2 = Color(0x80FFAAA5);
+
     final paint = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
@@ -283,38 +468,37 @@ class _BottomWaveLight extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// 다크 모드 상단 웨이브
-class _WavePainterDark extends CustomPainter {
-  final ColorScheme scheme;
-  _WavePainterDark(this.scheme);
+class _BottomWaveMint extends CustomPainter {
+  const _BottomWaveMint();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final top = scheme.primaryContainer.withOpacity(0.85);
-    final mid = scheme.surface;
+    const c1 = Color(0xFFA8E6CF); // 진한 민트
+    const c2 = Color(0xFFA8DCC4); // 살짝 다른 톤의 민트
 
     final paint = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [top, mid],
+        colors: [c1, c2],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path()
-      ..lineTo(0, size.height * 0.75)
+      ..moveTo(0, size.height * 0.25)
       ..quadraticBezierTo(
-        size.width * 0.25,
-        size.height * 0.55,
-        size.width * 0.5,
-        size.height * 0.65,
+        size.width * 0.20,
+        size.height * 0.05,
+        size.width * 0.45,
+        size.height * 0.18,
       )
       ..quadraticBezierTo(
-        size.width * 0.8,
-        size.height * 0.75,
+        size.width * 0.75,
+        size.height * 0.34,
         size.width,
-        size.height * 0.55,
+        size.height * 0.10,
       )
-      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
       ..close();
 
     canvas.drawPath(path, paint);
@@ -324,7 +508,6 @@ class _WavePainterDark extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// 다크 모드 하단 웨이브
 class _BottomWaveDark extends CustomPainter {
   final ColorScheme scheme;
   _BottomWaveDark(this.scheme);
@@ -364,4 +547,84 @@ class _BottomWaveDark extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 홈 화면 상단 오른쪽 아이콘 버튼 위젯
+// ─────────────────────────────────────────────────────────────
+class _HomeTopIconButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _HomeTopIconButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme      = Theme.of(context);
+    final isDark     = theme.brightness == Brightness.dark;
+    final bg         = theme.scaffoldBackgroundColor;
+    final bool isMintTheme =
+        bg.value == const Color(0xFFE7FFF6).value;
+
+    late final Color bgColor;
+    late final Color iconColor;
+    late final Color labelColor;
+
+    if (isDark) {
+      bgColor    = theme.colorScheme.surfaceContainerHigh;
+      iconColor  = theme.colorScheme.onSurface;
+      labelColor = theme.colorScheme.onSurface.withOpacity(0.85);
+    } else if (isMintTheme) {
+      bgColor    = const Color(0xFFD3F8EA); // 연민트
+      iconColor  = const Color(0xFF2F7A69); // 진한 민트
+      labelColor = const Color(0xFF2F7A69);
+    } else {
+      bgColor    = const Color(0xFFFFF3E8); // 크림
+      iconColor  = const Color(0xFF6B4E42); // 갈색
+      labelColor = const Color(0xFF6B4E42);
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: iconColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: labelColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -28,6 +28,9 @@ import 'package:saykoreanapp_f/pages/chatting/chat_list_wrapper_page.dart';
 import 'package:saykoreanapp_f/pages/chatting/chat_page.dart';
 import 'package:saykoreanapp_f/pages/test/testResult.dart';
 
+
+import 'package:saykoreanapp_f/api/resetPrefs.dart';
+
 // ─────────────────────────────────────────────────────────────
 // 전역 상태
 // ─────────────────────────────────────────────────────────────
@@ -276,6 +279,9 @@ ThemeData _darkTheme() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // !!!!!!!!!!!! 앱 시작 전에 SharedPreferences 전체 초기화 !!!!!!!!!!!!!
+  await resetPrefs();
+
   // reCAPTCHA 초기화
   const String androidSiteKey = "6LeHHw8sAAAAAAqE6e3b2hu7w9azw3_3udTKbHcp";
   try {
@@ -331,24 +337,23 @@ class MyApp extends StatelessWidget {
                   valueListenable: currentRouteNotifier,
                   builder: (context, routeName, _) {
                     final name = routeName ?? '';
-                    final hide =
-                    {'/', '/login', '/signup', '/find'}.contains(name);
+                    final hide = {'/', '/login', '/signup', '/find'}.contains(name);
 
                     return Scaffold(
                       body: child,
-                      bottomNavigationBar: hide
-                          ? null
-                          : _FooterBar(currentRoute: name),
+                      bottomNavigationBar:
+                      hide ? null : _FooterBar(currentRoute: name),
                       backgroundColor:
                       Theme.of(context).scaffoldBackgroundColor,
                     );
                   },
                 );
               },
+
+              // 여기 두 개만 남기기
               onGenerateRoute: _onGenerateRoute,
               routes: _routes,
             );
-
             return app;
           },
         );
@@ -438,13 +443,7 @@ class _RouteArgErrorPage extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // 푸터바
 // ─────────────────────────────────────────────────────────────
-
 class _FooterBar extends StatelessWidget {
-  static const Color _bgTop = Color(0xFFFFF9F0);
-  static const Color _bgBottom = Color(0xFFFFF1E8);
-  static const Color _active = Color(0xFFFFAAA5);
-  static const Color _inactive = Color(0x80FFAAA5);
-
   final String currentRoute;
 
   const _FooterBar({super.key, required this.currentRoute});
@@ -452,6 +451,35 @@ class _FooterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = currentRoute;
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
+    final isHome = current == '/home';
+
+    // 모드/테마별 색 결정
+    late final Color bgTop;
+    late final Color bgBottom;
+    late final Color activeColor;
+    late final Color inactiveColor;
+
+    if (isDark) {
+      bgTop = scheme.surfaceContainerHigh;
+      bgBottom = scheme.surface;
+      activeColor = scheme.primary;
+      inactiveColor = scheme.primary.withOpacity(0.5);
+    } else if (isMint) {
+      bgTop = const Color(0xFFE7FFF6);
+      bgBottom = const Color(0xFFD3F8EA);
+      activeColor = const Color(0xFF2F7A69);
+      inactiveColor = const Color(0x802F7A69);
+    } else {
+      bgTop = const Color(0xFFFFF9F0);
+      bgBottom = const Color(0xFFFFF1E8);
+      activeColor = const Color(0xFFFFAAA5);
+      inactiveColor = const Color(0x80FFAAA5);
+    }
 
     return SafeArea(
       top: false,
@@ -461,13 +489,13 @@ class _FooterBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Container(
             height: 76,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [_bgTop, _bgBottom],
+                colors: [bgTop, bgBottom],
               ),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Color(0x1A000000),
                   blurRadius: 18,
@@ -477,22 +505,54 @@ class _FooterBar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _item("홈", "assets/icons/home.svg", "/home",
-                    current == "/home"),
-                _item("내정보", "assets/icons/user.svg", "/info",
-                    current == "/info"),
-                _item("학습", "assets/icons/study.svg", "/study",
-                    current == "/study"),
-                _item("스토어", "assets/icons/store_icon.svg", "/store",
-                    current == "/store"),
-                _item("시험", "assets/icons/test.svg", "/testList",
-                    current == "/testList"),
-                _item("게임", "assets/icons/game.svg", "/game",
-                    current == "/game"),
-                _item("순위", "assets/icons/rank.svg", "/ranking",
-                    current == "/ranking"),
-                _item("채팅", "assets/icons/friends.svg", "/chat",
-                    current == "/chat"),
+                _item(
+                  "홈",
+                  "assets/icons/home.svg",
+                  "/home",
+                  current == "/home",
+                  activeColor,
+                  inactiveColor,
+                ),
+                _item(
+                  "학습",
+                  "assets/icons/study.svg",
+                  "/study",
+                  current == "/study",
+                  activeColor,
+                  inactiveColor,
+                ),
+                _item(
+                  "스토어",
+                  "assets/icons/store_icon.svg",
+                  "/store",
+                  current == "/store",
+                  activeColor,
+                  inactiveColor,
+                ),
+                _item(
+                  "시험",
+                  "assets/icons/test.svg",
+                  "/testList",
+                  current == "/testList",
+                  activeColor,
+                  inactiveColor,
+                ),
+                _item(
+                  "게임",
+                  "assets/icons/game.svg",
+                  "/game",
+                  current == "/game",
+                  activeColor,
+                  inactiveColor,
+                ),
+                _item(
+                  "채팅",
+                  "assets/icons/friends.svg",
+                  "/chat",
+                  current == "/chat",
+                  activeColor,
+                  inactiveColor,
+                ),
               ],
             ),
           ),
@@ -501,8 +561,15 @@ class _FooterBar extends StatelessWidget {
     );
   }
 
-  Widget _item(String label, String svg, String route, bool active) {
-    final c = active ? _active : _inactive;
+  Widget _item(
+      String label,
+      String svg,
+      String route,
+      bool active,
+      Color activeColor,
+      Color inactiveColor,
+      ) {
+    final c = active ? activeColor : inactiveColor;
 
     return Expanded(
       child: GestureDetector(
@@ -530,6 +597,44 @@ class _FooterBar extends StatelessWidget {
     );
   }
 }
+
+
+  Widget _item(
+      String label,
+      String svg,
+      String route,
+      bool active,
+      Color activeColor,
+      Color inactiveColor,
+      ) {
+    final c = active ? activeColor : inactiveColor;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => goNamed(route),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              svg,
+              height: 28,
+              colorFilter: ColorFilter.mode(c, BlendMode.srcIn),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: c,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
 // ─────────────────────────────────────────────────────────────
 // 네비게이션 헬퍼

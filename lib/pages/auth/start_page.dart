@@ -1,4 +1,4 @@
-// start_page.dart — 라이트/다크 물결 분기 버전
+// lib/pages/auth/start_page.dart — 라이트/민트/다크 물결 + 테마별 버튼 색상
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,27 +6,27 @@ class StartPage extends StatefulWidget {
   const StartPage({super.key});
 
   @override
-  State<StartPage> createState() =>
-    _StartPageState();
+  State<StartPage> createState() => _StartPageState();
 }
 
-class _StartPageState extends State<StartPage>{
-    @override
+class _StartPageState extends State<StartPage> {
+  @override
   void initState() {
     super.initState();
     _checkLogin();
   }
-  // 로그인 확인 메소드, Hot Restart 시작 시 토큰이 존재하면 homepage로 이동ㅕㄴ
-  Future<void> _checkLogin() async{
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if( token != null && token.isNotEmpty) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+
+  // 로그인 확인 메소드, 앱 시작 시 토큰이 존재하면 home으로 이동
+  Future<void> _checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token != null && token.isNotEmpty) {
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/home');
+    }
   }
 
-  // 이미지 파일
-  static const _bgWave = 'assets/img/bgImg.png';      // 라이트 전용
+  // 마스코트 이미지
   static const _mascot = 'assets/img/mascot_pair.png';
 
   @override
@@ -37,24 +37,28 @@ class _StartPageState extends State<StartPage>{
     final bg     = theme.scaffoldBackgroundColor;
     final isDark = theme.brightness == Brightness.dark;
 
+    // 민트 테마 여부 (home이랑 동일한 기준)
+    final bool isMintTheme =
+        bg.value == const Color(0xFFE7FFF6).value;
+
     return Scaffold(
       backgroundColor: bg,
       body: Stack(
         children: [
-          // ── 상단 물결
+          // ── 상단 물결: 라이트/민트/다크 분기
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             height: size.height * 0.22,
             child: isDark
-            // 🌙 다크 모드: 진한 톤 파도
-                ? CustomPaint(painter: _WavePainterDark(scheme))
-            // ☀️ 라이트 모드: 기존 파스텔 PNG (또는 커스텀)
-                : Image.asset(_bgWave, fit: BoxFit.cover),
+                ? CustomPaint(painter: _TopWaveDark(scheme))
+                : (isMintTheme
+                ? const CustomPaint(painter: _TopWaveMint())
+                : const CustomPaint(painter: _TopWavePink())),
           ),
 
-          // ── 하단 물결
+          // ── 하단 물결: 라이트=핑크, 민트=민트, 다크=다크
           Positioned(
             left: 0,
             right: 0,
@@ -62,7 +66,9 @@ class _StartPageState extends State<StartPage>{
             height: size.height * 0.18,
             child: isDark
                 ? CustomPaint(painter: _BottomWaveDark(scheme))
-                : CustomPaint(painter: _BottomWaveLight()),
+                : (isMintTheme
+                ? const CustomPaint(painter: _BottomWaveMint())
+                : const CustomPaint(painter: _BottomWavePink())),
           ),
 
           // ── 메인 콘텐츠
@@ -88,16 +94,20 @@ class _StartPageState extends State<StartPage>{
                         Expanded(
                           child: _PrimaryButton(
                             label: '로그인',
-                            onPressed: () =>
-                                Navigator.pushReplacementNamed(context, '/login'),
+                            onPressed: () => Navigator.pushReplacementNamed(
+                              context,
+                              '/login',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _GhostButton(
                             label: '회원가입',
-                            onPressed: () =>
-                                Navigator.pushReplacementNamed(context, '/signup'),
+                            onPressed: () => Navigator.pushReplacementNamed(
+                              context,
+                              '/signup',
+                            ),
                           ),
                         ),
                       ],
@@ -136,7 +146,6 @@ class _TitleFancy extends StatelessWidget {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        // 🔥 여기 const 빼기!!
         children: [
           _shadowSpan('재', cGreen),
           _shadowSpan('밌', cPink),
@@ -176,7 +185,6 @@ class _TitleFancy extends StatelessWidget {
   }
 }
 
-
 // ───────────────── 버튼들 ─────────────────
 
 class _PrimaryButton extends StatelessWidget {
@@ -186,12 +194,33 @@ class _PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg     = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+    final bool isMintTheme =
+        bg.value == const Color(0xFFE7FFF6).value;
+
+    late final Color backgroundColor;
+    late final Color foregroundColor;
+
+    if (isDark) {
+      backgroundColor = scheme.surfaceContainerHigh;
+      foregroundColor = scheme.onSurface;
+    } else if (isMintTheme) {
+      backgroundColor = const Color(0xFFD3F8EA); // 연민트
+      foregroundColor = const Color(0xFF2F7A69); // 진한 민트
+    } else {
+      backgroundColor = const Color(0xFFFFEEE9); // 연핑크
+      foregroundColor = const Color(0xFF6B4E42); // 갈색
+    }
+
     return SizedBox(
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFEEE9),
-          foregroundColor: const Color(0xFF6B4E42),
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -213,12 +242,33 @@ class _GhostButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg     = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+    final bool isMintTheme =
+        bg.value == const Color(0xFFE7FFF6).value;
+
+    late final Color borderColor;
+    late final Color fgColor;
+
+    if (isDark) {
+      borderColor = scheme.outline.withOpacity(0.6);
+      fgColor     = scheme.onSurface;
+    } else if (isMintTheme) {
+      borderColor = const Color(0xFF2F7A69);
+      fgColor     = const Color(0xFF2F7A69);
+    } else {
+      borderColor = const Color(0xFFE5D5CC);
+      fgColor     = const Color(0xFF6B4E42);
+    }
+
     return SizedBox(
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFE5D5CC), width: 1.2),
-          foregroundColor: const Color(0xFF6B4E42),
+          side: BorderSide(color: borderColor, width: 1.2),
+          foregroundColor: fgColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -232,13 +282,120 @@ class _GhostButton extends StatelessWidget {
 }
 
 // ───────────────── 물결 Painter들 ─────────────────
+// 홈 화면이랑 동일한 스타일로 맞춤
 
-// 라이트 모드 하단 핑크 웨이브 (기존)
-class _BottomWaveLight extends CustomPainter {
+// 라이트 모드 상단 핑크 웨이브 (단색)
+class _TopWavePink extends CustomPainter {
+  const _TopWavePink();
+
   @override
   void paint(Canvas canvas, Size size) {
-    const c1 = Color(0x80FFAAA5);
+    const c = Color(0xFFFFE0DC); // 살짝 진한 핑크
+
+    final paint = Paint()..color = c;
+
+    final path = Path()
+      ..lineTo(0, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.5,
+        size.height * 0.65,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.75,
+        size.width,
+        size.height * 0.55,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// 민트 테마 상단 웨이브 (진한 민트 단색)
+class _TopWaveMint extends CustomPainter {
+  const _TopWaveMint();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const c = Color(0xFFA8E6CF); // 진한 민트
+
+    final paint = Paint()..color = c;
+
+    final path = Path()
+      ..lineTo(0, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.5,
+        size.height * 0.65,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.75,
+        size.width,
+        size.height * 0.55,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// 다크 모드 상단 웨이브
+class _TopWaveDark extends CustomPainter {
+  final ColorScheme scheme;
+  _TopWaveDark(this.scheme);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = scheme.primaryContainer.withOpacity(0.9);
+
+    final paint = Paint()..color = c;
+
+    final path = Path()
+      ..lineTo(0, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.5,
+        size.height * 0.65,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.75,
+        size.width,
+        size.height * 0.55,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// 라이트 모드 하단 핑크 웨이브
+class _BottomWavePink extends CustomPainter {
+  const _BottomWavePink();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const c1 = Color(0x80FFAAA5); // 반투명 핑크
     const c2 = Color(0x80FFAAA5);
+
     final paint = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
@@ -249,9 +406,17 @@ class _BottomWaveLight extends CustomPainter {
     final path = Path()
       ..moveTo(0, size.height * 0.25)
       ..quadraticBezierTo(
-          size.width * 0.20, size.height * 0.05, size.width * 0.45, size.height * 0.18)
+        size.width * 0.20,
+        size.height * 0.05,
+        size.width * 0.45,
+        size.height * 0.18,
+      )
       ..quadraticBezierTo(
-          size.width * 0.75, size.height * 0.34, size.width, size.height * 0.10)
+        size.width * 0.75,
+        size.height * 0.34,
+        size.width,
+        size.height * 0.10,
+      )
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
@@ -263,31 +428,38 @@ class _BottomWaveLight extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// 다크 모드 상단 웨이브
-class _WavePainterDark extends CustomPainter {
-  final ColorScheme scheme;
-  _WavePainterDark(this.scheme);
+// 민트 테마 하단 웨이브
+class _BottomWaveMint extends CustomPainter {
+  const _BottomWaveMint();
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 다크에 어울리는 깊은 민트/브라운 계열
-    final top = scheme.primaryContainer.withOpacity(0.85);
-    final mid = scheme.surface;
+    const c1 = Color(0xFFA8E6CF); // 진한 민트
+    const c2 = Color(0xFFA8DCC4); // 살짝 다른 톤의 민트
 
     final paint = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [top, mid],
+        colors: [c1, c2],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path()
-      ..lineTo(0, size.height * 0.75)
+      ..moveTo(0, size.height * 0.25)
       ..quadraticBezierTo(
-          size.width * 0.25, size.height * 0.55, size.width * 0.5, size.height * 0.65)
+        size.width * 0.20,
+        size.height * 0.05,
+        size.width * 0.45,
+        size.height * 0.18,
+      )
       ..quadraticBezierTo(
-          size.width * 0.8, size.height * 0.75, size.width, size.height * 0.55)
-      ..lineTo(size.width, 0)
+        size.width * 0.75,
+        size.height * 0.34,
+        size.width,
+        size.height * 0.10,
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
       ..close();
 
     canvas.drawPath(path, paint);
@@ -317,9 +489,17 @@ class _BottomWaveDark extends CustomPainter {
     final path = Path()
       ..moveTo(0, size.height * 0.15)
       ..quadraticBezierTo(
-          size.width * 0.20, 0, size.width * 0.45, size.height * 0.18)
+        size.width * 0.20,
+        0,
+        size.width * 0.45,
+        size.height * 0.18,
+      )
       ..quadraticBezierTo(
-          size.width * 0.75, size.height * 0.36, size.width, size.height * 0.12)
+        size.width * 0.75,
+        size.height * 0.36,
+        size.width,
+        size.height * 0.12,
+      )
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();

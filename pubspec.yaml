@@ -65,27 +65,41 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 # 게임 관련 에셋들입니다
+# 게임 관련 에셋들입니다
 flutter:
- uses-material-design: true
- assets:
-    - assets/game/
-    - assets/game/receive/
-    - assets/game/watermelon/
+  uses-material-design: true
 
-    # 아이콘
-    - assets/icons/
-    - assets/icons/home.svg
-    - assets/icons/user.svg
-    - assets/icons/study.svg
-    - assets/icons/test.svg
-    - assets/icons/rank.svg
-    - assets/img/mascot_pair.png
-    - assets/img/top_wave.png
-    - assets/img/bgImg.png
-    - assets/          # 이 한 줄로 하위 전부 포함
+  assets:
+    - assets/
 
-    # 다국어
-    - assets/i18n/
+#    - assets/receive/
+#    - assets/watermelon/
+#
+#    - 'assets/loading/1_loading_img.png'
+#    - 'assets/loading/2_loading_img.png'
+#    - 'assets/loading/3_loading_img.png'
+#    - 'assets/loading/4_loading_img.png'
+#    - 'assets/loading/5_loading_img.png'
+#    - 'assets/loading/6_loading_img.png'
+#    - 'assets/loading/7_loading_img.png'
+#
+#
+#
+#
+#   # 아이콘
+#    - assets/icons/
+#    - assets/icons/home.svg
+#    - assets/icons/user.svg
+#    - assets/icons/study.svg
+#    - assets/icons/test.svg
+#    - assets/icons/rank.svg
+#    - assets/img/mascot_pair.png
+#    - assets/img/top_wave.png
+#    - assets/img/bgImg.png
+#    - assets/          # 이 한 줄로 하위 전부 포함
+#
+#    # 다국어
+#    - assets/i18n/
 
 
   # The following line ensures that the Material Icons font is

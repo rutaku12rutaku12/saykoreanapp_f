@@ -276,12 +276,6 @@ class _SignupState extends State<SignupPage> {
               SizedBox(height: 20,),
 
               ElevatedButton(onPressed: onSignup, child: const Text("회원가입")),
-              SizedBox(height: 20,),
-              ElevatedButton(onPressed: () =>
-              {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => LoginPage())),
-              }, child: Text("이미 가입된 사용자면 로그인"))
 
             ],
           ),

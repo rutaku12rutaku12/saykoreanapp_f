@@ -46,16 +46,16 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
           final r = rooms[i];
 
           return ListTile(
-            title: Text(r['friendName']),
-            subtitle: Text(r['lastMessage'] ?? '대화 없음'),
-            trailing: Text(r['lastTime'] ?? ''),
+            title: Text(r['friendName']?.toString() ?? '알 수 없는 사용자'),
+            subtitle: Text(r['lastMessage'].toString() ?? '대화 없음'),
+            trailing: Text(r['lastTime'].toString() ?? ''),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => ChatPage(
                     roomNo: r['roomNo'],
-                    friendName: r['friendName'],
+                    friendName: r['friendName']?.toString() ?? '알 수 없는 사용자',
                     myUserNo: widget.myUserNo,
 
                     // 🔥 메시지 오면 리스트 갱신

@@ -17,7 +17,6 @@ import 'package:saykoreanapp_f/pages/setting/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 
-import 'package:saykoreanapp_f/pages/test/testList.dart';
 import 'package:saykoreanapp_f/pages/test/test_mode_page.dart';
 import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';

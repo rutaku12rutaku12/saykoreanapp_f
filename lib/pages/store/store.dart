@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // ApiClient.dio 사용
+import 'package:saykoreanapp_f/main.dart' show setThemeMode, setThemeColor;
 
 class StorePage extends StatefulWidget {
   const StorePage({super.key});
@@ -86,6 +87,56 @@ class _StorePageState extends State<StorePage> {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // 1-1) 테마 적용 (선택된 테마를 로컬에 저장)
+  //   - themeKey 예: 'dark', 'mint', 'default'
+  //   - 실제 앱 전체 테마 변경은 상위(MyApp 등)에서
+  //     SharedPreferences의 selectedTheme를 읽어서 처리
+  // ─────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 1-1) 테마 적용 (전역 themeMode/themeColor 사용)
+  //   - 'dark'  : 다크 모드
+  //   - 'mint'  : 라이트 + 민트 팔레트
+  //   - 'default': 라이트 + 기본(핑크) 팔레트
+  // ─────────────────────────────────────────────────────────────
+  Future<void> _applyTheme(String themeKey) async {
+    switch (themeKey) {
+      case 'dark':
+      // 다크 테마: ThemeMode.dark
+        await setThemeMode(ThemeMode.dark);
+        break;
+      case 'mint':
+      // 민트 테마: 라이트 모드 + 민트 색상
+        await setThemeMode(ThemeMode.light);
+        await setThemeColor('mint');
+        break;
+      default:
+      // 기본 테마: 라이트 모드 + default 색상
+        await setThemeMode(ThemeMode.light);
+        await setThemeColor('default');
+        break;
+    }
+
+    if (!mounted) return;
+
+    String label;
+    switch (themeKey) {
+      case 'dark':
+        label = '다크 테마로 변경했어요.';
+        break;
+      case 'mint':
+        label = '민트 테마로 변경했어요.';
+        break;
+      default:
+        label = '기본 테마로 변경했어요.';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(label)),
+    );
+  }
+
+
+  // ─────────────────────────────────────────────────────────────
   // 2) 다크 테마 구매 API 호출
   //
   //   POST /saykorean/store/theme/1/buy
@@ -95,7 +146,6 @@ class _StorePageState extends State<StorePage> {
     try {
       final res = await ApiClient.dio.post(
         '/saykorean/store/theme/1/buy',
-        // body 필요 없으면 빼도 됨
         options: Options(validateStatus: (status) => true),
       );
 
@@ -164,7 +214,7 @@ class _StorePageState extends State<StorePage> {
   Future<void> _onTapBuyDarkTheme() async {
     if (_pointBalance == null) return;
 
-    const int price = 2000; // ✅ pointPolicy의 '테마 구매 -2000'과 맞추기
+    const int price = 2000; // 테마 가격
 
     if (_pointBalance! < price) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -225,7 +275,7 @@ class _StorePageState extends State<StorePage> {
   Future<void> _onTapBuyMintTheme() async {
     if (_pointBalance == null) return;
 
-    const int price = 2000; // ✅ pointPolicy와 동일하게 맞추기
+    const int price = 2000;
 
     if (_pointBalance! < price) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -278,6 +328,7 @@ class _StorePageState extends State<StorePage> {
       const SnackBar(content: Text('민트 테마가 해금되었어요! 설정에서 변경할 수 있어요.')),
     );
   }
+
   // ─────────────────────────────────────────────────────────────────────────
   // UI
   // ─────────────────────────────────────────────────────────────────────────
@@ -427,7 +478,8 @@ class _StorePageState extends State<StorePage> {
   Widget _buildDarkThemeItem(
       ThemeData theme, ColorScheme scheme, bool isDark) {
     const int price = 2000;
-    final bool disabled = _hasDarkTheme || (_pointBalance ?? 0) < price;
+    final bool owned = _hasDarkTheme;
+    final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
     final titleColor =
     isDark ? scheme.onSurface : const Color(0xFF111827);
@@ -575,14 +627,18 @@ class _StorePageState extends State<StorePage> {
           SizedBox(
             height: 40,
             child: ElevatedButton(
-              onPressed: disabled ? null : _onTapBuyDarkTheme,
+              onPressed: disabled
+                  ? null
+                  : (owned
+                  ? () => _applyTheme('dark')   // 이미 보유 → 테마 변경
+                  : _onTapBuyDarkTheme),        // 미보유 → 구매
               style: ElevatedButton.styleFrom(
-                backgroundColor: _hasDarkTheme
+                backgroundColor: owned
                     ? (isDark
                     ? scheme.primaryContainer
                     : const Color(0xFFD1FAE5))
                     : const Color(0xFFFFEEE9),
-                foregroundColor: _hasDarkTheme
+                foregroundColor: owned
                     ? (isDark
                     ? scheme.onPrimaryContainer
                     : const Color(0xFF047857))
@@ -595,8 +651,8 @@ class _StorePageState extends State<StorePage> {
                 ),
               ),
               child: Text(
-                _hasDarkTheme
-                    ? '구매완료'
+                owned
+                    ? '테마 변경'
                     : (_pointBalance != null && _pointBalance! < price
                     ? '포인트 부족'
                     : '구매'),
@@ -614,7 +670,8 @@ class _StorePageState extends State<StorePage> {
   Widget _buildMintThemeItem(
       ThemeData theme, ColorScheme scheme, bool isDark) {
     const int price = 2000;
-    final bool disabled = _hasMintTheme || (_pointBalance ?? 0) < price;
+    final bool owned = _hasMintTheme;
+    final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
     final titleColor =
     isDark ? scheme.onSurface : const Color(0xFF064E3B);
@@ -752,15 +809,21 @@ class _StorePageState extends State<StorePage> {
           SizedBox(
             height: 40,
             child: ElevatedButton(
-              onPressed: disabled ? null : _onTapBuyMintTheme,
+              onPressed: disabled
+                  ? null
+                  : (owned
+                  ? () => _applyTheme('mint')
+                  : _onTapBuyMintTheme),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _hasMintTheme
+                backgroundColor: owned
                     ? (isDark
                     ? const Color(0xFF064E3B)
                     : const Color(0xFFD1FAE5))
                     : const Color(0xFFE0FFF5),
-                foregroundColor: _hasMintTheme
-                    ? (isDark ? Colors.white : const Color(0xFF047857))
+                foregroundColor: owned
+                    ? (isDark
+                    ? Colors.white
+                    : const Color(0xFF047857))
                     : const Color(0xFF064E3B),
                 elevation: 0,
                 padding:
@@ -770,8 +833,8 @@ class _StorePageState extends State<StorePage> {
                 ),
               ),
               child: Text(
-                _hasMintTheme
-                    ? '구매완료'
+                owned
+                    ? '테마 변경'
                     : (_pointBalance != null && _pointBalance! < price
                     ? '포인트 부족'
                     : '구매'),

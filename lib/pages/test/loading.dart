@@ -38,42 +38,46 @@ class _LoadingPageState extends State<LoadingPage> {
   void initState() {
     super.initState();
 
-    // ── 슬라이드 후보들 (React의 slides와 비슷하게)
-    // ⚠️ asset 경로는 프로젝트에 맞게 수정해도 됨
+    // ── 슬라이드 후보들
     const slides = <_LoadingSlide>[
       _LoadingSlide(
-        asset: 'assets/img/loading/1_loading_img.png',
+        asset: 'assets/loading/1_loading_img.png',
         title: '숭례문',
         description: '서울을 대표하는 국보 제1호 숭례문은 '
             '조선시대 한양 도성의 남쪽 문으로, '
             '지금은 도심 속 유서 깊은 랜드마크가 되었어요.',
       ),
       _LoadingSlide(
-        asset: 'assets/img/loading/2_loading_img.png',
+        asset: 'assets/loading/2_loading_img.png',
         title: '북촌 한옥마을',
         description: '고즈넉한 한옥과 골목길이 이어진 북촌은 '
             '전통과 현대가 공존하는 서울의 대표적인 관광지예요.',
       ),
       _LoadingSlide(
-        asset: 'assets/img/loading/3_loading_img.png',
+        asset: 'assets/loading/3_loading_img.png',
         title: '국립중앙박물관',
         description: '한국의 역사와 문화를 한자리에서 만날 수 있는 곳, '
             '다양한 전시와 체험 프로그램도 즐겨 보세요.',
       ),
       _LoadingSlide(
-        asset: 'assets/img/loading/4_loading_img.png',
+        asset: 'assets/loading/4_loading_img.png',
         title: '무령왕릉',
         description: '백제 무령왕과 왕비의 무덤으로, '
             '수많은 유물이 발견된 중요한 역사 유적지입니다.',
       ),
       _LoadingSlide(
-        asset: 'assets/img/loading/6_loading_img.png',
+        asset: 'assets/loading/5_loading_img.png',
+        title: '???',
+        description: '5번 이미지 설명을 여기에 적어 주세요.',
+      ),
+      _LoadingSlide(
+        asset: 'assets/loading/6_loading_img.png',
         title: '광한루원',
         description: '춘향전의 무대가 된 남원의 광한루원은 '
             '기와와 연못, 정원이 어우러진 고즈넉한 누각이에요.',
       ),
       _LoadingSlide(
-        asset: 'assets/img/loading/7_loading_img.png',
+        asset: 'assets/loading/7_loading_img.png',
         title: '한라산',
         description: '제주도의 상징 한라산은 사계절마다 다른 풍경으로 '
             '등산객들을 반겨주는 우리나라 최고의 명산 중 하나입니다.',
@@ -106,7 +110,6 @@ class _LoadingPageState extends State<LoadingPage> {
     final rawArgs = ModalRoute.of(context)?.settings.arguments;
 
     if (rawArgs is! Map) {
-      // 잘못된 접근이면 바로 이전 페이지로 에러 반환
       if (mounted) {
         Navigator.pop(context, {
           'ok': false,
@@ -161,23 +164,17 @@ class _LoadingPageState extends State<LoadingPage> {
         'statusCode': res.statusCode,
       });
     } on DioException catch (e) {
-      // Dio 에러 로깅
       print('LoadingPage DioException: '
           'type=${e.type}, status=${e.response?.statusCode}, data=${e.response?.data}');
-
       if (!mounted) return;
-
       Navigator.pop(context, {
         'ok': false,
         'error': e.message ?? e.toString(),
         'statusCode': e.response?.statusCode,
       });
     } catch (e) {
-      // 기타 예외
       print('LoadingPage unknown error: $e');
-
       if (!mounted) return;
-
       Navigator.pop(context, {
         'ok': false,
         'error': e.toString(),
@@ -198,7 +195,7 @@ class _LoadingPageState extends State<LoadingPage> {
           children: [
             const SizedBox(height: 16),
 
-            // ── 상단 이미지 + 타이틀/설명 (React의 image-container 느낌)
+            // ── 상단 이미지 + 타이틀/설명
             Expanded(
               child: Center(
                 child: Column(
@@ -269,7 +266,7 @@ class _LoadingPageState extends State<LoadingPage> {
 
             const SizedBox(height: 16),
 
-            // ── 하단 로딩 문구 + 프로그레스 (React의 loading-footer 느낌)
+            // ── 하단 로딩 문구 + 프로그레스
             Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
               child: Column(

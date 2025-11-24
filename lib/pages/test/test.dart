@@ -779,8 +779,8 @@ class _TestPageState extends State<TestPage> {
                           idx <
                               items.length -
                                   1
-                              ? "다음 문제"
-                              : "결과 보기",
+                              ? "test.next".tr()
+                              : "test.result.view".tr(),
                         ),
                       ),
                     ),

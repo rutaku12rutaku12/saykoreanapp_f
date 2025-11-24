@@ -15,6 +15,7 @@ import 'package:recaptcha_enterprise_flutter/recaptcha_action.dart';
 
 // 은주
 import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 
 // JWT → payload 추출
 Map<String, dynamic> _decodeJwt(String token) {
@@ -151,19 +152,21 @@ class _LoginState extends State<LoginPage>{
                   labelText: "비밀번호", border: OutlineInputBorder()),
             ),
             SizedBox(height: 20,),
-            ElevatedButton(onPressed: onLogin, child: Text("로그인")),
+            ElevatedButton(onPressed: onLogin, child: Text("login.button".tr()),
+            ),
             SizedBox(height: 20,),
             ElevatedButton(onPressed: () =>
             {
               Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (context) => FindPage()))
-            }, child: Text("이메일 찾기/비밀번호 찾기 ")),
+            }, child: Text("login.find".tr()),
+            ),
             SizedBox(height: 20,),
             ElevatedButton(onPressed: () =>
             {
               Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (context) => SignupPage())),
-            }, child: Text("회원가입") ),
+            }, child: Text("signup.signup".tr()) ),
 
             // SizedBox( height: 20,),
             // ElevatedButton(

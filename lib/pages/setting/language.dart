@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)
@@ -16,6 +17,14 @@ String _detectBaseUrl() {
   if (kIsWeb) return 'http://localhost:8080';
   if (Platform.isAndroid) return 'http://10.0.2.2:8080'; // 안드 에뮬레이터→호스트
   return 'http://localhost:8080';                        // iOS 시뮬레이터/데스크톱
+}
+
+Locale _toLocale(String code) {
+  if (code.contains('-')) {
+    final parts = code.split('-');
+    return Locale(parts[0], parts[1]);
+  }
+  return Locale(code);
 }
 
 final Dio dio = Dio(BaseOptions(
@@ -124,8 +133,11 @@ class _LanguagePageState extends State<LanguagePage> {
     final prefs = await SharedPreferences.getInstance();
     final code = _LANG_MAP[n] ?? 'ko';
 
+    
     await prefs.setInt('selectedLangNo', n);
     await prefs.setString('lng', code);
+    
+    await context.setLocale(_toLocale(code));
 
     if (!mounted) return;
     setState(() => _selected = n);

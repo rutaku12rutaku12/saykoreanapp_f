@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // 전역 Dio: ApiClient.dio 사용
+import 'package:easy_localization/easy_localization.dart';
 
 class TestPage extends StatefulWidget {
   final int testNo;
@@ -771,8 +772,8 @@ class _TestPageState extends State<TestPage> {
                           idx <
                               items.length -
                                   1
-                              ? "다음 문제"
-                              : "결과 보기",
+                              ? "test.next".tr()
+                              : "test.result.view".tr(),
                         ),
                       ),
                     ),
@@ -885,7 +886,7 @@ class _TestPageState extends State<TestPage> {
               elevation: 0,
             ),
             child: Text(
-                submitting ? "로딩 중..." : "제출"),
+                submitting ? "common.loading".tr() : "test.submit".tr()),
           ),
         ),
       ],

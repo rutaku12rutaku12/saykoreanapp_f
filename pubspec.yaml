@@ -82,7 +82,6 @@ flutter:
     - assets/img/mascot_pair.png
     - assets/img/top_wave.png
     - assets/img/bgImg.png
-    - assets/          # 이 한 줄로 하위 전부 포함
 
     # 다국어
     - assets/i18n/

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:saykoreanapp_f/api/api.dart';
@@ -188,7 +190,21 @@ class _StudyPageState extends State<StudyPage> {
       _langNo = prefs.getInt('selectedLangNo') ?? 1; // 선택된 언어
 
       if (_genreNo == null || _genreNo! <= 0) {
-        setState(() => _error = '먼저 장르를 선택해 주세요.');
+        // 아래쪽에 안내 알림 띄우기
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('먼저 장르를 선택해주세요.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // 장르 선택 화면으로 이동
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const GenrePage(),
+          ),
+        );
         return;
       }
 

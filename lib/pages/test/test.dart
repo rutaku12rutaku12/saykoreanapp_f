@@ -3,6 +3,7 @@
 import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // 전역 Dio: ApiClient.dio 사용
 
 class TestPage extends StatefulWidget {
@@ -25,6 +26,16 @@ class _TestPageState extends State<TestPage> {
   String subjective = "";
   Map<String, dynamic>? feedback;
 
+  // AudioPlayer 추가
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
   int? langNo; // null 일 때는 아직 언어 안 정해진 상태
   int? testRound; // 회차
 
@@ -33,6 +44,30 @@ class _TestPageState extends State<TestPage> {
   void initState() {
     super.initState();
     _initLangAndQuestions();
+  }
+
+  // ✅ 3. 오디오 재생 함수 추가
+  Future<void> _playAudio(String? audioPath) async {
+    if (audioPath == null || audioPath.isEmpty) {
+      print('⚠️ 오디오 경로가 비어있습니다');
+      return;
+    }
+
+    final audioUrl = ApiClient.getAudioUrl(audioPath);
+    print('🎵 오디오 재생 시도: $audioUrl');
+
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(UrlSource(audioUrl));
+      print('✅ 오디오 재생 성공');
+    } catch (e) {
+      print('❌ 오디오 재생 실패: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오디오를 재생할 수 없습니다: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _initLangAndQuestions() async {
@@ -558,37 +593,27 @@ class _TestPageState extends State<TestPage> {
                         ),
                       ),
 
-                    // 오디오 (1,4,7...) 번째 문항
+                    // 오디오 버튼 부분을 다음과 같이 수정:
                     if (isAudioQuestion && hasAudio)
                       Column(
                         children: [
-                          for (final audio
-                          in (cur!['audios']
-                          as List))
-                            if (_safeSrc(audio[
-                            'audioPath']) !=
-                                null)
+                          for (final audio in (cur!['audios'] as List))
+                            if (_safeSrc(audio['audioPath']) != null)
                               Padding(
-                                padding:
-                                const EdgeInsets
-                                    .symmetric(
-                                    vertical: 6.0),
-                                child: OutlinedButton(
+                                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                child: OutlinedButton.icon(
                                   onPressed: () {
-                                    // TODO: 오디오 플레이 로직
+                                    // ✅ 오디오 재생 구현
+                                    _playAudio(audio['audioPath']);
                                   },
-                                  style: OutlinedButton
-                                      .styleFrom(
-                                    foregroundColor:
-                                    brown,
-                                    side:
-                                    const BorderSide(
-                                      color: Color(
-                                          0xFFE5D5CC),
+                                  icon: const Text('🔊'),
+                                  label: Text('음성 듣기'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: brown,
+                                    side: const BorderSide(
+                                      color: Color(0xFFE5D5CC),
                                     ),
                                   ),
-                                  child: Text(
-                                      "🔊 ${audio['audioPath']}"),
                                 ),
                               )
                         ],

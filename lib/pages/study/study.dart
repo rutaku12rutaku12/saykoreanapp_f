@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:saykoreanapp_f/api/api.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)
@@ -288,16 +289,34 @@ class _StudyPageState extends State<StudyPage> {
   }
 
   // ── 오디오 재생
+  // ✅ 2. _play 함수 수정
   Future<void> _play(String? url) async {
-    if (url == null || url.isEmpty) return;
+    if (url == null || url.isEmpty) {
+      print('⚠️ 오디오 URL이 비어있습니다');
+      return;
+    }
 
-    final resolved = buildUrl(url);
+    final resolved = ApiClient.getAudioUrl(url);
+
+    print('🎵 오디오 재생 시도: $resolved');
 
     try {
+      // 오디오 설정 (볼륨 및 모드)
+      await _player.setVolume(1.0); // 최대 볼륨
+      await _player.setReleaseMode(ReleaseMode.stop);
+
       await _player.stop();
       await _player.play(UrlSource(resolved));
+
+      print('✅ 오디오 재생 성공');
+      print('📊 플레이어 상태: ${_player.state}');
     } catch (e) {
-      // 무시
+      print('❌ 오디오 재생 실패: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오디오를 재생할 수 없습니다: $e')),
+        );
+      }
     }
   }
 

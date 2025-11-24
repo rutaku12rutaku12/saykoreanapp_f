@@ -40,6 +40,7 @@ dependencies:
   intl_phone_field_v2: ^4.0.5 # 국제번호 드롭다운 // 웹은 국가 사진x
   flutter_inappwebview: ^6.1.5 # 소셜 로그인 시 내부 브라우저 지원
   recaptcha_enterprise_flutter: ^18.8.1 # 리캡챠 // 현재 안드로이드만 가능, 폴더명에 _가 존재하여 ios 키 생성 불가
+  easy_localization: ^3.0.1 # 다국어
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -82,6 +83,9 @@ flutter:
     - assets/img/top_wave.png
     - assets/img/bgImg.png
     - assets/          # 이 한 줄로 하위 전부 포함
+
+    # 다국어
+    - assets/i18n/
 
 
   # The following line ensures that the Material Icons font is

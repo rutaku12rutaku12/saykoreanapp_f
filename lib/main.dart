@@ -530,6 +530,22 @@ class _FooterBar extends StatelessWidget {
             child: Row(
               children: [
                 _item(
+                  "게임",
+                  "assets/icons/game.svg",
+                  "/game",
+                  current == "/game",
+                  activeColor,
+                  inactiveColor,
+                ),
+                _item(
+                  "채팅",
+                  "assets/icons/friends.svg",
+                  "/chat",
+                  current == "/chat",
+                  activeColor,
+                  inactiveColor,
+                ),
+                _item(
                   "홈",
                   "assets/icons/home.svg",
                   "/home",
@@ -546,14 +562,6 @@ class _FooterBar extends StatelessWidget {
                   inactiveColor,
                 ),
                 _item(
-                  "스토어",
-                  "assets/icons/store_icon.svg",
-                  "/store",
-                  current == "/store",
-                  activeColor,
-                  inactiveColor,
-                ),
-                _item(
                   "시험",
                   "assets/icons/test.svg",
                   "/testList",
@@ -561,22 +569,8 @@ class _FooterBar extends StatelessWidget {
                   activeColor,
                   inactiveColor,
                 ),
-                _item(
-                  "게임",
-                  "assets/icons/game.svg",
-                  "/game",
-                  current == "/game",
-                  activeColor,
-                  inactiveColor,
-                ),
-                _item(
-                  "채팅",
-                  "assets/icons/friends.svg",
-                  "/chat",
-                  current == "/chat",
-                  activeColor,
-                  inactiveColor,
-                ),
+
+
               ],
             ),
           ),

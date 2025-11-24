@@ -126,31 +126,48 @@ class _HomePageState extends State<HomePage> {
                 : const CustomPaint(painter: _BottomWavePink())),
           ),
 
-          // ── 오른쪽 상단 아이콘 2개 (내정보 / 순위)
+          // ── 상단 아이콘들
+//   - 왼쪽 끝 : 내정보
+//   - 오른쪽 끝 : 스토어 + 순위
           Positioned(
-            top: topPadding + 8, // 상태바 밑으로 살짝
+            top: topPadding + 8,
             right: 16,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                _HomeTopIconButton(
-                  icon: Icons.person_outline,
-                  label: '내정보',
-                  onTap: () {
-                    Navigator.pushNamed(context, '/info');
-                  },
-                ),
-                const SizedBox(width: 8),
-                _HomeTopIconButton(
-                  icon: Icons.emoji_events_outlined,
-                  label: '순위',
-                  onTap: () {
-                    Navigator.pushNamed(context, '/ranking');
-                  },
+                // 오른쪽: 스토어 + 순위
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _HomeTopIconButton(
+                      icon: Icons.storefront_outlined,
+                      label: '스토어',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/store');
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _HomeTopIconButton(
+                      icon: Icons.emoji_events_outlined,
+                      label: '순위',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/ranking');
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _HomeTopIconButton(
+                      icon: Icons.person_outline,
+                      label: '내정보',
+                      onTap: () {
+                        Navigator.pushNamed(context, '/info');
+                      },
+                    ),
+
+                  ],
                 ),
               ],
             ),
           ),
+
 
           // ── 메인 컨텐츠 영역
           SafeArea(

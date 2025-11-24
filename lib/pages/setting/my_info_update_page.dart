@@ -16,6 +16,11 @@ class MyInfoUpdatePage extends StatefulWidget {
 }
 
 class _InfoUpdateState extends State<MyInfoUpdatePage>{
+  @override
+  void initState() {
+    super.initState();
+    loadUserInfo();   // ← 기존 값 자동 세팅
+  }
 
   // 입력창 텍스트 컨트롤러
   TextEditingController nameCon = TextEditingController();
@@ -30,6 +35,9 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
 
   // 서버 전송용 국제번호 저장 변수
   PhoneNumber? emailPhoneNumber;
+
+  // 원래 전화번호 저장용
+  String originalPhone = "";
 
   // 탈퇴용 비밀번호 입력 팝업 메소드
   Future<String?> showPasswordPrompt() async {
@@ -98,7 +106,18 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
           print("입력값을 채워주세요.");
         return;}
     try{
-      final plusPhone = emailPhoneNumber?.completeNumber ?? phoneCon.text;
+      final plusPhone = emailPhoneNumber?.completeNumber ?? "+82${phoneCon.text}";
+      bool isPhoneChanged = (originalPhone != plusPhone);
+
+      print("원래 번호: $originalPhone");
+      print("현재 번호: $plusPhone");
+      print("변경 여부: $isPhoneChanged");
+
+      // 전화번호가 변경되었는데 중복 확인을 안했으면 에러
+      if(isPhoneChanged && !phoneCheck) {
+        Fluttertoast.showToast(msg: "전화번호 중복 확인을 해주세요.",backgroundColor: Colors.red);
+        return;
+      }
       final sendData = {"name": nameCon.text,"nickName":nickCon.text,"phone":plusPhone };
       print(sendData);
       final response = await ApiClient.dio.put(
@@ -118,7 +137,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
         Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => MyPage()));
-      }else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.greenAccent);}
+      }else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.red);}
     }catch(e){print(e);}
   }
 
@@ -133,8 +152,12 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
     // if (newPassword != checkPassword) { return alert(t("myinfoupdate.checkNewPassword")) }
     if( newPassCon.text != checkPassCon.text ){
       print("비밀번호 불일치 , 새 비밀번호: ${newPassCon.text}, 비밀번호 확인: ${checkPassCon.text} ");
-      Fluttertoast.showToast(msg: "비밀번호가 다릅니다. 다시 확인해주세요.",backgroundColor: Colors.red);
-      return; 
+      Fluttertoast.showToast(msg: "비밀번호가 일치하지 않습니다.",backgroundColor: Colors.red);
+      return;
+    }
+    if( newPassCon.text.length <8 || checkPassCon.text.length <8 ){
+      Fluttertoast.showToast(msg: "8자 이상 비밀번호를 입력해주세요.", backgroundColor: Colors.red);
+      return;
     }
     try{
       final sendData = {"currentPassword":currentPassCon.text,"newPassword":newPassCon.text};
@@ -147,14 +170,13 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
       );
       print(response);
       print(response.data);
-      if(response.statusCode == 200 && response.data != null
-        && response.data == 1){
+      if(response.statusCode == 200 && response.data != null){
         Fluttertoast.showToast(msg: "수정이 완료되었습니다.",backgroundColor: Colors.greenAccent);
         // 수정 후 내 정보로 이동
         Navigator.push(
             context,
             MaterialPageRoute(builder: (context)=> MyPage() ));
-      }else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.greenAccent);}
+      }else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.red);}
     }catch(e){print(e);}
   }
 
@@ -210,7 +232,35 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
       print(e);
     }
   }
+  // 수정 입력값 기존값 불러오기
+  void loadUserInfo() async {
+    try {
+      final response = await ApiClient.dio.get(
+        "/saykorean/info",
+        options: Options(
+          validateStatus: (status) => true,
+        ),
+      );
 
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+
+        setState(() {
+          nameCon.text = data["name"] ?? "";
+          nickCon.text = data["nickName"] ?? "";
+          // 전화번호 불러오기
+          String phone = data["phone"] ?? "";
+          if (phone.startsWith("+82")) {
+            phone = phone.substring(3); // +82 제거만
+          } else if (phone.startsWith("82")) {
+            phone = phone.substring(2); // 82 제거만
+          }
+          phoneCon.text = phone;
+          // 원래 전화번호 저장 (국제번호 포함)
+          originalPhone = data["phone"] ?? "";
+        });
+      }}catch(e){print(e);}
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -253,6 +303,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
                 validator: (value) => null, // 자리수 검증 제거// ,
                 onChanged: (phone) {
                   emailPhoneNumber = phone;
+                  phoneCheck = false;
                   print("입력한 번호: ${phone.number}");
                 }, // 입력 위젯, 전화번호
               ),

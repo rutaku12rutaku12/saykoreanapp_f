@@ -25,6 +25,8 @@ class _SignupState extends State<SignupPage> {
   TextEditingController passwordCon = TextEditingController();
   TextEditingController nickNameCon = TextEditingController();
   TextEditingController phoneCon = TextEditingController();
+  
+  TextEditingController passwordCon2 = TextEditingController();
 
   // 중복검사 상태관리
   bool emailCheck = false;
@@ -47,11 +49,19 @@ class _SignupState extends State<SignupPage> {
         emailCon.text.trim().isEmpty ||
         passwordCon.text.trim().isEmpty ||
         nickNameCon.text.trim().isEmpty ||
-        phoneCon.text.trim().isEmpty)
+        phoneCon.text.trim().isEmpty ||
+        passwordCon2.text.trim().isEmpty)
     {
       Fluttertoast.showToast(msg: "입력값을 채워주세요.", backgroundColor: Colors.red);
       print("입력값을 채워주세요.");
       return;}
+    if( passwordCon.text != passwordCon2.text ){
+      Fluttertoast.showToast(msg: "비밀번호가 일치하지 않습니다.",backgroundColor: Colors.red);
+      return;}
+    if( passwordCon.text.length <8 || passwordCon2.text.length <8 ){
+      Fluttertoast.showToast(msg: "8자 이상 비밀번호를 입력해주세요.", backgroundColor: Colors.red);
+      return;
+    }
     if( emailCheck == false || phoneCheck == false ){
       Fluttertoast.showToast(msg: "중복 확인을 모두 해주세요.",backgroundColor: Colors.red); print("중복 확인을 해주세요.");
       return;}
@@ -177,6 +187,7 @@ class _SignupState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        resizeToAvoidBottomInset: true, // 자동 스크롤 허용
         body: Container( // Container( padding : , margin : ); 안쪽/바깥 여백 위젯
           padding: EdgeInsets.all(30), // EdgeInsets.all() : 상하좌우 모두 적용되는 안쪽 여백
           margin: EdgeInsets.all(30), // EdgeInsets.all() : 상하좌우 모두 적용되는 바깥 여백
@@ -203,8 +214,17 @@ class _SignupState extends State<SignupPage> {
                 controller: passwordCon,
                 obscureText: true, // 입력한 텍스트 가리기
                 decoration: InputDecoration(
-                    labelText: "비밀번호", border: OutlineInputBorder()),
+                    labelText: "비밀번호", hintText: "8자 이상 입력해주세요", border: OutlineInputBorder()),
               ), // 입력 위젯 , 패스워드
+              
+              SizedBox(height: 20,),
+              TextField(
+                controller: passwordCon2,
+                obscureText: true, // 입력한 텍스트 가리기
+                decoration: InputDecoration(
+                    labelText: "비밀번호 확인",hintText: "8자 이상 입력해주세요", border: OutlineInputBorder()),
+              ), // 입력 위젯 , 패스워드
+              
               SizedBox(height: 20,),
               TextField(
                 controller: nickNameCon,
@@ -256,12 +276,6 @@ class _SignupState extends State<SignupPage> {
               SizedBox(height: 20,),
 
               ElevatedButton(onPressed: onSignup, child: const Text("회원가입")),
-              SizedBox(height: 20,),
-              ElevatedButton(onPressed: () =>
-              {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => LoginPage())),
-              }, child: Text("이미 가입된 사용자면 로그인"))
 
             ],
           ),

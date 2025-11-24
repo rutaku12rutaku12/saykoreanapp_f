@@ -51,42 +51,42 @@ class ApiClient {
     ),
   )..interceptors.add(
     InterceptorsWrapper(
-        onRequest: (options,handler) async{
-          // JWT 토큰 자동 추가
-          final prefs = await SharedPreferences.getInstance();
-          final token = prefs.getString('token');
+      onRequest: (options,handler) async{
+        // JWT 토큰 자동 추가
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token');
 
-          if( token != null && token.isNotEmpty ){
-            options.headers['Authorization'] = 'Bearer $token';
-            print('✅ Authorization 헤더 추가');
-          }
-
-          print('🌐 요청: ${options.method} ${options.uri}');
-          return handler.next(options);
-        },
-        onResponse: (response,handler){
-          print('✅ 응답 성공: ${response.statusCode}');
-          return handler.next(response);
-        },
-        onError: (error, handler) async{
-          final status = error.response?.statusCode;
-
-          print('❌ API 에러: ${status}');
-          print('   URL: ${error.requestOptions.uri}');
-          print('   메시지: ${error.response?.data}');
-
-          // 토큰 만료 또는 인증 실패 시 자동 로그아웃
-          if( status == 401){
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.remove('token');
-            // 로그인 화면으로 이동
-            appNavigatorKey.currentState?.pushNamedAndRemoveUntil(
-              '/login',
-                  (_) => false,
-            );
-          }
-          return handler.next(error);
+        if( token != null && token.isNotEmpty ){
+          options.headers['Authorization'] = 'Bearer $token';
+          print('✅ Authorization 헤더 추가');
         }
+
+        print('🌐 요청: ${options.method} ${options.uri}');
+        return handler.next(options);
+      },
+      onResponse: (response,handler) async {
+        if( response.statusCode == 401){
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('token');
+          // 로그인 화면으로 이동
+          appNavigatorKey.currentState?.pushNamedAndRemoveUntil(
+            '/login',
+                (_) => false,
+          );
+
+        }
+        print('✅ 응답 코드: ${response.statusCode}');
+        return handler.next(response);
+      },
+      onError: (error, handler) async{
+        final status = error.response?.statusCode;
+
+        print('❌ API 에러: ${status}');
+        print('   URL: ${error.requestOptions.uri}');
+        print('   메시지: ${error.response?.data}');
+
+        return handler.next(error);
+      }
     ),
   );
 
@@ -123,88 +123,39 @@ class ApiClient {
       return imagePath;
     }
 
-    // 역슬래시 정규화
-    String normalized = imagePath.replaceAll('\\', '/');
-
-    final base = dio.options.baseUrl;
-
-    // 이미 /upload/... 로 시작하면 그대로 baseUrl만 붙이기
-    if (normalized.startsWith('/upload/')) {
-      final url = '$base$normalized';
-      debugPrint('[ApiClient] image url = $url');
-      return url;
-    }
-    if (normalized.startsWith('upload/')) {
-      final url = '$base/$normalized';
-      debugPrint('[ApiClient] image url = $url');
-      return url;
+    // /upload로 시작하면 baseUrl과 결합
+    if (imagePath.startsWith('/upload')) {
+      return '${_detectBaseUrl()}$imagePath';
     }
 
-    // dev/sayKorean_uploads/... 같은 실제 경로인 경우
-    // 뒤쪽의 image/ 또는 audio/ 부분부터 잘라서 사용
-    final candidates = ['image/', 'audio/', 'video/', 'file/'];
-    for (final key in candidates) {
-      final idx = normalized.indexOf(key);
-      if (idx != -1) {
-        normalized = normalized.substring(idx); // ex) image/nov_25/1_img.jpg
-        break;
-      }
+    // upload로 시작하면 / 추가
+    if (imagePath.startsWith('upload')) {
+      return '${_detectBaseUrl()}/$imagePath';
     }
 
-    // 앞에 슬래시 없으면 추가 → /image/...
-    if (!normalized.startsWith('/')) {
-      normalized = '/$normalized';
-    }
-
-    // 최종 URL 경로: /upload/image/...
-    final path = '/upload$normalized';
-    final url = '$base$path';
-    debugPrint('[ApiClient] image url = $url');
-    return url;
+    // 기타 경로는 /upload/ 추가
+    return '${_detectBaseUrl()}/upload/$imagePath';
   }
 
-  // 오디오 URL 생성 (이미지와 거의 동일한 로직)
+  // ✅ 오디오 URL 생성 (이미지와 동일한 로직)
   static String getAudioUrl(String? audioPath) {
     if (audioPath == null || audioPath.isEmpty) {
       return '';
     }
 
-    // 이미 완전한 URL이면 그대로
     if (audioPath.startsWith('http://') || audioPath.startsWith('https://')) {
       return audioPath;
     }
 
-    String normalized = audioPath.replaceAll('\\', '/');
-    final base = dio.options.baseUrl;
-
-    // 이미 /upload/audio/... 형식인 경우
-    if (normalized.startsWith('/upload/')) {
-      final url = '$base$normalized';
-      debugPrint('[ApiClient] audio url = $url');
-      return url;
-    }
-    if (normalized.startsWith('upload/')) {
-      final url = '$base/$normalized';
-      debugPrint('[ApiClient] audio url = $url');
-      return url;
+    if (audioPath.startsWith('/upload')) {
+      return '${_detectBaseUrl()}$audioPath';
     }
 
-    // dev/sayKorean_uploads/... 인 경우 audio/ 뒤부터 자르기
-    final idx = normalized.indexOf('audio/');
-    if (idx != -1) {
-      normalized = normalized.substring(idx); // audio/...
+    if (audioPath.startsWith('upload')) {
+      return '${_detectBaseUrl()}/$audioPath';
     }
 
-    // 앞에 슬래시 없으면 붙이기 → /audio/...
-    if (!normalized.startsWith('/')) {
-      normalized = '/$normalized';
-    }
-
-    // 최종 URL 경로: /upload/audio/...
-    final path = '/upload$normalized';
-    final url = '$base$path';
-    debugPrint('[ApiClient] audio url = $url');
-    return url;
+    return '${_detectBaseUrl()}/upload/$audioPath';
   }
 
   // ✅ URL 유효성 검사
@@ -224,9 +175,10 @@ class ApiClient {
     return _detectBaseUrl();
   }
 
-// ✅ 토큰 저장
+  // ✅ 토큰 저장
 
-// ✅ 토큰 삭제 (로그아웃)
+  // ✅ 토큰 삭제 (로그아웃)
 
-// ✅ 토큰 확인
+  // ✅ 토큰 확인
+
 }

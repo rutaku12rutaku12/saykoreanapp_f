@@ -58,7 +58,7 @@ class _FindState extends State<FindPage>{
         queryParameters: sendData);
       print(response.data);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('임시 비밀번호가 발급되었습니다. 임시 비밀번호 : ${response.data} 입니다. '),
+        SnackBar(content: Text('임시 비밀번호가 이메일로 발급되었습니다.'),
                  duration: Duration(seconds: 15) // 스낵바 시간
         ),);
     }catch(e){print("오류발생 : 비밀번호 찾기 실패, $e");}

@@ -8,7 +8,6 @@ import 'package:saykoreanapp_f/api/api.dart'; // 전역 Dio: ApiClient.dio 사�
 import 'package:easy_localization/easy_localization.dart';
 
 class TestPage extends StatefulWidget {
-
   final int testNo;
   final String? testMode; // "REGULAR" , "INFINITE" , "HARD"
 
@@ -112,7 +111,7 @@ class _TestPageState extends State<TestPage> {
       print('❌ 오디오 재생 실패: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('test.audio.error'.tr(args: [e.toString()]))),
+          SnackBar(content: Text('오디오를 재생할 수 없습니다: $e')),
         );
       }
     }
@@ -150,6 +149,7 @@ class _TestPageState extends State<TestPage> {
     });
 
     try {
+
       // [1] 문항 로드 - 모드 분기 :: 2번째에서 1번째로
       print("🎯 testMode = ${widget.testMode}");
       List<dynamic> list = [];
@@ -191,48 +191,52 @@ class _TestPageState extends State<TestPage> {
         setState(() => testRound = nextRound);
 
         list = await _loadRegularItems();
+
       }
+
 
       print("✅ 로드된 문항 수: ${list.length}");
 
       setState(() {
         items = list;
         idx = 0;
-        // msg는 에러일 때만 사용, 기본은 빈 문자열 유지
+        msg = items.isEmpty ? "문항이 없습니다." : "";
       });
     } catch (e, st) {
       print("_loadQuestions error: $e");
       print(st);
       setState(() {
-        msg = "test.loadError".tr();
+        msg = "문항을 불러올 수 없습니다.";
         items = [];
       });
     } finally {
       setState(() => loading = false);
     }
   }
-
+      
   // 📝 [3-1] 정기 시험 문항 로드
   Future<List<dynamic>> _loadRegularItems() async {
-    final res = await ApiClient.dio.get(
-      "/saykorean/test/findtestitem",
-      queryParameters: {
-        "testNo": widget.testNo,
-        "langNo": langNo,
-      },
-    );
+      final res = await ApiClient.dio.get(
+        "/saykorean/test/findtestitem",
+        queryParameters: {
+          "testNo": widget.testNo,
+          "langNo": langNo,
+        },
+      );
 
-    print("▶ findtestitem status = ${res.statusCode}");
-    print("▶ findtestitem data   = ${res.data}");
+      print("▶ findtestitem status = ${res.statusCode}");
+      print("▶ findtestitem data   = ${res.data}");
 
-    if (res.data is List) {
-      return res.data as List;
-    } else if (res.data is Map && res.data['list'] is List) {
-      return res.data['list'] as List;
-    } else {
-      return [];
-    }
+
+      if (res.data is List) {
+        return res.data as List;
+      } else if (res.data is Map && res.data['list'] is List) {
+        return res.data['list'] as List;
+      } else {
+        return [];
+      }
   }
+
 
   // ♾️ [3-2] 무한모드 문항 로드
   Future<List<dynamic>> _loadInfiniteItems() async {
@@ -244,7 +248,7 @@ class _TestPageState extends State<TestPage> {
         .where((n) => n != null && n! > 0)
         .cast<int>()
         .toList();
-
+    
     // 완료한 주제가 비어있으면
     if (studyNos.isEmpty) {
       print("⚠️ 무한모드 : 완료한 주제가 없습니다");
@@ -254,10 +258,10 @@ class _TestPageState extends State<TestPage> {
     print("📚 무한모드 : studyNos = $studyNos}");
 
     final res = await ApiClient.dio.get(
-      "/saykorean/test/infinite-items",
+      "/saykorean/test/infinite-items" ,
       queryParameters: {
-        "langNo": langNo,
-        "studyNos": studyNos.join(','),
+        "langNo" : langNo ,
+        "studyNos" : studyNos.join(','),
       },
     );
 
@@ -277,9 +281,9 @@ class _TestPageState extends State<TestPage> {
     print("🔥 하드모드: 전체 문항 로드");
 
     final res = await ApiClient.dio.get(
-      "/saykorean/test/hard-items",
+      "/saykorean/test/hard-items" ,
       queryParameters: {
-        "langNo": langNo,
+        "langNo" : langNo,
       },
     );
 
@@ -365,7 +369,7 @@ class _TestPageState extends State<TestPage> {
 
       if (!mounted || result == null || result['ok'] != true) {
         setState(() {
-          msg = "test.submitError".tr();
+          msg = "답안 제출 실패";
           feedback = {
             "correct": false,
             "score": 0,
@@ -453,7 +457,7 @@ class _TestPageState extends State<TestPage> {
       print("submitAnswer error: $e");
       print(st);
       setState(() {
-        msg = "test.submitError".tr();
+        msg = "답안 제출 실패";
         feedback = {
           "correct": false,
           "score": 0,
@@ -496,6 +500,7 @@ class _TestPageState extends State<TestPage> {
         // 무한/하드모드 : 모든 문제 정답 시
         _showVictoryDialog();
       }
+
     }
   }
 
@@ -504,27 +509,24 @@ class _TestPageState extends State<TestPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text("test.gameover.title".tr()),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "test.gameover.infinite".tr(namedArgs: {
-            "count": "${idx + 1}",
-          })
-              : "test.gameover.hard".tr(namedArgs: {
-            "count": "${idx + 1}",
-          }),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // 다이얼로그 닫기
-              Navigator.pop(context); // 시험페이지 닫기
-            },
-            child: Text("common.confirm".tr()),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("게임 오버"),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
+                  : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // 다이얼로그 닫기
+                  Navigator.pop(context); // 시험페이지 닫기
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -533,27 +535,24 @@ class _TestPageState extends State<TestPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text("test.victory.title".tr()),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "test.victory.infinite".tr(namedArgs: {
-            "count": "${items.length}",
-          })
-              : "test.victory.hard".tr(namedArgs: {
-            "count": "${items.length}",
-          }),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: Text("common.confirm".tr()),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("🎉 완벽합니다!"),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
+                  : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -575,7 +574,10 @@ class _TestPageState extends State<TestPage> {
     final bg = theme.scaffoldBackgroundColor;
     final isDark = theme.brightness == Brightness.dark;
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
 
     final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
 
@@ -622,25 +624,6 @@ class _TestPageState extends State<TestPage> {
     final nextButtonBg = scheme.primaryContainer;
     final nextButtonFg = scheme.onPrimaryContainer;
 
-    // 모드별 타이틀/설명 key
-    String appBarTitleKey;
-    String headerTitleKey;
-    String descKey;
-
-    if (widget.testMode == "INFINITE") {
-      appBarTitleKey = "test.mode.infinite.title";
-      headerTitleKey = "test.mode.infinite.title";
-      descKey = "test.desc.infinite";
-    } else if (widget.testMode == "HARD") {
-      appBarTitleKey = "test.mode.hard.title";
-      headerTitleKey = "test.mode.hard.title";
-      descKey = "test.desc.hard";
-    } else {
-      appBarTitleKey = "test.mode.regular.title";
-      headerTitleKey = "test.header.regular";
-      descKey = "test.desc.regular";
-    }
-
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
@@ -649,7 +632,11 @@ class _TestPageState extends State<TestPage> {
         centerTitle: true,
         iconTheme: IconThemeData(color: titleColor),
         title: Text(
-          appBarTitleKey.tr(),
+          widget.testMode == "INFINITE"
+              ? '♾️ 무한모드'
+              : widget.testMode == "HARD"
+              ? '🔥 하드모드'
+              : '📝 정기시험',
           style: TextStyle(
             color: titleColor,
             fontWeight: FontWeight.w700,
@@ -661,7 +648,7 @@ class _TestPageState extends State<TestPage> {
           : items.isEmpty
           ? Center(
         child: Text(
-          msg.isEmpty ? "test.empty".tr() : msg,
+          msg.isEmpty ? "문항이 없습니다." : msg,
           style: TextStyle(color: subtitleColor),
         ),
       )
@@ -673,7 +660,11 @@ class _TestPageState extends State<TestPage> {
             children: [
               // 상단 타이틀
               Text(
-                headerTitleKey.tr(),
+                widget.testMode == "INFINITE"
+                    ? "♾️ 무한모드"
+                    : widget.testMode == "HARD"
+                    ? "🔥 하드모드"
+                    : "📝 오늘의 시험",
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -682,7 +673,10 @@ class _TestPageState extends State<TestPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                descKey.tr(),
+                widget.testMode == "INFINITE" ||
+                    widget.testMode == "HARD"
+                    ? "틀릴 때까지 계속 도전해요!"
+                    : "문제를 풀고 자신의 실력을 확인해 보아요.",
                 style: TextStyle(
                   fontSize: 13,
                   color: subtitleColor,
@@ -748,11 +742,10 @@ class _TestPageState extends State<TestPage> {
                               ),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
-                                  Center(
-                                    child: Text(
-                                      'test.image.loadError'.tr(),
-                                    ),
-                                  ),
+                              const Center(
+                                child:
+                                Text('이미지를 불러올 수 없어요'),
+                              ),
                             ),
                           ),
                         ),
@@ -776,12 +769,12 @@ class _TestPageState extends State<TestPage> {
                                         audio['audioPath']);
                                   },
                                   icon: const Text('🔊'),
-                                  label: Text(
-                                    'test.audio.play'.tr(),
-                                  ),
+                                  label:
+                                  const Text('음성 듣기'),
                                   style:
                                   OutlinedButton.styleFrom(
-                                    foregroundColor: titleColor,
+                                    foregroundColor:
+                                    titleColor,
                                     side: BorderSide(
                                       color: cardBorderColor,
                                     ),
@@ -834,8 +827,7 @@ class _TestPageState extends State<TestPage> {
                   CrossAxisAlignment.stretch,
                   children: [
                     Container(
-                      padding:
-                      const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: feedback!['correct']
                             ? Colors.green.shade100
@@ -845,8 +837,8 @@ class _TestPageState extends State<TestPage> {
                       ),
                       child: Text(
                         feedback!['correct']
-                            ? "test.feedback.correct".tr()
-                            : "test.feedback.wrong".tr(),
+                            ? "정답입니다!"
+                            : "틀렸어요 😢",
                         style: TextStyle(
                           color: feedback!['correct']
                               ? Colors.green.shade900
@@ -870,9 +862,11 @@ class _TestPageState extends State<TestPage> {
                           elevation: 0,
                         ),
                         child: Text(
-                          idx < items.length - 1
-                              ? "test.next".tr()
-                              : "test.result.view".tr(),
+                          idx <
+                              items.length -
+                                  1
+                              ? "다음 문제"
+                              : "결과 보기",
                         ),
                       ),
                     ),
@@ -892,7 +886,8 @@ class _TestPageState extends State<TestPage> {
     final titleColor = scheme.primary;
 
     final options = cur?['options'];
-    final hasOptions = options is List && options.isNotEmpty;
+    final hasOptions =
+        options is List && options.isNotEmpty;
 
     int? _toInt(dynamic v) {
       if (v == null) return null;
@@ -905,7 +900,7 @@ class _TestPageState extends State<TestPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "test.multiple.title".tr(), // "정답을 골라보세요"
+          "정답을 골라보세요",
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -913,28 +908,32 @@ class _TestPageState extends State<TestPage> {
           ),
         ),
         const SizedBox(height: 8),
+
+        // ✅ 여기부터 바뀐 부분
         if (hasOptions)
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: (options as List).map<Widget>((opt) {
+            children:
+            (options as List).map<Widget>((opt) {
               final map = opt as Map<String, dynamic>;
               final label = map['examSelected'] ??
                   map['examKo'] ??
-                  "test.options.loadError".tr();
+                  "보기 로드 실패";
               return _ChoiceButton(
                 label: label.toString(),
                 onTap: feedback == null
-                    ? () => submitAnswer(
-                  selectedExamNo:
-                  _toInt(map['examNo']),
-                )
+                    ? () =>
+                    submitAnswer(
+                      selectedExamNo:
+                      _toInt(map['examNo']),
+                    )
                     : null,
               );
             }).toList(),
           )
         else
-          Text("test.options.loadError".tr()),
+          const Text("보기 불러오기 실패"),
       ],
     );
   }
@@ -950,7 +949,7 @@ class _TestPageState extends State<TestPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "test.subjective.title".tr(), // "한국어로 답을 입력해 보세요"
+          "한국어로 답을 입력해 보세요",
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -968,7 +967,7 @@ class _TestPageState extends State<TestPage> {
             });
           },
           decoration: InputDecoration(
-            hintText: "test.subjective.placeholder".tr(),
+            hintText: "한국어로 답변을 작성하세요",
             border: const OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
@@ -982,8 +981,10 @@ class _TestPageState extends State<TestPage> {
         SizedBox(
           height: 44,
           child: ElevatedButton(
-            onPressed:
-            (subjective.trim().isEmpty || submitting)
+            onPressed: (subjective
+                .trim()
+                .isEmpty ||
+                submitting)
                 ? null
                 : () => submitAnswer(),
             style: ElevatedButton.styleFrom(
@@ -991,11 +992,8 @@ class _TestPageState extends State<TestPage> {
               foregroundColor: buttonFg,
               elevation: 0,
             ),
-            child: Text(
-              submitting
-                  ? "common.loading".tr()
-                  : "test.submit".tr(),
-            ),
+            child:
+            Text(submitting ? "로딩 중..." : "제출"),
           ),
         ),
       ],
@@ -1046,4 +1044,47 @@ class _ChoiceButton extends StatelessWidget {
       ),
     );
   }
+}
+// 공통으로 쓰면 좋은 객관식 버튼 빌더
+Widget buildChoiceButton(
+    BuildContext context,
+    String text,
+    VoidCallback? onTap,
+    ) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final isDark = theme.brightness == Brightness.dark;
+
+  final borderColor =
+  isDark ? scheme.outline.withOpacity(0.5) : const Color(0xFFE5E7EB);
+  final fgColor =
+  isDark ? scheme.onSurface : const Color(0xFF6B4E42); // 브라운 톤
+  final bgColor = isDark ? scheme.surface : Colors.white;
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6.0),
+    child: SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: fgColor,
+          side: BorderSide(color: borderColor, width: 1.4),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    ),
+  );
 }

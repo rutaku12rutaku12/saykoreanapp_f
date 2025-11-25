@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../../api/chatting_api.dart';  // 🔥 신고 API 사용
+import '../../api/chatting_api.dart';
 
 class ChatPage extends StatefulWidget {
   final int roomNo;
@@ -23,26 +23,25 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  late WebSocketChannel _channel;
+  WebSocketChannel? _channel;
   final ScrollController _scroll = ScrollController();
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
 
-  bool _loadingHistory = true; // HISTORY 도착 전 로딩 표시
-  final api = ChattingApi();   // 🔥 신고 API 인스턴스 추가
+  bool _loadingHistory = true;
+  final api = ChattingApi();
 
   @override
   void initState() {
     super.initState();
-    _connectSocket(); // 첫 연결
+    _connectSocket();
   }
 
   void _connectSocket() {
-    // 혹시 기존 소켓이 남아있으면 강제로 닫고 재연결
-    try{
+    try {
       _channel?.sink.close();
-    }catch(_){}
-    //-----------------------------
+    } catch (_) {}
+
     final wsUrl =
         "${ApiClient.detectWsUrl()}?roomNo=${widget.roomNo}&userNo=${widget.myUserNo}";
     print("WebSocket connect: $wsUrl");
@@ -54,14 +53,12 @@ class _ChatPageState extends State<ChatPage> {
         final decoded = jsonDecode(data);
         final type = decoded["type"] ?? "";
 
-        // -------------------------------
-        // HISTORY mode
-        // -------------------------------
+        // 🔥 HISTORY 수신
         if (type == "HISTORY") {
           final list = decoded["messages"] ?? [];
 
           setState(() {
-            _loadingHistory = false; // 로딩 종료
+            _loadingHistory = false;
             _messages.clear();
 
             for (final m in list) {
@@ -73,14 +70,11 @@ class _ChatPageState extends State<ChatPage> {
               });
             }
           });
-
           _scrollToBottom();
           return;
         }
 
-        // -------------------------------
-        // 실시간 메시지
-        // -------------------------------
+        // 🔥 실시간 메시지 수신
         if (type == "chat") {
           setState(() {
             _messages.add({
@@ -96,18 +90,18 @@ class _ChatPageState extends State<ChatPage> {
         }
       },
       onDone: () {
-        print("⚠ 소켓 종료됨 → 자동 재연결 시도");
-        Future.delayed(Duration(seconds: 1), _connectSocket);
+        print("⚠ 소켓 종료됨 → 자동 재연결");
+        Future.delayed(const Duration(seconds: 1), _connectSocket);
       },
       onError: (e) {
         print("⚠ 소켓 오류: $e");
-        Future.delayed(Duration(seconds: 1), _connectSocket);
+        Future.delayed(const Duration(seconds: 1), _connectSocket);
       },
     );
   }
 
   void _scrollToBottom() {
-    Future.delayed(Duration(milliseconds: 150), () {
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (_scroll.hasClients) {
         _scroll.jumpTo(_scroll.position.maxScrollExtent);
       }
@@ -116,55 +110,53 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void dispose() {
-    try{
+    try {
       _channel?.sink.close();
-    }catch(_){}
+    } catch (_) {}
     _controller.dispose();
     super.dispose();
   }
 
-  // -------------------------------
   // 메시지 전송
-  // -------------------------------
   void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
     final payload = {
-      "type" : "chat",
-      "roomNo" : widget.roomNo, //채팅방 번호
-      "userNo" : widget.myUserNo, // 내 userNo
-      "message": text //보낼 메시지
+      "type": "chat",
+      "roomNo": widget.roomNo,
+      "userNo": widget.myUserNo,
+      "message": text
     };
-    _channel.sink.add(jsonEncode(payload));
 
+    _channel?.sink.add(jsonEncode(payload));
     _controller.clear();
   }
 
-  // -------------------------------
   // 메시지 신고 기능
-  // -------------------------------
   Future<void> _reportMessage(Map<String, dynamic> message) async {
     final reasonController = TextEditingController();
 
     final reason = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text("메시지 신고"),
+        title: const Text("메시지 신고"),
         content: TextField(
           controller: reasonController,
           maxLines: 3,
-          decoration: InputDecoration(hintText: "신고 사유를 입력해주세요."),
+          decoration: const InputDecoration(
+            hintText: "신고 사유를 입력해주세요.",
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("취소"),
+            child: const Text("취소"),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.pop(context, reasonController.text.trim()),
-            child: Text("신고"),
+            child: const Text("신고"),
           ),
         ],
       ),
@@ -180,48 +172,124 @@ class _ChatPageState extends State<ChatPage> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("신고가 접수되었습니다.")),
+        const SnackBar(content: Text("신고가 접수되었습니다.")),
       );
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("신고 중 오류가 발생했습니다.")),
+        const SnackBar(content: Text("신고 중 오류가 발생했습니다.")),
       );
     }
   }
 
-  // -------------------------------
+  // ============================
   // UI
-  // -------------------------------
+  // ============================
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final myBubbleBg = scheme.primaryContainer;
+    final myBubbleFg = scheme.onPrimaryContainer;
+    final otherBubbleBg = scheme.surface;
+    final otherBubbleFg = scheme.onSurface;
+    final timeColor = scheme.onSurface.withOpacity(0.5);
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.friendName)),
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: bg,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          widget.friendName,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color:
+            theme.appBarTheme.foregroundColor ?? theme.colorScheme.primary,
+          ),
+        ),
+        iconTheme: IconThemeData(
+          color:
+          theme.appBarTheme.foregroundColor ?? theme.colorScheme.primary,
+        ),
+      ),
       body: Column(
         children: [
           // 메시지 목록
           Expanded(
-            child: ListView.builder(
+            child: _loadingHistory && _messages.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
               controller: _scroll,
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
               itemCount: _messages.length,
               itemBuilder: (_, i) {
                 final m = _messages[i];
                 final isMe = m['sendNo'] == widget.myUserNo;
 
+                final bubbleBg = isMe ? myBubbleBg : otherBubbleBg;
+                final bubbleFg = isMe ? myBubbleFg : otherBubbleFg;
+
                 return GestureDetector(
-                  onLongPress: () => _reportMessage(m),   // 🔥 길게 눌러 신고
+                  onLongPress: () => _reportMessage(m),
                   child: Align(
-                    alignment:
-                    isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isMe
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
-                      margin:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isMe ? Colors.pink[100] : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(12),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      child: Column(
+                        crossAxisAlignment: isMe
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: bubbleBg,
+                              borderRadius: BorderRadius.only(
+                                topLeft: const Radius.circular(16),
+                                topRight: const Radius.circular(16),
+                                bottomLeft:
+                                Radius.circular(isMe ? 16 : 4),
+                                bottomRight:
+                                Radius.circular(isMe ? 4 : 16),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              m['message'] ?? '',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: bubbleFg,
+                              ),
+                            ),
+                          ),
+                          if ((m['time'] ?? '').toString().isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 2, left: 4, right: 4),
+                              child: Text(
+                                m['time'].toString(),
+                                style: theme.textTheme.labelSmall
+                                    ?.copyWith(
+                                  color: timeColor,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                      child: Text(m['message'] ?? ''),
                     ),
                   ),
                 );
@@ -232,27 +300,55 @@ class _ChatPageState extends State<ChatPage> {
           // 입력창
           SafeArea(
             top: false,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
+            child: Container(
+              padding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? scheme.surface : Colors.white,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 10,
+                    offset: Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
                     child: TextField(
                       controller: _controller,
+                      minLines: 1,
+                      maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: "메시지 입력",
-                        border: OutlineInputBorder(),
+                        hintText: "메시지를 입력하세요",
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: scheme.primary,
+                            width: 1.4,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: _send,
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(Icons.send, color: scheme.primary),
+                    onPressed: _send,
+                  ),
+                ],
+              ),
             ),
-          )
+          ),
         ],
       ),
     );

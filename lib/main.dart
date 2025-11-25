@@ -168,6 +168,9 @@ Future<void> setThemeColor(String color) async {
 // Theme 정의
 // ─────────────────────────────────────────────────────────────
 
+const skButtonBg = Color(0xFFFFD2BF); // 살구 버튼 배경
+const skButtonFg = Color(0xFF6B4E42); // 갈색 글씨
+
 ThemeData _lightTheme() {
   return ThemeData(
     useMaterial3: true,

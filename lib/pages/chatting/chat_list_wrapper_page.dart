@@ -25,15 +25,34 @@ class _ChatListWrapperPageState extends State<ChatListWrapperPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("채팅"),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          "채팅",
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).appBarTheme.foregroundColor,
+          ),
+        ),
+
         bottom: TabBar(
           controller: _tab,
+
+          // 여기서 색 통일
+          labelColor: Theme.of(context).appBarTheme.foregroundColor,
+          unselectedLabelColor:
+          Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.5),
+
+          indicatorColor: Theme.of(context).appBarTheme.foregroundColor,
+
           tabs: const [
             Tab(text: "채팅방"),
             Tab(text: "친구"),
           ],
         ),
       ),
+
       body: TabBarView(
         controller: _tab,
         children: [

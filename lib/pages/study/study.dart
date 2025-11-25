@@ -1,3 +1,5 @@
+// lib/pages/study/study.dart
+
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -6,41 +8,12 @@ import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:saykoreanapp_f/api/api.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)
-String _detectBaseUrl() {
-  final env = const String.fromEnvironment('API_HOST');
-  if (env.isNotEmpty) return env;
-
-  if (kIsWeb) return 'http://localhost:8080';
-  if (Platform.isAndroid) return 'http://10.0.2.2:8080'; // 안드 에뮬레이터→호스트
-  return 'http://localhost:8080'; // iOS 시뮬레이터/데스크톱
-}
-
-final Dio dio = Dio(BaseOptions(
-  baseUrl: _detectBaseUrl(),
-  connectTimeout: const Duration(seconds: 6),
-  receiveTimeout: const Duration(seconds: 12),
-));
-
-final Uri _baseUri = Uri.parse(_detectBaseUrl());
-
-String buildUrl(String? path) {
-  if (path == null || path.isEmpty) return '';
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  if (path.startsWith('file://')) {
-    final p = path.replaceFirst('file://', '');
-    return _baseUri.resolve(p.startsWith('/') ? p.substring(1) : p).toString();
-  }
-  return _baseUri
-      .resolve(path.startsWith('/') ? path.substring(1) : path)
-      .toString();
-}
+import 'package:saykoreanapp_f/api/api.dart'; // ✅ ApiClient 사용
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DTO
+// ─────────────────────────────────────────────────────────────────────────────
+
 class StudyDto {
   final int studyNo;
   final int genreNo;
@@ -133,6 +106,7 @@ class ExamDto {
 // ─────────────────────────────────────────────────────────────────────────────
 // StudyPage : 주제 목록 + 상세 + 예문 학습
 // ─────────────────────────────────────────────────────────────────────────────
+
 class StudyPage extends StatefulWidget {
   const StudyPage({super.key});
 
@@ -178,6 +152,7 @@ class _StudyPageState extends State<StudyPage> {
     super.dispose();
   }
 
+  // 초기화
   Future<void> _bootstrap() async {
     setState(() {
       _loading = true;
@@ -216,10 +191,12 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
-  // ── API: 주제 목록 조회
+  // ───────────────────────────────────────────────────────────────────────────
+  // API: 주제 목록 조회
+  // ───────────────────────────────────────────────────────────────────────────
   Future<void> _fetchSubjects() async {
     try {
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(
         '/saykorean/study/getSubject',
         queryParameters: {'genreNo': _genreNo, 'langNo': _langNo},
         options: Options(headers: {'Accept-Language': _langNo.toString()}),
@@ -240,7 +217,7 @@ class _StudyPageState extends State<StudyPage> {
   // API : 특정 주제 상세 조회
   Future<void> _fetchDailyStudy(int studyNo) async {
     try {
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(
         '/saykorean/study/getDailyStudy',
         queryParameters: {'studyNo': studyNo, 'langNo': _langNo},
         options: Options(headers: {'Accept-Language': _langNo.toString()}),
@@ -257,12 +234,12 @@ class _StudyPageState extends State<StudyPage> {
   // API : 첫번재 예문 조회
   Future<void> _fetchFirstExam(int studyNo) async {
     try {
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(
         '/saykorean/study/exam/first',
         queryParameters: {'studyNo': studyNo, 'langNo': _langNo},
       );
-      setState(() =>
-      _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(
+              () => _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } on DioException catch (e) {
       setState(() => _error = e.message ?? '예문을 불러오지 못했습니다.');
     } catch (_) {
@@ -274,7 +251,7 @@ class _StudyPageState extends State<StudyPage> {
   Future<void> _fetchNextExam() async {
     if (_exam == null || _subject == null) return;
     try {
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(
         '/saykorean/study/exam/next',
         queryParameters: {
           'studyNo': _subject!.studyNo,
@@ -282,8 +259,8 @@ class _StudyPageState extends State<StudyPage> {
           'langNo': _langNo,
         },
       );
-      setState(() =>
-      _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(
+              () => _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } catch (_) {}
   }
 
@@ -291,7 +268,7 @@ class _StudyPageState extends State<StudyPage> {
   Future<void> _fetchPrevExam() async {
     if (_exam == null || _subject == null) return;
     try {
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(
         '/saykorean/study/exam/prev',
         queryParameters: {
           'studyNo': _subject!.studyNo,
@@ -299,13 +276,14 @@ class _StudyPageState extends State<StudyPage> {
           'langNo': _langNo,
         },
       );
-      setState(() =>
-      _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(
+              () => _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } catch (_) {}
   }
 
-  // ── 오디오 재생
-  // ✅ 2. _play 함수 수정
+  // ───────────────────────────────────────────────────────────────────────────
+  // 오디오 재생 (ApiClient.getAudioUrl 사용)
+  // ───────────────────────────────────────────────────────────────────────────
   Future<void> _play(String? url) async {
     if (url == null || url.isEmpty) {
       print('⚠️ 오디오 URL이 비어있습니다');
@@ -358,7 +336,9 @@ class _StudyPageState extends State<StudyPage> {
     Navigator.pushNamed(context, '/successList');
   }
 
-  // ── UI
+  // ───────────────────────────────────────────────────────────────────────────
+  // UI
+  // ───────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -395,8 +375,8 @@ class _StudyPageState extends State<StudyPage> {
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-// 주제 목록 화면 - TestListPage 스타일
-// ───────────────────────────────────────────────────────────────────────────
+  // 주제 목록 화면 - TestListPage 스타일
+  // ───────────────────────────────────────────────────────────────────────────
   Widget _buildList(ThemeData theme, ColorScheme scheme, bool isDark) {
     final titleColor =
     isDark ? scheme.onSurface : const Color(0xFF6B4E42); // 상단 타이틀 포인트
@@ -503,7 +483,6 @@ class _StudyPageState extends State<StudyPage> {
     );
   }
 
-
   // ───────────────────────────────────────────────────────────────────────────
   // 주제 상세 + 예문 학습 화면
   // ───────────────────────────────────────────────────────────────────────────
@@ -519,11 +498,9 @@ class _StudyPageState extends State<StudyPage> {
     isDark ? scheme.onSurface : const Color(0xFF7C5A48);
     final cardColor = isDark ? scheme.surface : Colors.white;
 
-    final completeBg = isDark
-        ? scheme.primaryContainer.withOpacity(0.9)
-        : const Color(0xFFFFEEE9);
-    final completeFg =
-    isDark ? scheme.onPrimaryContainer : const Color(0xFF6B4E42);
+    // 테마 기반 버튼 색
+    final completeBg = scheme.primaryContainer;
+    final completeFg = scheme.onPrimaryContainer;
 
     final outlineColor = scheme.outline.withOpacity(0.5);
     final outlineFg =
@@ -558,7 +535,7 @@ class _StudyPageState extends State<StudyPage> {
           ),
           const SizedBox(height: 8),
 
-          // 현재 예문 카드 표시
+          // 현재 주제 카드
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -676,7 +653,7 @@ class _StudyPageState extends State<StudyPage> {
 // 컴포넌트들 - Pill 버튼, Exam 카드, 에러 뷰
 // ─────────────────────────────────────────────────────────────────────────────
 
-// 주제 목록에서 사용하는 알약 스타일 버튼
+// (지금은 안 쓰고 있을 수도 있지만 남겨둘게)
 class _PillButton extends StatelessWidget {
   final String label;
   final bool active;
@@ -694,21 +671,23 @@ class _PillButton extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    final bg = active
-        ? (isDark
-        ? scheme.primaryContainer.withOpacity(0.5)
-        : const Color(0xFFFFEEE9))
-        : (isDark ? scheme.surface : Colors.white);
-    final fg = active
-        ? (isDark ? scheme.onPrimaryContainer : const Color(0xFFFF7F79))
-        : (isDark ? scheme.onSurface : const Color(0xFF444444));
-    final br = active
-        ? (isDark
-        ? scheme.primary.withOpacity(0.5)
-        : const Color(0xFFFFC7C2))
-        : (isDark
-        ? scheme.outline.withOpacity(0.4)
-        : const Color(0xFFE5E7EB));
+    final Color bg;
+    final Color fg;
+    final Color br;
+
+    if (active) {
+      // ✅ 활성 상태: 테마 포인트 색
+      bg = scheme.primaryContainer;
+      fg = scheme.onPrimaryContainer;
+      br = scheme.primary.withOpacity(isDark ? 0.7 : 1.0);
+    } else {
+      // 비활성
+      bg = isDark ? scheme.surface : Colors.white;
+      fg = isDark ? scheme.onSurface : const Color(0xFF444444);
+      br = isDark
+          ? scheme.outline.withOpacity(0.4)
+          : const Color(0xFFE5E7EB);
+    }
 
     return Material(
       color: Colors.transparent,
@@ -716,7 +695,8 @@ class _PillButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+          padding:
+          const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
           decoration: BoxDecoration(
             color: bg,
             border: Border.all(color: br),
@@ -774,11 +754,12 @@ class _ExamCard extends StatelessWidget {
     final outlineColor = scheme.outline.withOpacity(0.5);
     final btnFg =
     isDark ? scheme.onSurface : const Color(0xFF6B4E42);
-    final navBg = isDark
-        ? scheme.primaryContainer.withOpacity(0.9)
-        : const Color(0xFFFFEEE9);
-    final navFg =
-    isDark ? scheme.onPrimaryContainer : const Color(0xFF6B4E42);
+
+    // 🔥 이미지도 ApiClient.getImageUrl 사용
+    final imageUrl = ApiClient.getImageUrl(exam.imagePath);
+
+    final navBg = scheme.primaryContainer;
+    final navFg = scheme.onPrimaryContainer;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -796,14 +777,14 @@ class _ExamCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          if (exam.imagePath != null && exam.imagePath!.isNotEmpty)
+          if (imageUrl.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
                 width: 350,
                 height: 350,
                 child: Image.network(
-                  buildUrl(exam.imagePath),
+                  imageUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => const Center(
                     child: Text('이미지를 불러올 수 없어요'),
@@ -942,8 +923,8 @@ class _ErrorView extends StatelessWidget {
               ElevatedButton(
                 onPressed: onRetry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFEEE9),
-                  foregroundColor: const Color(0xFF6B4E42),
+                  backgroundColor: scheme.primaryContainer,
+                  foregroundColor: scheme.onPrimaryContainer,
                   elevation: 0,
                 ),
                 child: const Text('다시 시도'),

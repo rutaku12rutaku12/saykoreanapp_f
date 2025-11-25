@@ -58,10 +58,10 @@ class ApiClient {
 
         if( token != null && token.isNotEmpty ){
           options.headers['Authorization'] = 'Bearer $token';
-          print('✅ Authorization 헤더 추가');
+          print('Authorization 헤더 추가');
         }
 
-        print('🌐 요청: ${options.method} ${options.uri}');
+        print('요청: ${options.method} ${options.uri}');
         return handler.next(options);
       },
       onResponse: (response,handler) async {
@@ -75,15 +75,15 @@ class ApiClient {
           );
 
         }
-        print('✅ 응답 코드: ${response.statusCode}');
+        print('응답 코드: ${response.statusCode}');
         return handler.next(response);
       },
       onError: (error, handler) async{
         final status = error.response?.statusCode;
 
-        print('❌ API 에러: ${status}');
-        print('   URL: ${error.requestOptions.uri}');
-        print('   메시지: ${error.response?.data}');
+        print('API 에러: ${status}');
+        print('URL: ${error.requestOptions.uri}');
+        print('메시지: ${error.response?.data}');
 
         return handler.next(error);
       }
@@ -112,7 +112,7 @@ class ApiClient {
         .toString();
   }
 
-  // ✅ 이미지 URL 생성 (Spring의 /upload/** 경로)
+  // 이미지 URL 생성 (Spring의 /upload/** 경로)
   static String getImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) {
       return '';  // 빈 문자열 반환 -> 에러 위젯 표시
@@ -137,7 +137,7 @@ class ApiClient {
     return '${_detectBaseUrl()}/upload/$imagePath';
   }
 
-  // ✅ 오디오 URL 생성 (이미지와 동일한 로직)
+  // 오디오 URL 생성 (이미지와 동일한 로직)
   static String getAudioUrl(String? audioPath) {
     if (audioPath == null || audioPath.isEmpty) {
       return '';
@@ -158,7 +158,7 @@ class ApiClient {
     return '${_detectBaseUrl()}/upload/$audioPath';
   }
 
-  // ✅ URL 유효성 검사
+  // URL 유효성 검사
   static bool isValidUrl(String? url) {
     if (url == null || url.isEmpty) return false;
 
@@ -170,15 +170,15 @@ class ApiClient {
     }
   }
 
-  // ✅ Base URL 확인용 (디버깅)
+  // Base URL 확인용 (디버깅)
   static String getBaseUrl() {
     return _detectBaseUrl();
   }
 
-  // ✅ 토큰 저장
+  // 토큰 저장
 
-  // ✅ 토큰 삭제 (로그아웃)
+  // 토큰 삭제 (로그아웃)
 
-  // ✅ 토큰 확인
+  // 토큰 확인
 
 }

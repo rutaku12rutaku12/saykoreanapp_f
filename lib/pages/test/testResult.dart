@@ -17,19 +17,15 @@ class TestResultPage extends StatelessWidget {
 
     final dynamic rawResult = args?['result'];
 
-    // result가 Map이면 그 안도 같이 뒤져본다
     final Map resultMap =
     (rawResult is Map) ? rawResult as Map : const <String, dynamic>{};
 
-    // total, correct 값을 여러 키에서 찾아본다
     int total = 0;
     int correct = 0;
 
-    // 1순위: 최상위 total / correct
     if (args?['total'] is int) total = args!['total'] as int;
     if (args?['correct'] is int) correct = args!['correct'] as int;
 
-    // 2순위: result 안에 total / correct / totalQuestions / correctAnswers
     if (total == 0) {
       if (resultMap['total'] is int) {
         total = resultMap['total'] as int;
@@ -46,7 +42,6 @@ class TestResultPage extends StatelessWidget {
       }
     }
 
-    // 3순위: score/isCorrect만 있을 때 (임시 fallback)
     if (total == 0 && resultMap['score'] is int) {
       total = 1;
       correct = ((resultMap['isCorrect'] ?? 0) == 1) ? 1 : 0;
@@ -56,9 +51,17 @@ class TestResultPage extends StatelessWidget {
     (total > 0) ? (correct / total * 100).clamp(0, 100) : 0;
 
     // ─────────────────────────────────────────────
-    const cream = Color(0xFFFFF9F0);
-    const brown = Color(0xFF6B4E42);
-    const pink = Color(0xFFFFAAA5);
+    // 여기부터 테마 색 가져오기
+    // ─────────────────────────────────────────────
+    final theme = Theme.of(context);
+    final bgColor = theme.scaffoldBackgroundColor;
+    final primary = theme.colorScheme.primary; // 민트/브라운 등 테마에 따라 바뀜
+    final surface = theme.colorScheme.surface; // 카드 배경
+    final chipBg = theme.colorScheme.secondaryContainer.withOpacity(0.4);
+    final accent = theme.colorScheme.secondary; // 그래디언트/포인트 컬러용
+    final subtleTextColor =
+        theme.textTheme.bodySmall?.color?.withOpacity(0.8) ??
+            Colors.grey.shade600;
 
     String getMessage() {
       if (percent >= 90) return "완벽해요! ✨";
@@ -68,39 +71,42 @@ class TestResultPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: cream,
+        backgroundColor: bgColor,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           '시험 결과',
           style: TextStyle(
-            color: brown,
+            color: primary,
             fontWeight: FontWeight.w700,
           ),
         ),
-        iconTheme: const IconThemeData(color: brown),
+        iconTheme: IconThemeData(color: primary),
       ),
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // 상단 뱃지
                 Container(
                   padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFEEE9),
-                    borderRadius: BorderRadius.circular(999),
+                    color: chipBg,
+                    borderRadius:
+                    BorderRadius.circular(999),
                   ),
                   child: Text(
                     '시험 번호 : $testNo',
-                    style: const TextStyle(
-                      color: brown,
+                    style: TextStyle(
+                      color: primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -109,17 +115,23 @@ class TestResultPage extends StatelessWidget {
 
                 // 메인 카드
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    color: surface,
+                    borderRadius:
+                    BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.dividerColor
+                          .withOpacity(0.3),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.brown.withOpacity(0.08),
+                        color: Colors.black
+                            .withOpacity(0.06),
                         blurRadius: 18,
-                        offset: const Offset(0, 8),
+                        offset:
+                        const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -132,37 +144,47 @@ class TestResultPage extends StatelessWidget {
                         height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFFE5CF), Color(0xFFFFC9C3)],
+                          gradient: LinearGradient(
+                            colors: [
+                              accent.withOpacity(0.25),
+                              accent.withOpacity(0.6),
+                            ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: pink.withOpacity(0.3),
+                              color: accent
+                                  .withOpacity(0.3),
                               blurRadius: 16,
-                              offset: const Offset(0, 6),
+                              offset:
+                              const Offset(0, 6),
                             ),
                           ],
                         ),
                         child: Center(
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisSize:
+                            MainAxisSize.min,
                             children: [
                               Text(
                                 '${percent.toStringAsFixed(0)}%',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 28,
-                                  fontWeight: FontWeight.w800,
-                                  color: brown,
+                                  fontWeight:
+                                  FontWeight
+                                      .w800,
+                                  color: primary,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              const Text(
+                              const SizedBox(
+                                  height: 4),
+                              Text(
                                 '정답률',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF7C5A48),
+                                  color:
+                                  subtleTextColor,
                                 ),
                               ),
                             ],
@@ -174,21 +196,35 @@ class TestResultPage extends StatelessWidget {
                       // 멘트
                       Text(
                         getMessage(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: brown,
+                          fontWeight:
+                          FontWeight.w700,
+                          color: primary,
                         ),
                       ),
                       const SizedBox(height: 16),
 
                       // 상세 수치
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment:
+                        MainAxisAlignment.center,
                         children: [
-                          _statItem(label: '총 문항', value: '$total'),
+                          _StatItem(
+                            label: '총 문항',
+                            value: '$total',
+                            color: primary,
+                            subtleColor:
+                            subtleTextColor,
+                          ),
                           const SizedBox(width: 32),
-                          _statItem(label: '맞힌 개수', value: '$correct'),
+                          _StatItem(
+                            label: '맞힌 개수',
+                            value: '$correct',
+                            color: primary,
+                            subtleColor:
+                            subtleTextColor,
+                          ),
                         ],
                       ),
                     ],
@@ -197,26 +233,39 @@ class TestResultPage extends StatelessWidget {
 
                 const SizedBox(height: 28),
 
-                // 버튼
+                // 버튼들
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          // 그냥 뒤로가기 (같은 시험 다시 풀기 느낌)
+                          // 현재 시험 화면으로 돌아가기
                           Navigator.pop(context);
                         },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: brown),
-                          foregroundColor: brown,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                        style:
+                        OutlinedButton.styleFrom(
+                          padding:
+                          const EdgeInsets
+                              .symmetric(
+                              vertical: 14),
+                          side: BorderSide(
+                              color: primary),
+                          foregroundColor:
+                          primary,
+                          shape:
+                          RoundedRectangleBorder(
+                            borderRadius:
+                            BorderRadius
+                                .circular(
+                                14),
                           ),
                         ),
                         child: const Text(
                           '다시 풀기',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight:
+                            FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -224,24 +273,42 @@ class TestResultPage extends StatelessWidget {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pushNamedAndRemoveUntil(
+                          Navigator
+                              .pushNamedAndRemoveUntil(
                             context,
-                            "/testList",
+                            "/testList", // 너 프로젝트 라우트 이름에 맞게
                                 (route) => false,
                           );
                         },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: const Color(0xFFFFEEE9),
-                          foregroundColor: brown,
+                        style: ElevatedButton
+                            .styleFrom(
+                          padding:
+                          const EdgeInsets
+                              .symmetric(
+                              vertical: 14),
+                          backgroundColor:
+                          accent
+                              .withOpacity(
+                              0.85),
+                          foregroundColor:
+                          theme
+                              .colorScheme
+                              .onSecondary,
                           elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                          shape:
+                          RoundedRectangleBorder(
+                            borderRadius:
+                            BorderRadius
+                                .circular(
+                                14),
                           ),
                         ),
                         child: const Text(
                           '시험 목록으로',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight:
+                            FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -256,27 +323,42 @@ class TestResultPage extends StatelessWidget {
   }
 }
 
-Widget _statItem({required String label, required String value}) {
-  const brown = Color(0xFF6B4E42);
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      Text(
-        label,
-        style: const TextStyle(
-          fontSize: 13,
-          color: Color(0xFF9C7C68),
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final Color subtleColor;
+
+  const _StatItem({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.subtleColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment:
+      CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: subtleColor,
+          ),
         ),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-          color: brown,
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }

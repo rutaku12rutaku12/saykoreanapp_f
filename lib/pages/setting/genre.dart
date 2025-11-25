@@ -1,6 +1,6 @@
-// main.dart — 그대로 복붙해서 실행하세요.
-// (안드로이드 에뮬레이터에서 호스트 서버로 붙는 경우, 기본 baseUrl은 10.0.2.2:8080)
-// (실기기/다른 PC로 붙을 땐 flutter run --dart-define=API_HOST=http://<IP>:8080)
+// main.dart — 그대로 복붙해서 실행 가능 (단일 샘플 앱 버전)
+// 실제 SayKorean 앱에 넣을 때는 MyApp/Theme는 이미 있으니까
+// 아래 GenrePage 부분만 가져가서 pages/... 쪽에 붙여도 됨.
 
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -8,6 +8,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+
+// 🔥 공통 UI (헤더/버튼)
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)
@@ -41,7 +44,8 @@ class GenreDto {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 앱 시작
+// 앱 시작 (샘플용 MyApp)
+// 실제 프로젝트에선 이미 MyApp/테마 있으니까 GenrePage만 써도 됨
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
@@ -53,16 +57,30 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SayKorean Genres',
-      themeMode: ThemeMode.system,              // ← 시스템 테마 따라가기
+      themeMode: ThemeMode.system,
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        colorSchemeSeed: Colors.teal,
+        scaffoldBackgroundColor: const Color(0xFFFFF9F0),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFFAAA5), // 딸기우유 핑크
+          brightness: Brightness.light,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFFFF9F0),
+          foregroundColor: Color(0xFF6B4E42),
+          elevation: 0,
+          centerTitle: true,
+        ),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorSchemeSeed: Colors.teal,
+        scaffoldBackgroundColor: const Color(0xFF1E1816),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6B4E42),
+          brightness: Brightness.dark,
+        ),
       ),
       home: const GenrePage(),
     );
@@ -111,7 +129,7 @@ class _GenreState extends State<GenrePage> {
 
       final res = await dio.get(
         '/saykorean/study/getGenre',
-        queryParameters: {'lng': lng}, // 서버가 사용한다면 유지
+        queryParameters: {'lng': lng},
         options: Options(headers: {'Accept-Language': lng}),
       );
 
@@ -143,53 +161,175 @@ class _GenreState extends State<GenrePage> {
       SnackBar(content: Text('선택한 장르: $name (No.$genreNo) 저장됨')),
     );
 
-    // 필요 시 화면 전환
-    // if (mounted) {
-    //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MyPage()));
-    // }
+    // 필요 시 다른 페이지로 이동할 때 여기서 Navigator.pushReplacement 사용
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg = theme.scaffoldBackgroundColor;
+
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text('장르 선택'),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('에러: $_error'),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: _fetchGenres,
-              child: const Text('다시 시도'),
-            ),
-          ],
+        backgroundColor: bg,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          '장르 선택',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+          ),
         ),
-      )
-          : ListView.separated(
-        padding: const EdgeInsets.all(12),
-        itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (context, i) {
-          final g = _items[i];
-          final selected = _selected == g.genreNo;
-          return ListTile(
-            leading: CircleAvatar(child: Text('${g.genreNo}')),
-            title: Text(g.genreName),
-            trailing:
-            selected ? const Icon(Icons.check_circle) : null,
-            onTap: () => _saveGenre(g.genreNo, g.genreName),
-          );
-        },
+        iconTheme: IconThemeData(
+          color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _fetchGenres,
-        child: const Icon(Icons.refresh),
+      body: SafeArea(
+        child: _loading
+            ? Center(
+          child: CircularProgressIndicator(
+            color: scheme.primary,
+          ),
+        )
+            : _error != null
+            ? _buildError(theme, scheme)
+            : _buildContent(theme, scheme),
+      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _fetchGenres,
+      //   backgroundColor: scheme.primary,
+      //   foregroundColor: Colors.white,
+      //   child: const Icon(Icons.refresh),
+      // ),
+    );
+  }
+
+  Widget _buildError(ThemeData theme, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '에러가 발생했어요',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: scheme.error,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _error ?? '',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          SKPrimaryButton(
+            label: '다시 시도',
+            onPressed: _fetchGenres,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(ThemeData theme, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SKPageHeader(
+            title: '장르 선택',
+            subtitle: '관심 있는 장르를 선택하면 학습 추천에 활용돼요.',
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: _items.isEmpty
+                ? Center(
+              child: Text(
+                '등록된 장르가 없습니다.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            )
+                : ListView.separated(
+              itemCount: _items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, i) {
+                final g = _items[i];
+                final selected = _selected == g.genreNo;
+
+                final cardColor = scheme.surface;
+                final borderColor = selected
+                    ? scheme.primary.withOpacity(0.5)
+                    : scheme.outline.withOpacity(0.15);
+
+                return Material(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  elevation: selected ? 3 : 1,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => _saveGenre(g.genreNo, g.genreName),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor:
+                            scheme.primary.withOpacity(0.12),
+                            child: Text(
+                              '${g.genreNo}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              g.genreName,
+                              style:
+                              theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: scheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            selected
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            color: selected
+                                ? scheme.primary
+                                : scheme.outline,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

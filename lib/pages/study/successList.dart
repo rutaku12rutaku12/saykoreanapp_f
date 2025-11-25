@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:saykoreanapp_f/api/api.dart';   // 추가
-import 'study.dart'; // StudyDto 사용
+import 'package:saykoreanapp_f/api/api.dart';   // ApiClient.dio
+import 'study.dart';                           // StudyDto 사용
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ SKPageHeader, SKPrimaryButton
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // 학습 완료한 주제 목록 페이지
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 class SuccessListPage extends StatefulWidget {
   const SuccessListPage({super.key});
 
@@ -81,7 +82,7 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
 
   Future<StudyDto?> _fetchStudyDetail(int studyNo) async {
     try {
-      final res = await ApiClient.dio.get(      // dio -> ApiClient.dio
+      final res = await ApiClient.dio.get(
         '/saykorean/study/getDailyStudy',
         queryParameters: {
           'studyNo': studyNo,
@@ -99,7 +100,7 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
     }
   }
 
-  // 완료한 주제 버튼 클릭  -> 해당 주제로 StudyPage 열기
+  // 완료한 주제 카드 클릭  -> 해당 주제로 StudyPage 열기
   void _onTapStudy(StudyDto item) {
     Navigator.pushNamed(
       context,
@@ -110,20 +111,31 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
 
   @override
   Widget build(BuildContext context) {
-    const brown = Color(0xFF6B4E42);
-    final bg = Theme.of(context).scaffoldBackgroundColor; // 테마 기반 배경
+    final theme = Theme.of(context);
+    final bg = theme.scaffoldBackgroundColor;
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        title: const Text('완수한 주제 목록'),
+        title: const Text(''), // 실제 타이틀은 SKPageHeader에서 크게 표시
         backgroundColor: bg,
         elevation: 0,
-        foregroundColor: brown,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _buildBody(context),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SKPageHeader(
+                title: '완수한 주제',
+                subtitle: '이미 학습을 마친 주제 목록이에요.',
+              ),
+              const SizedBox(height: 16),
+              Expanded(child: _buildBody(context)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -147,9 +159,9 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
+            SKPrimaryButton(
+              label: '다시 시도',
               onPressed: _bootstrap,
-              child: const Text('다시 시도'),
             ),
           ],
         ),
@@ -163,8 +175,9 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
       );
     }
 
-    // 4) 정상적으로 목록이 있는 경우에는 리스트 출력
-    final cardColor = Theme.of(context).cardColor; // 다크/라이트 공통 카드색
+    // 4) 정상적으로 목록이 있는 경우에는 카드 리스트 출력
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return ListView.separated(
       itemCount: _studies.length,
@@ -174,24 +187,46 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
         final title =
             s.themeSelected ?? s.themeKo ?? '주제 #${s.studyNo}';
 
-        return SizedBox(
-          height: 48,
-          child: ElevatedButton(
-            onPressed: () => _onTapStudy(s),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: cardColor,
-              foregroundColor: const Color(0xFF6B4E42),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                title,
-                overflow: TextOverflow.ellipsis,
+        return Card(
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _onTapStudy(s),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  // 왼쪽 컬러 점/아이콘
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: scheme.secondary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // 제목
+                  Expanded(
+                    child: Text(
+                      title,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: scheme.outline,
+                    size: 22,
+                  ),
+                ],
               ),
             ),
           ),

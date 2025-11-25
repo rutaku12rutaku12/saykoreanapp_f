@@ -188,5 +188,11 @@
   "test.gameover.hard": "困难模式结束！\n挑战了 {{count}} 题！",
   "test.victory.title": "🎉 完美！",
   "test.victory.infinite": "无限模式全答对！\n共完成 {{count}} 题！",
-  "test.victory.hard": "困难模式全答对！\n共完成 {{count}} 题！"
+  "test.victory.hard": "困难模式全答对！\n共完成 {{count}} 题！",
+  "footer.home": "主页",
+  "footer.game": "游戏",
+  "footer.chat": "聊天",
+  "footer.study": "学习",
+  "footer.test": "测试",
+  "store": "商店"
 }

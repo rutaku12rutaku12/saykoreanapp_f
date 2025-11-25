@@ -243,13 +243,7 @@ class _FriendsPageState extends State<FriendsPage>
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        title: Text(
-          "친구",
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
-          ),
-        ),
+        title: null,
         backgroundColor: bg,
         elevation: 0,
         centerTitle: true,

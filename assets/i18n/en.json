@@ -189,5 +189,11 @@
   "test.gameover.hard": "Hard Mode ended!\nYou reached {{count}} questions!",
   "test.victory.title": "🎉 Perfect!",
   "test.victory.infinite": "All correct in Infinite Mode!\n{{count}} questions cleared!",
-  "test.victory.hard": "All correct in Hard Mode!\n{{count}} questions cleared!"
+  "test.victory.hard": "All correct in Hard Mode!\n{{count}} questions cleared!",
+  "footer.home": "Home",
+  "footer.game": "Game",
+  "footer.chat": "Chat",
+  "footer.study": "Study",
+  "footer.test": "Test",
+  "store": "Store"
 }

@@ -188,5 +188,11 @@
   "test.gameover.hard": "Modo difícil terminado.\n¡Has llegado a {{count}} preguntas!",
   "test.victory.title": "🎉 ¡Perfecto!",
   "test.victory.infinite": "¡Todas las preguntas correctas!\n{{count}} preguntas completadas.",
-  "test.victory.hard": "¡Modo difícil completado!\n{{count}} preguntas completadas."
+  "test.victory.hard": "¡Modo difícil completado!\n{{count}} preguntas completadas.",
+  "footer.home": "Inicio",
+  "footer.game": "Juego",
+  "footer.chat": "Chat",
+  "footer.study": "Estudio",
+  "footer.test": "Prueba",
+  "store": "Tienda"
 }

@@ -190,5 +190,6 @@
   "test.victory.infinite": "무한모드 모든 문제 정답! \n{{count}}문제 클리어!",
   "test.victory.hard": "하드모드 모든 문제 정답! \n{{count}}문제 클리어!",
   "footer.game": "게임",
-  "footer.chat": "채팅"
+  "footer.chat": "채팅",
+  "store": "스토어"
 }

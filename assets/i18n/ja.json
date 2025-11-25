@@ -189,5 +189,11 @@
   "test.gameover.hard": "ハードモード終了！\n{{count}}問まで挑戦しました！",
   "test.victory.title": "🎉 完璧です！",
   "test.victory.infinite": "無限モード全問正解！\n{{count}}問クリア！",
-  "test.victory.hard": "ハードモード全問正解！\n{{count}}問クリア！"
+  "test.victory.hard": "ハードモード全問正解！\n{{count}}問クリア！",
+  "footer.home": "ホーム",
+  "footer.game": "ゲーム",
+  "footer.chat": "チャット",
+  "footer.study": "学習",
+  "footer.test": "試験",
+  "store": "ストア"
 }

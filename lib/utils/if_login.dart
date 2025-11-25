@@ -45,6 +45,13 @@ class _IfLoginState extends State<IfLogin> {
         body: Center(child: CircularProgressIndicator(),),
       );
     }
-    return widget.child;
+
+    // 🔥 EasyLocalization context를 그대로 유지하면서 child 렌더링
+    return Builder(
+      builder: (ctx) {
+        return widget.child;
+      },
+    );
+
   }
 }

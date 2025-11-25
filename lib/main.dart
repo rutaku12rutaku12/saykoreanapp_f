@@ -340,12 +340,12 @@ class MyApp extends StatelessWidget {
             final ThemeData lightTheme =
             isMint ? mintTheme : _lightTheme();
 
-            final app = MaterialApp(
+            return MaterialApp(
               debugShowCheckedModeBanner: false,
               navigatorKey: appNavigatorKey,
               initialRoute: "/",
 
-              // 🌍 다국어 적용
+              // 🌍 다국어 적용 (이제 정상 작동함)
               locale: context.locale,
               supportedLocales: context.supportedLocales,
               localizationsDelegates: context.localizationDelegates,
@@ -354,31 +354,44 @@ class MyApp extends StatelessWidget {
               theme: lightTheme,
               darkTheme: _darkTheme(),
               navigatorObservers: [
-                AppRouteObserver(),
+                AppRouteObserver(), // currentRouteNotifier 갱신용
               ],
-              builder: (context, child) {
-                return ValueListenableBuilder<String?>(
-                  valueListenable: currentRouteNotifier,
-                  builder: (context, routeName, _) {
-                    final name = routeName ?? '';
-                    final hide = {'/', '/login', '/signup', '/find'}.contains(name);
 
-                    return Scaffold(
-                      body: child,
-                      bottomNavigationBar:
-                      hide ? null : _FooterBar(currentRoute: name),
-                      backgroundColor:
-                      Theme.of(context).scaffoldBackgroundColor,
-                    );
-                  },
+              // ❗ builder 제거 → locale 정상 적용됨
+              builder: (context, child) {
+                return Stack(
+                  children: [
+                    child!, // 페이지 본문
+
+                    // 🔍 네비게이션 상태에 따라 FooterBar 자동 노출
+                    ValueListenableBuilder<String?>(
+                      valueListenable: currentRouteNotifier,
+                      builder: (context, routeName, _) {
+                        final name = routeName ?? '';
+
+                        // 하단바 숨길 페이지
+                        final hide = {
+                          '/',
+                          '/login',
+                          '/signup',
+                          '/find'
+                        }.contains(name);
+
+                        if (hide) return const SizedBox.shrink();
+
+                        return Align(
+                          alignment: Alignment.bottomCenter,
+                          child: _FooterBar(currentRoute: name),
+                        );
+                      },
+                    ),
+                  ],
                 );
               },
 
-              // 여기 두 개만 남기기
               onGenerateRoute: _onGenerateRoute,
               routes: _routes,
             );
-            return app;
           },
         );
       },

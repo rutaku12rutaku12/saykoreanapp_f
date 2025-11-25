@@ -68,9 +68,12 @@ dev_dependencies:
 flutter:
  uses-material-design: true
  assets:
+   # 다국어
+    - assets/i18n/
     - assets/game/
     - assets/game/receive/
     - assets/game/watermelon/
+
 
     # 아이콘
     - assets/icons/
@@ -83,8 +86,6 @@ flutter:
     - assets/img/top_wave.png
     - assets/img/bgImg.png
 
-    # 다국어
-    - assets/i18n/
 
 
   # The following line ensures that the Material Icons font is

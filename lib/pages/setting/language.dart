@@ -7,7 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // SKPageHeader, SKPrimaryButton
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // SKPageHeader, SKPrimaryButton, FooterSafeArea
 
 // ─────────────────────────────────────────────────────────────
 // 환경별 baseUrl 감지
@@ -190,6 +190,7 @@ class _LanguagePageState extends State<LanguagePage> {
     } else {
       // ✅ 장르 선택 페이지처럼: 한 줄에 한 언어 카드
       content = ListView.separated(
+        padding: const EdgeInsets.only(top: 8, bottom: 8),
         itemCount: _items.length,
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
@@ -212,18 +213,20 @@ class _LanguagePageState extends State<LanguagePage> {
         title: const Text(''),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SKPageHeader(
-                title: '언어 선택',
-                subtitle: '학습에 사용할 언어를 골라주세요.',
-              ),
-              const SizedBox(height: 16),
-              Expanded(child: content),
-            ],
+        child: FooterSafeArea( // 🔥 푸터에 안 가리도록 여기서만 패딩 처리
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SKPageHeader(
+                  title: '언어 선택',
+                  subtitle: '학습에 사용할 언어를 골라주세요.',
+                ),
+                const SizedBox(height: 16),
+                Expanded(child: content),
+              ],
+            ),
           ),
         ),
       ),

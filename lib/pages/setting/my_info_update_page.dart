@@ -5,11 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl_phone_field_v2/intl_phone_field.dart';
 import 'package:intl_phone_field_v2/phone_number.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/setting/myPage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ 공통 UI (헤더/버튼)
+
+// ─────────────────────────────────────────────────────────────
+// 내 정보 수정 페이지
+// ─────────────────────────────────────────────────────────────
 
 class MyInfoUpdatePage extends StatefulWidget {
   const MyInfoUpdatePage({super.key});
@@ -21,30 +26,46 @@ class MyInfoUpdatePage extends StatefulWidget {
 }
 
 class _InfoUpdateState extends State<MyInfoUpdatePage> {
-  @override
-  void initState() {
-    super.initState();
-    loadUserInfo(); // ← 기존 값 자동 세팅
-  }
-
-  // 입력창 텍스트 컨트롤러
+  // 입력 컨트롤러
   final TextEditingController nameCon = TextEditingController();
   final TextEditingController nickCon = TextEditingController();
   final TextEditingController phoneCon = TextEditingController();
+
   final TextEditingController currentPassCon = TextEditingController();
   final TextEditingController newPassCon = TextEditingController();
   final TextEditingController checkPassCon = TextEditingController();
 
-  // 중복검사 상태관리
+  // 중복검사 상태
   bool phoneCheck = false;
 
-  // 서버 전송용 국제번호 저장 변수
+  // 서버 전송용 국제번호
   PhoneNumber? emailPhoneNumber;
 
-  // 원래 전화번호 저장용
+  // 원래 전화번호 저장 (+82 포함)
   String originalPhone = "";
 
-  // 탈퇴용 비밀번호 입력 팝업 메소드
+  @override
+  void initState() {
+    super.initState();
+    loadUserInfo(); // 기존 값 자동 세팅
+  }
+
+  @override
+  void dispose() {
+    nameCon.dispose();
+    nickCon.dispose();
+    phoneCon.dispose();
+    currentPassCon.dispose();
+    newPassCon.dispose();
+    checkPassCon.dispose();
+    super.dispose();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 팝업 / API 호출 메소드
+  // ─────────────────────────────────────────────────────────────
+
+  // 탈퇴용 비밀번호 입력 팝업
   Future<String?> showPasswordPrompt() async {
     final TextEditingController controller = TextEditingController();
 
@@ -53,6 +74,8 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text("정말 탈퇴하시겠습니까?"),
           content: TextField(
             controller: controller,
@@ -80,7 +103,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     );
   }
 
-  // 전화번호 중복 확인 메소드
+  // 전화번호 중복 확인
   void checkPhone() async {
     try {
       final plusPhone = emailPhoneNumber?.completeNumber ?? phoneCon.text;
@@ -91,6 +114,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         ),
         queryParameters: {'phone': plusPhone},
       );
+      // ignore: avoid_print
       print("(중복 : 1 , 사용 가능 : 0 반환 ): ${response.data}");
       if (response.statusCode == 200 &&
           response.data != null &&
@@ -109,11 +133,12 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
 
-  // 사용자 정보 수정 메소드
+  // 사용자 기본 정보 수정
   void updateUserInfo() async {
     if (nameCon.text.trim().isEmpty ||
         nickCon.text.trim().isEmpty ||
@@ -122,18 +147,22 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         msg: "입력값을 채워주세요.",
         backgroundColor: Colors.red,
       );
+      // ignore: avoid_print
       print("입력값을 채워주세요.");
       return;
     }
     try {
-      final plusPhone = emailPhoneNumber?.completeNumber ?? "+82${phoneCon.text}";
-      bool isPhoneChanged = (originalPhone != plusPhone);
+      final plusPhone =
+          emailPhoneNumber?.completeNumber ?? "+82${phoneCon.text}";
+      final bool isPhoneChanged = (originalPhone != plusPhone);
 
+      // ignore: avoid_print
       print("원래 번호: $originalPhone");
+      // ignore: avoid_print
       print("현재 번호: $plusPhone");
+      // ignore: avoid_print
       print("변경 여부: $isPhoneChanged");
 
-      // 전화번호가 변경되었는데 중복 확인을 안했으면 에러
       if (isPhoneChanged && !phoneCheck) {
         Fluttertoast.showToast(
           msg: "전화번호 중복 확인을 해주세요.",
@@ -141,12 +170,15 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
         return;
       }
+
       final sendData = {
         "name": nameCon.text,
         "nickName": nickCon.text,
-        "phone": plusPhone
+        "phone": plusPhone,
       };
+      // ignore: avoid_print
       print(sendData);
+
       final response = await ApiClient.dio.put(
         "/saykorean/updateuserinfo",
         data: sendData,
@@ -154,8 +186,11 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           validateStatus: (status) => true,
         ),
       );
+      // ignore: avoid_print
       print(response);
+      // ignore: avoid_print
       print(response.data);
+
       if (response.statusCode == 200 &&
           response.data != null &&
           response.data == 1) {
@@ -175,11 +210,12 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
 
-  // 비밀번호 수정 메소드
+  // 비밀번호 수정
   void updatePwrd() async {
     if (currentPassCon.text.trim().isEmpty ||
         newPassCon.text.trim().isEmpty ||
@@ -188,10 +224,12 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         msg: "입력값을 채워주세요.",
         backgroundColor: Colors.red,
       );
+      // ignore: avoid_print
       print("입력값을 채워주세요.");
       return;
     }
     if (newPassCon.text != checkPassCon.text) {
+      // ignore: avoid_print
       print(
           "비밀번호 불일치 , 새 비밀번호: ${newPassCon.text}, 비밀번호 확인: ${checkPassCon.text} ");
       Fluttertoast.showToast(
@@ -210,7 +248,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     try {
       final sendData = {
         "currentPassword": currentPassCon.text,
-        "newPassword": newPassCon.text
+        "newPassword": newPassCon.text,
       };
       final response = await ApiClient.dio.put(
         "/saykorean/updatepwrd",
@@ -219,8 +257,11 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           validateStatus: (status) => true,
         ),
       );
+      // ignore: avoid_print
       print(response);
+      // ignore: avoid_print
       print(response.data);
+
       if (response.statusCode == 200 && response.data != null) {
         Fluttertoast.showToast(
           msg: "수정이 완료되었습니다.",
@@ -238,17 +279,16 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
 
-  // 탈퇴 메소드
+  // 회원 탈퇴
   void deleteUserStatus() async {
     try {
-      // 비밀번호 입력 팝업 띄우기
       final inputPassword = await showPasswordPrompt();
 
-      // 취소 누르면 null -> 종료
       if (inputPassword == null || inputPassword.trim().isEmpty) {
         Fluttertoast.showToast(
           msg: "취소되었습니다.",
@@ -256,7 +296,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
         return;
       }
-      // 서버로 전송
+
       final response = await ApiClient.dio.put(
         "/saykorean/deleteuser",
         data: {"password": inputPassword},
@@ -264,6 +304,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           validateStatus: (status) => true,
         ),
       );
+      // ignore: avoid_print
       print("탈퇴 성공 시 1 반환: ${response.data}");
 
       if (response.statusCode == 200 && response.data == 1) {
@@ -271,7 +312,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           msg: "회원 탈퇴가 완료되었습니다.",
           backgroundColor: Colors.greenAccent,
         );
-        LogOut(); // 탈퇴 후 로그아웃(토큰제거, 로그인페이지로 이동)
+        _logOut(); // 탈퇴 후 로그아웃
       } else {
         Fluttertoast.showToast(
           msg: "비밀번호가 올바르지 않습니다.",
@@ -279,12 +320,13 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
 
-  // 로그아웃 메소드
-  void LogOut() async {
+  // 로그아웃
+  void _logOut() async {
     try {
       await ApiClient.dio.get(
         '/saykorean/logout',
@@ -303,6 +345,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -323,39 +366,32 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         setState(() {
           nameCon.text = data["name"] ?? "";
           nickCon.text = data["nickName"] ?? "";
-          // 전화번호 불러오기
+
           String phone = data["phone"] ?? "";
           if (phone.startsWith("+82")) {
-            phone = phone.substring(3); // +82 제거만
+            phone = phone.substring(3);
           } else if (phone.startsWith("82")) {
-            phone = phone.substring(2); // 82 제거만
+            phone = phone.substring(2);
           }
           phoneCon.text = phone;
-          // 원래 전화번호 저장 (국제번호 포함)
           originalPhone = data["phone"] ?? "";
         });
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // UI
+  // ─────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final bg = theme.scaffoldBackgroundColor;
-
-    // 공통 핑크 메인 버튼 스타일 (CTA)
-    final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFFFAAA5), // 🩷 딸기우유 핑크
-      foregroundColor: Colors.white,
-      elevation: 0,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
 
     return Scaffold(
       backgroundColor: bg,
@@ -367,13 +403,11 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           "내 정보",
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color:
-            theme.appBarTheme.foregroundColor ?? theme.colorScheme.primary,
+            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
           ),
         ),
         iconTheme: IconThemeData(
-          color:
-          theme.appBarTheme.foregroundColor ?? theme.colorScheme.primary,
+          color: theme.appBarTheme.foregroundColor ?? scheme.primary,
         ),
       ),
       body: SafeArea(
@@ -388,152 +422,279 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
               ),
               const SizedBox(height: 24),
 
-              // 섹션 1: 기본 정보
-              Text(
-                "기본 정보",
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: scheme.primary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: nameCon,
-                decoration: const InputDecoration(
-                  labelText: '이름',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: nickCon,
-                decoration: const InputDecoration(
-                  labelText: '닉네임',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              IntlPhoneField(
-                controller: phoneCon,
-                decoration: const InputDecoration(
-                  labelText: '전화번호',
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(),
-                  ),
-                ),
-                initialCountryCode: 'KR',
-                autovalidateMode: AutovalidateMode.disabled,
-                validator: (value) => null,
-                onChanged: (phone) {
-                  emailPhoneNumber = phone;
-                  phoneCheck = false;
-                  print("입력한 번호: ${phone.number}");
-                }, // 입력 위젯, 전화번호
-              ),
-              const SizedBox(height: 8),
-
-              SizedBox(
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: checkPhone,
-                  style: primaryButtonStyle,
-                  child: const Text("전화번호 중복 확인"),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: updateUserInfo,
-                  style: primaryButtonStyle,
-                  child: const Text("정보 수정"),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // 섹션 2: 비밀번호 변경
-              Text(
-                "비밀번호 수정",
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: scheme.primary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: currentPassCon,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "기존 비밀번호",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: newPassCon,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "새 비밀번호",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: checkPassCon,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "새 비밀번호 확인",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: updatePwrd,
-                  style: primaryButtonStyle,
-                  child: const Text("비밀번호 수정"),
+              // 섹션 1: 기본 정보 카드
+              _buildCard(
+                theme: theme,
+                scheme: scheme,
+                title: '기본 정보',
+                description: '닉네임과 전화번호를 수정할 수 있어요.',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(
+                      theme: theme,
+                      scheme: scheme,
+                      controller: nameCon,
+                      label: '이름',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      theme: theme,
+                      scheme: scheme,
+                      controller: nickCon,
+                      label: '닉네임',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPhoneField(theme, scheme),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 44,
+                      child: ElevatedButton(
+                        onPressed: checkPhone,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: scheme.primary,
+                          foregroundColor: scheme.onPrimary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: const Text("전화번호 중복 확인"),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: updateUserInfo,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: scheme.primary,
+                          foregroundColor: scheme.onPrimary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: const Text("정보 수정"),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // 섹션 3: 탈퇴
-              Text(
-                "회원 탈퇴",
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: scheme.error,
+              // 섹션 2: 비밀번호 변경 카드
+              _buildCard(
+                theme: theme,
+                scheme: scheme,
+                title: '비밀번호 변경',
+                description: '현재 비밀번호를 확인한 후 새 비밀번호를 설정해 주세요.',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(
+                      theme: theme,
+                      scheme: scheme,
+                      controller: currentPassCon,
+                      label: '기존 비밀번호',
+                      obscure: true,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      theme: theme,
+                      scheme: scheme,
+                      controller: newPassCon,
+                      label: '새 비밀번호 (8자 이상)',
+                      obscure: true,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTextField(
+                      theme: theme,
+                      scheme: scheme,
+                      controller: checkPassCon,
+                      label: '새 비밀번호 확인',
+                      obscure: true,
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: updatePwrd,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: scheme.primary,
+                          foregroundColor: scheme.onPrimary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: const Text("비밀번호 수정"),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                "탈퇴 시 계정 정보와 포인트, 랭킹 기록 등이 삭제될 수 있어요.",
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurface.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 16),
 
-              // 🔥 로그아웃이랑 같은 톤(연살구) 버튼 → SKPrimaryButton 사용
-              SKPrimaryButton(
-                label: '회원 탈퇴',
-                onPressed: deleteUserStatus,
+              const SizedBox(height: 24),
+
+              // 섹션 3: 회원 탈퇴 카드
+              _buildCard(
+                theme: theme,
+                scheme: scheme,
+                title: '회원 탈퇴',
+                description: '탈퇴 시 계정 정보와 포인트, 랭킹 기록 등이 삭제될 수 있어요.',
+                accentColor: scheme.error,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      "탈퇴 후에는 일부 데이터를 복구할 수 없습니다.",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withOpacity(0.75),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SKPrimaryButton(
+                      label: '회원 탈퇴',
+                      onPressed: deleteUserStatus,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 공통 위젯
+  // ─────────────────────────────────────────────────────────────
+
+  Widget _buildCard({
+    required ThemeData theme,
+    required ColorScheme scheme,
+    required String title,
+    required String description,
+    Color? accentColor,
+    required Widget child,
+  }) {
+    final cardColor = scheme.surface;
+
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 2,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: scheme.outline.withOpacity(0.15),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: accentColor ?? scheme.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required ThemeData theme,
+    required ColorScheme scheme,
+    required TextEditingController controller,
+    required String label,
+    bool obscure = false,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: scheme.onSurface.withOpacity(0.7),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: scheme.primary,
+            width: 1.5,
+          ),
+        ),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      ),
+    );
+  }
+
+  Widget _buildPhoneField(ThemeData theme, ColorScheme scheme) {
+    return IntlPhoneField(
+      controller: phoneCon,
+      initialCountryCode: 'KR',
+      autovalidateMode: AutovalidateMode.disabled,
+      validator: (value) => null,
+      decoration: InputDecoration(
+        labelText: '전화번호',
+        labelStyle: TextStyle(
+          color: scheme.onSurface.withOpacity(0.7),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: scheme.primary,
+            width: 1.5,
+          ),
+        ),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      ),
+      onChanged: (phone) {
+        emailPhoneNumber = phone;
+        phoneCheck = false;
+        // ignore: avoid_print
+        print("입력한 번호: ${phone.number}");
+      },
     );
   }
 }

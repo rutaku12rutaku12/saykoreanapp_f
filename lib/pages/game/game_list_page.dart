@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/game_api.dart';
 import 'package:saykoreanapp_f/pages/game/game_play_page.dart';
-import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ 공통 UI 헤더 사용
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ 공통 UI 헤더/버튼
 
 class GameListPage extends StatefulWidget {
   const GameListPage({super.key});
@@ -42,6 +42,7 @@ class _GameListPageState extends State<GameListPage> {
         _errorMessage = '게임 목록을 불러오는데 실패했습니다.';
         _isLoading = false;
       });
+      // ignore: avoid_print
       print('게임 목록 로드 실패: $e');
     }
   }
@@ -87,8 +88,6 @@ class _GameListPageState extends State<GameListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
     final bgColor = theme.scaffoldBackgroundColor;
 
     return Scaffold(
@@ -118,72 +117,97 @@ class _GameListPageState extends State<GameListPage> {
           ? _buildError(theme, scheme)
           : _games.isEmpty
           ? _buildEmpty(theme, scheme)
-          : _buildList(theme, scheme, isDark),
+          : _buildList(theme, scheme),
     );
   }
 
+  // 에러 상태 UI
   Widget _buildError(ThemeData theme, ColorScheme scheme) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: scheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.error,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SKPageHeader(
+            title: '게임 선택',
+            subtitle: '게임 목록을 불러오는 중 문제가 발생했어요.',
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: scheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.error,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  SKPrimaryButton(
+                    label: '다시 시도',
+                    onPressed: _loadGames,
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 44,
-              child: ElevatedButton(
-                onPressed: _loadGames,
-                child: const Text('다시 시도'),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
+  // 빈 목록 UI
   Widget _buildEmpty(ThemeData theme, ColorScheme scheme) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.games_outlined,
-              size: 64,
-              color: scheme.outlineVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '등록된 게임이 없습니다.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onBackground.withOpacity(0.6),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SKPageHeader(
+            title: '게임 선택',
+            subtitle: '등록된 게임이 아직 없어요.',
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.games_outlined,
+                    size: 64,
+                    color: scheme.outlineVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '등록된 게임이 없습니다.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onBackground.withOpacity(0.6),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   // 🔥 SKPageHeader + 리스트 통합
-  Widget _buildList(ThemeData theme, ColorScheme scheme, bool isDark) {
+  Widget _buildList(ThemeData theme, ColorScheme scheme) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return RefreshIndicator(
       onRefresh: _loadGames,
       color: scheme.primary,
@@ -211,7 +235,7 @@ class _GameListPageState extends State<GameListPage> {
           final gameIcon = _getGameIcon(gameNo);
 
           final cardColor =
-          isDark ? scheme.surface : scheme.surfaceContainer;
+          isDark ? scheme.surface : (scheme.surfaceContainer ?? scheme.surface);
           final iconBoxColor =
           isDark ? scheme.surfaceVariant : scheme.surface;
           final titleColor =

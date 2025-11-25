@@ -45,6 +45,7 @@ class _ChatPageState extends State<ChatPage> {
 
     final wsUrl =
         "${ApiClient.detectWsUrl()}?roomNo=${widget.roomNo}&userNo=${widget.myUserNo}";
+    // ignore: avoid_print
     print("WebSocket connect: $wsUrl");
 
     _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
@@ -91,10 +92,12 @@ class _ChatPageState extends State<ChatPage> {
         }
       },
       onDone: () {
+        // ignore: avoid_print
         print("⚠ 소켓 종료됨 → 자동 재연결");
         Future.delayed(const Duration(seconds: 1), _connectSocket);
       },
       onError: (e) {
+        // ignore: avoid_print
         print("⚠ 소켓 오류: $e");
         Future.delayed(const Duration(seconds: 1), _connectSocket);
       },
@@ -119,7 +122,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   // 메시지 전송
-  void _sendMessage() {
+  void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
@@ -192,7 +195,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-
   // ============================
   // UI
   // ============================
@@ -203,9 +205,14 @@ class _ChatPageState extends State<ChatPage> {
     final bg = theme.scaffoldBackgroundColor;
     final isDark = theme.brightness == Brightness.dark;
 
-    final myBubbleBg = scheme.primaryContainer;
-    final myBubbleFg = scheme.onPrimaryContainer;
-    final otherBubbleBg = scheme.surface;
+    // 테마/민트/다크에 따라 자동으로 맞춰지는 컬러들
+    final myBubbleBg =
+    isDark ? scheme.primaryContainer : scheme.secondaryContainer;
+    final myBubbleFg =
+    isDark ? scheme.onPrimaryContainer : scheme.onSecondaryContainer;
+
+    final otherBubbleBg =
+    isDark ? scheme.surfaceContainerHigh : scheme.surface;
     final otherBubbleFg = scheme.onSurface;
     final timeColor = scheme.onSurface.withOpacity(0.5);
 
@@ -219,13 +226,11 @@ class _ChatPageState extends State<ChatPage> {
           widget.friendName,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color:
-            theme.appBarTheme.foregroundColor ?? theme.colorScheme.primary,
+            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
           ),
         ),
         iconTheme: IconThemeData(
-          color:
-          theme.appBarTheme.foregroundColor ?? theme.colorScheme.primary,
+          color: theme.appBarTheme.foregroundColor ?? scheme.primary,
         ),
       ),
       body: Column(
@@ -282,7 +287,8 @@ class _ChatPageState extends State<ChatPage> {
                             ),
                             child: Text(
                               m['message'] ?? '',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style:
+                              theme.textTheme.bodyMedium?.copyWith(
                                 color: bubbleFg,
                               ),
                             ),
@@ -309,14 +315,14 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
 
-
           // 입력창
           SafeArea(
             top: false,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: isDark ? scheme.surface : Colors.white,
+                color: isDark ? scheme.surfaceContainerHigh : scheme.surface,
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x14000000),

@@ -8,7 +8,8 @@ import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:saykoreanapp_f/api/api.dart'; // ✅ ApiClient 사용
+import 'package:saykoreanapp_f/api/api.dart'; // ApiClient 사용
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DTO
@@ -222,8 +223,8 @@ class _StudyPageState extends State<StudyPage> {
         queryParameters: {'studyNo': studyNo, 'langNo': _langNo},
         options: Options(headers: {'Accept-Language': _langNo.toString()}),
       );
-      setState(() =>
-      _subject = StudyDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(
+              () => _subject = StudyDto.fromJson(Map<String, dynamic>.from(res.data)));
     } on DioException catch (e) {
       setState(() => _error = e.message ?? '주제 상세를 불러오지 못했습니다.');
     } catch (_) {
@@ -349,6 +350,18 @@ class _StudyPageState extends State<StudyPage> {
     final titleColor =
     isDark ? scheme.onSurface : const Color(0xFF6B4E42); // 브라운 포인트
 
+    // 🔥 각 상태별로 보여줄 내용 한 번에 정리
+    Widget content;
+    if (_loading) {
+      content = const Center(child: CircularProgressIndicator());
+    } else if (_error != null) {
+      content = _ErrorView(message: _error!, onRetry: _bootstrap);
+    } else {
+      content = (_subject == null)
+          ? _buildList(theme, scheme, isDark)
+          : _buildDetail(theme, scheme, isDark);
+    }
+
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
@@ -364,18 +377,16 @@ class _StudyPageState extends State<StudyPage> {
         iconTheme: IconThemeData(color: titleColor),
         elevation: 0,
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? _ErrorView(message: _error!, onRetry: _bootstrap)
-          : (_subject == null
-          ? _buildList(theme, scheme, isDark)
-          : _buildDetail(theme, scheme, isDark)),
+      body: SafeArea(
+        child: FooterSafeArea(        // 여기서 한 번만 FooterSafeArea 적용
+          child: content,
+        ),
+      ),
     );
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 주제 목록 화면 - TestListPage 스타일
+  // 주제 목록 화면 - 장르 스타일 카드 리스트
   // ───────────────────────────────────────────────────────────────────────────
   Widget _buildList(ThemeData theme, ColorScheme scheme, bool isDark) {
     final titleColor =
@@ -442,42 +453,20 @@ class _StudyPageState extends State<StudyPage> {
         final s = _subjects[index - 1];
         final label = s.themeSelected ?? s.themeKo ?? '제목 없음';
 
-        return SizedBox(
-          height: 52,
-          child: ElevatedButton(
-            onPressed: () async {
-              setState(() {
-                _loading = true;
-                _error = null;
-              });
-              await _fetchDailyStudy(s.studyNo);
-              await _fetchFirstExam(s.studyNo);
-              if (mounted) {
-                setState(() => _loading = false);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: scheme.surface,
-              foregroundColor: scheme.onSurface,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-                side: BorderSide(
-                  color: scheme.outlineVariant.withOpacity(0.6),
-                ),
-              ),
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
+        return _StudyTile(
+          index: index, // 1부터 시작하도록 그대로 사용
+          label: label,
+          onTap: () async {
+            setState(() {
+              _loading = true;
+              _error = null;
+            });
+            await _fetchDailyStudy(s.studyNo);
+            await _fetchFirstExam(s.studyNo);
+            if (mounted) {
+              setState(() => _loading = false);
+            }
+          },
         );
       },
     );
@@ -647,13 +636,109 @@ class _StudyPageState extends State<StudyPage> {
       ),
     );
   }
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 컴포넌트들 - Pill 버튼, Exam 카드, 에러 뷰
+// 장르 스타일 주제 카드
 // ─────────────────────────────────────────────────────────────────────────────
 
-// (지금은 안 쓰고 있을 수도 있지만 남겨둘게)
+class _StudyTile extends StatelessWidget {
+  final int index;
+  final String label;
+  final VoidCallback onTap;
+
+  const _StudyTile({
+    required this.index,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final Color cardBg =
+    isDark ? scheme.surfaceContainerHigh : theme.cardColor;
+    final Color badgeBg =
+    scheme.secondaryContainer.withOpacity(isDark ? 0.35 : 0.6);
+    final Color badgeText = scheme.onSecondaryContainer;
+    final Color textColor = scheme.onSurface;
+    final Color borderColor = scheme.outline.withOpacity(0.12);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          height: 68,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // 왼쪽 번호 원
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$index',
+                  style: TextStyle(
+                    color: badgeText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // 주제 이름
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 오른쪽 chevron (이동 느낌)
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.outline,
+                size: 22,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// (기존 Pill 버튼은 안 쓰이지만 혹시 몰라서 남김)
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _PillButton extends StatelessWidget {
   final String label;
   final bool active;
@@ -676,17 +761,14 @@ class _PillButton extends StatelessWidget {
     final Color br;
 
     if (active) {
-      // ✅ 활성 상태: 테마 포인트 색
       bg = scheme.primaryContainer;
       fg = scheme.onPrimaryContainer;
       br = scheme.primary.withOpacity(isDark ? 0.7 : 1.0);
     } else {
-      // 비활성
       bg = isDark ? scheme.surface : Colors.white;
       fg = isDark ? scheme.onSurface : const Color(0xFF444444);
-      br = isDark
-          ? scheme.outline.withOpacity(0.4)
-          : const Color(0xFFE5E7EB);
+      br =
+      isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB);
     }
 
     return Material(

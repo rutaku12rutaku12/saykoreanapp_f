@@ -101,6 +101,7 @@ class _SignupState extends State<SignupPage> {
       // reCAPTCHA 토큰 발급
       recaptchaToken =
       await RecaptchaManager.getClient().execute(RecaptchaAction.SIGNUP());
+      // ignore: avoid_print
       print('reCAPTCHA Token: $recaptchaToken');
     } catch (e) {
       Navigator.pop(context); // 로딩 닫기
@@ -109,6 +110,7 @@ class _SignupState extends State<SignupPage> {
         backgroundColor: Colors.red,
         toastLength: Toast.LENGTH_LONG,
       );
+      // ignore: avoid_print
       print('reCAPTCHA execution error: $e');
       return;
     }
@@ -124,6 +126,7 @@ class _SignupState extends State<SignupPage> {
       // 'recaptcha': recaptchaToken,
     };
 
+    // ignore: avoid_print
     print(sendData);
 
     try {
@@ -134,6 +137,7 @@ class _SignupState extends State<SignupPage> {
       Navigator.pop(context); // 로딩 닫기
 
       if (data == true) {
+        // ignore: avoid_print
         print("회원가입 성공");
 
         Fluttertoast.showToast(
@@ -153,6 +157,7 @@ class _SignupState extends State<SignupPage> {
           MaterialPageRoute(builder: (_) => const LoginPage()),
         );
       } else {
+        // ignore: avoid_print
         print("회원가입 실패");
         Fluttertoast.showToast(
           msg: "회원가입 실패",
@@ -161,6 +166,7 @@ class _SignupState extends State<SignupPage> {
       }
     } catch (e) {
       Navigator.pop(context); // 에러 시 로딩 닫기
+      // ignore: avoid_print
       print(e);
       Fluttertoast.showToast(
         msg: "서버 통신 오류가 발생했습니다.",
@@ -179,6 +185,7 @@ class _SignupState extends State<SignupPage> {
         ),
         queryParameters: {'email': emailCon.text.trim()},
       );
+      // ignore: avoid_print
       print("(중복 : 1 , 사용 가능 : 0 반환 ): ${response.data}");
 
       if (response.statusCode == 200 &&
@@ -196,6 +203,7 @@ class _SignupState extends State<SignupPage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -211,6 +219,7 @@ class _SignupState extends State<SignupPage> {
         ),
         queryParameters: {'phone': plusPhone.trim()},
       );
+      // ignore: avoid_print
       print("(중복 : 1 , 사용 가능 : 0 반환 ): ${response.data}");
 
       if (response.statusCode == 200 &&
@@ -228,6 +237,7 @@ class _SignupState extends State<SignupPage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -302,6 +312,19 @@ class _SignupState extends State<SignupPage> {
                           height: 44,
                           child: OutlinedButton(
                             onPressed: checkEmail,
+                            style: OutlinedButton.styleFrom(
+                              padding:
+                              const EdgeInsets.symmetric(horizontal: 12),
+                              side: BorderSide(
+                                color: scheme.primary,
+                                width: 1.2,
+                              ),
+                              foregroundColor: scheme.primary,
+                              textStyle: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             child: const Text('중복 확인'),
                           ),
                         ),
@@ -357,6 +380,7 @@ class _SignupState extends State<SignupPage> {
                             controller: phoneCon,
                             onChanged: (phone) {
                               emailPhoneNumber = phone;
+                              // ignore: avoid_print
                               print("입력한 번호: ${phone.completeNumber}");
                             },
                           ),
@@ -366,6 +390,19 @@ class _SignupState extends State<SignupPage> {
                           height: 44,
                           child: OutlinedButton(
                             onPressed: checkPhone,
+                            style: OutlinedButton.styleFrom(
+                              padding:
+                              const EdgeInsets.symmetric(horizontal: 12),
+                              side: BorderSide(
+                                color: scheme.primary,
+                                width: 1.2,
+                              ),
+                              foregroundColor: scheme.primary,
+                              textStyle: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             child: const Text('중복 확인'),
                           ),
                         ),
@@ -382,17 +419,10 @@ class _SignupState extends State<SignupPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: onSignup,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFAAA5),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                        ),
-                        child: const Text("회원가입"),
-                      ),
+                    // ✅ 공통 Primary 버튼 사용 (테마 컬러 자동 대응)
+                    SKPrimaryButton(
+                      label: "회원가입",
+                      onPressed: onSignup,
                     ),
                   ],
                 ),
@@ -404,7 +434,7 @@ class _SignupState extends State<SignupPage> {
     );
   }
 
-  // 공통 카드 UI
+  // 공통 카드 UI (Theme의 cardTheme를 최대한 활용)
   Widget _buildCard({
     required ThemeData theme,
     required ColorScheme scheme,
@@ -412,20 +442,15 @@ class _SignupState extends State<SignupPage> {
     required String description,
     required Widget child,
   }) {
-    final cardColor = scheme.surface;
-
-    return Material(
-      color: cardColor,
-      borderRadius: BorderRadius.circular(18),
-      elevation: 2,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: scheme.outline.withOpacity(0.15),
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: theme.cardTheme.elevation ?? 2,
+      shape: theme.cardTheme.shape ??
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

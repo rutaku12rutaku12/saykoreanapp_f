@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api/api.dart';   // ApiClient.dio
 import 'study.dart';                           // StudyDto 사용
-import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ SKPageHeader, SKPrimaryButton
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ SKPageHeader, SKPrimaryButton, FooterSafeArea
 
 // ─────────────────────────────────────────────────────────────
 // 학습 완료한 주제 목록 페이지
@@ -122,18 +122,21 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
         elevation: 0,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SKPageHeader(
-                title: '완수한 주제',
-                subtitle: '이미 학습을 마친 주제 목록이에요.',
-              ),
-              const SizedBox(height: 16),
-              Expanded(child: _buildBody(context)),
-            ],
+        // ✅ 하단 푸터(네비게이션 바 등)에 내용 안 가리도록 공통 FooterSafeArea 적용
+        child: FooterSafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SKPageHeader(
+                  title: '완수한 주제',
+                  subtitle: '이미 학습을 마친 주제 목록이에요.',
+                ),
+                const SizedBox(height: 16),
+                Expanded(child: _buildBody(context)),
+              ],
+            ),
           ),
         ),
       ),
@@ -142,9 +145,16 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
 
   // 로딩/에러/데이터 유무에 따라 다른 UI
   Widget _buildBody(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     // 1) 로딩 중
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(
+          color: scheme.primary,
+        ),
+      );
     }
 
     // 2) 에러 발생
@@ -176,16 +186,12 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
     }
 
     // 4) 정상적으로 목록이 있는 경우에는 카드 리스트 출력
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
     return ListView.separated(
       itemCount: _studies.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final s = _studies[index];
-        final title =
-            s.themeSelected ?? s.themeKo ?? '주제 #${s.studyNo}';
+        final title = s.themeSelected ?? s.themeKo ?? '주제 #${s.studyNo}';
 
         return Card(
           elevation: 1,
@@ -196,7 +202,8 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
             borderRadius: BorderRadius.circular(14),
             onTap: () => _onTapStudy(s),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 children: [
                   // 왼쪽 컬러 점/아이콘

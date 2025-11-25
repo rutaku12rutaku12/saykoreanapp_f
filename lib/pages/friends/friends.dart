@@ -1,6 +1,7 @@
 // lib/pages/friends/friends.dart
 
 import 'package:flutter/material.dart';
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 import '../../api/friends_api.dart';
 import '../../models/friend.dart';
 import '../../models/friend_request.dart';
@@ -40,7 +41,6 @@ class _FriendsPageState extends State<FriendsPage>
     _loadFriends();
     _loadRequests(); // 받은요청
     _loadSentRequests(); // 보낸요청
-
   }
 
   @override
@@ -54,6 +54,7 @@ class _FriendsPageState extends State<FriendsPage>
     setState(() => _loadingFriends = true);
     try {
       final list = await _api.getFriendList(userNo: widget.myUserNo);
+      // ignore: avoid_print
       print("최종 파싱된 Friend 리스트:");
       setState(() {
         _friends = list;
@@ -70,11 +71,14 @@ class _FriendsPageState extends State<FriendsPage>
     setState(() => _loadingRequests = true);
     try {
       final list = await _api.fetchRequests(widget.myUserNo);
+      // ignore: avoid_print
       print("서버에서 받은 요청 개수: ${list.length}");
+      // ignore: avoid_print
       print("서버에서 받은 raw 데이터: $list");
 
       setState(() {
         _requests = list;
+        // ignore: avoid_print
         print("_requests 길이: ${_requests.length}");
       });
     } catch (e) {
@@ -84,15 +88,15 @@ class _FriendsPageState extends State<FriendsPage>
     }
   }
 
-  //보낸 요청 목록
-  Future<void> _loadSentRequests() async{
+  // 보낸 요청 목록
+  Future<void> _loadSentRequests() async {
     setState(() => _loadingSent = true);
-    try{
+    try {
       _sentRequests = await _api.getSentRequests(widget.myUserNo);
-    }finally{
+    } finally {
       setState(() => _loadingSent = false);
     }
-}
+  }
 
   // 친구 요청 보내기
   Future<void> _sendRequest() async {
@@ -149,12 +153,13 @@ class _FriendsPageState extends State<FriendsPage>
         }
       }
 
-      //요청 갱신
+      // 요청 갱신
       if (success == true) {
+        _loadFriends();
         _loadRequests();
         _loadSentRequests();
       }
-    } catch(e) {
+    } catch (e) {
       _showError("친구 요청 실패\n$e");
     }
   }
@@ -169,7 +174,7 @@ class _FriendsPageState extends State<FriendsPage>
       setState(() {
         _requests.removeWhere((e) => e.frenNo == r.frenNo);
       });
-      // 친구 목록 갱신
+      // 친구 목록 및 요청들 갱신
       await _loadFriends();
       await _loadRequests();
       await _loadSentRequests();
@@ -191,15 +196,14 @@ class _FriendsPageState extends State<FriendsPage>
 
         // 화면 상태에서 즉시 제거
         setState(() {
-          _requests
-              .removeWhere((e) => e.offer == r.offer && e.receiver == r.receiver);
+          _requests.removeWhere(
+                  (e) => e.offer == r.offer && e.receiver == r.receiver);
         });
       } else {
         _showError("이미 처리된 요청이거나 존재하지 않습니다.");
       }
       await _loadRequests();
       await _loadSentRequests();
-
     } catch (e) {
       _showError("거절 실패\n$e");
     }
@@ -221,23 +225,37 @@ class _FriendsPageState extends State<FriendsPage>
   }
 
   void _showError(String msg) {
+    final scheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: scheme.error,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // 🔥 테마 기반 배경 (라이트/다크 둘 다)
-    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg = theme.scaffoldBackgroundColor;
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        title: const Text("친구"),
-        // AppBar 도 테마 배경 사용
+        title: Text(
+          "친구",
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+          ),
+        ),
         backgroundColor: bg,
         elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(
+          color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+        ),
         actions: [
           IconButton(
             onPressed: _sendRequest,
@@ -248,25 +266,37 @@ class _FriendsPageState extends State<FriendsPage>
       ),
       body: Column(
         children: [
-          TabBar(
-            controller: _tabController,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor:
-            Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            tabs: const [
-              Tab(text: "친구 목록"),
-              Tab(text: "받은 요청"),
-              Tab(text: "보낸 요청")
-            ],
+          // 상단 헤더
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
           ),
+          const SizedBox(height: 4),
+
+          // 탭바
+          Material(
+            color: Colors.transparent,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: scheme.primary,
+              unselectedLabelColor:
+              theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+              indicatorColor: scheme.primary,
+              indicatorWeight: 2.5,
+              tabs: const [
+                Tab(text: "친구 목록"),
+                Tab(text: "받은 요청"),
+                Tab(text: "보낸 요청"),
+              ],
+            ),
+          ),
+
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildFriendsTab(),
-                _buildRequestsTab(), //받은 요청
-                _buildSentRequestsTab() //보낸요청
+                _buildFriendsTab(context),
+                _buildRequestsTab(context), // 받은 요청
+                _buildSentRequestsTab(context), // 보낸 요청
               ],
             ),
           ),
@@ -276,7 +306,9 @@ class _FriendsPageState extends State<FriendsPage>
   }
 
   // 친구 목록 UI
-  Widget _buildFriendsTab() {
+  Widget _buildFriendsTab(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (_loadingFriends) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -288,15 +320,25 @@ class _FriendsPageState extends State<FriendsPage>
     return RefreshIndicator(
       onRefresh: _loadFriends,
       child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _friends.length,
         itemBuilder: (_, i) {
           final f = _friends[i];
 
-          return ListTile(
-            title: Text(f.friendName),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _delete(f),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Card(
+              child: ListTile(
+                title: Text(
+                  f.friendName,
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _delete(f),
+                ),
+              ),
             ),
           );
         },
@@ -304,8 +346,11 @@ class _FriendsPageState extends State<FriendsPage>
     );
   }
 
-  // 요청 목록 UI
-  Widget _buildRequestsTab() {
+  // 받은 요청 목록 UI
+  Widget _buildRequestsTab(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     if (_loadingRequests) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -317,26 +362,38 @@ class _FriendsPageState extends State<FriendsPage>
     return RefreshIndicator(
       onRefresh: _loadRequests,
       child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _requests.length,
         itemBuilder: (_, i) {
           final r = _requests[i];
 
-          return ListTile(
-            title: Text(r.friendName),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 수락
-                IconButton(
-                  onPressed: () => _accept(r),
-                  icon: const Icon(Icons.check, color: Colors.green),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Card(
+              child: ListTile(
+                title: Text(
+                  r.friendName,
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                // 거절
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red),
-                  onPressed: () => _refusal(r),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => _accept(r),
+                      icon: Icon(Icons.check_circle,
+                          color: scheme.primary.withOpacity(0.9)),
+                      tooltip: "수락",
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.cancel,
+                          color: scheme.error.withOpacity(0.9)),
+                      onPressed: () => _refusal(r),
+                      tooltip: "거절",
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -344,8 +401,11 @@ class _FriendsPageState extends State<FriendsPage>
     );
   }
 
-  //보낸 요청 목록
-  Widget _buildSentRequestsTab() {
+  // 보낸 요청 목록 UI
+  Widget _buildSentRequestsTab(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     if (_loadingSent) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -357,13 +417,31 @@ class _FriendsPageState extends State<FriendsPage>
     return RefreshIndicator(
       onRefresh: _loadSentRequests,
       child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _sentRequests.length,
         itemBuilder: (context, index) {
           final item = _sentRequests[index];
-          return ListTile(
-            title: Text(item.friendName),
-            subtitle: const Text("요청중"),
-            trailing: const Icon(Icons.hourglass_top),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Card(
+              child: ListTile(
+                title: Text(
+                  item.friendName,
+                  style: theme.textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  "요청 중",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.hourglass_top,
+                  color: scheme.primary.withOpacity(0.8),
+                ),
+              ),
+            ),
           );
         },
       ),

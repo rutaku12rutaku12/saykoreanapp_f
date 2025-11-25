@@ -10,9 +10,7 @@ class FindPage extends StatefulWidget {
   const FindPage({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _FindState();
-  }
+  State<FindPage> createState() => _FindState();
 }
 
 class _FindState extends State<FindPage> {
@@ -69,7 +67,9 @@ class _FindState extends State<FindPage> {
       print("오류발생 : 이메일 찾기 실패, $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이메일 찾기에 실패했어요. 다시 시도해주세요.')),
+        const SnackBar(
+          content: Text('이메일 찾기에 실패했어요. 다시 시도해주세요.'),
+        ),
       );
     }
   }
@@ -105,7 +105,9 @@ class _FindState extends State<FindPage> {
       print("오류발생 : 비밀번호 찾기 실패, $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('비밀번호 찾기에 실패했어요. 다시 시도해주세요.')),
+        const SnackBar(
+          content: Text('비밀번호 찾기에 실패했어요. 다시 시도해주세요.'),
+        ),
       );
     }
   }
@@ -134,6 +136,7 @@ class _FindState extends State<FindPage> {
         ),
       ),
       body: SafeArea(
+        child: FooterSafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
           child: Column(
@@ -171,17 +174,11 @@ class _FindState extends State<FindPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed: onFindEmail,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          elevation: 0,
-                        ),
-                        child: const Text("이메일 찾기"),
-                      ),
+                    // 살구색 공통 버튼
+                    const SizedBox(height: 4),
+                    SKPrimaryButton(
+                      label: '이메일 찾기',
+                      onPressed: onFindEmail,
                     ),
                   ],
                 ),
@@ -222,17 +219,9 @@ class _FindState extends State<FindPage> {
                       label: '이메일',
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed: onFindPass,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primaryContainer,
-                          foregroundColor: scheme.onPrimaryContainer,
-                          elevation: 0,
-                        ),
-                        child: const Text("비밀번호 찾기"),
-                      ),
+                    SKPrimaryButton(
+                      label: '비밀번호 찾기',
+                      onPressed: onFindPass,
                     ),
                   ],
                 ),
@@ -240,6 +229,7 @@ class _FindState extends State<FindPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

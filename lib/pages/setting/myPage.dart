@@ -1,3 +1,5 @@
+// lib/pages/setting/myPage.dart
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/api.dart';
@@ -8,8 +10,8 @@ import 'package:saykoreanapp_f/pages/setting/language.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// themeModeNotifier, app 전역 정의된 main.dart import
-import 'package:saykoreanapp_f/main.dart';
+// ✅ 공통 UI (헤더/푸터 패딩)
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -30,22 +32,22 @@ class _MyPageState extends State<MyPage> {
   dynamic maxStreak;
   bool isLoading = true;
 
-  bool _isDark = false; // 다크 모드 스위치
-  bool _isMint = false; // 민트 모드 스위치
+  bool _isDark = false;
+  bool _isMint = false;
 
   bool? isLogin;
 
   @override
   void initState() {
     super.initState();
-    _initThemeFromGlobal();
+    _initThemeFromPrefs();
     loginCheck();
   }
 
-  Future<void> _initThemeFromGlobal() async {
+  Future<void> _initThemeFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedMode = prefs.getString('themeMode'); // light/dark/system
-    final savedColor = prefs.getString('themeColor'); // default/mint
+    final savedMode = prefs.getString('themeMode');
+    final savedColor = prefs.getString('themeColor');
 
     setState(() {
       _isDark = (savedMode == 'dark');
@@ -56,17 +58,13 @@ class _MyPageState extends State<MyPage> {
   Future<void> _toggleDark(bool value) async {
     setState(() {
       _isDark = value;
-      if (value) {
-        _isMint = false; // 다크 켜면 민트 OFF
-      }
+      if (value) _isMint = false;
     });
 
     if (value) {
-      // 다크 모드 ON
-      await setThemeMode(ThemeMode.dark); // main.dart 전역 함수
-      await setThemeColor('default'); // 다크일 때는 민트 색상 OFF
+      await setThemeMode(ThemeMode.dark);
+      await setThemeColor('default');
     } else {
-      // 다크 모드 OFF → 라이트 모드
       await setThemeMode(ThemeMode.light);
     }
   }
@@ -74,17 +72,13 @@ class _MyPageState extends State<MyPage> {
   Future<void> _toggleMint(bool value) async {
     setState(() {
       _isMint = value;
-      if (value) {
-        _isDark = false; // 민트 켜면 다크 OFF
-      }
+      if (value) _isDark = false;
     });
 
     if (value) {
-      // 민트 ON → 라이트 + 민트 색상
       await setThemeMode(ThemeMode.light);
       await setThemeColor('mint');
     } else {
-      // 민트 OFF → 기본 라이트 색상
       await setThemeColor('default');
     }
   }
@@ -104,7 +98,7 @@ class _MyPageState extends State<MyPage> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
+          MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       }
     }
@@ -130,7 +124,7 @@ class _MyPageState extends State<MyPage> {
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => LoginPage()),
+            MaterialPageRoute(builder: (context) => const LoginPage()),
           );
         }
       } else {
@@ -145,7 +139,7 @@ class _MyPageState extends State<MyPage> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
+          MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       }
     }
@@ -160,56 +154,57 @@ class _MyPageState extends State<MyPage> {
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        List<dynamic> attendList = response.data;
+        final List<dynamic> attendList = response.data;
         print("출석 리스트: $attendList");
 
         int calculatedCurrentStreak = 0;
 
         if (attendList.isNotEmpty) {
-          // 날짜만 추출하고 정렬 (최신순)
           final dates = attendList
               .map((item) => DateTime.parse(item['attendDay']))
               .toList()
-            ..sort((a, b) => b.compareTo(a)); // 내림차순 정렬 (최신날짜가 앞에)
+            ..sort((a, b) => b.compareTo(a));
 
           final today = DateTime.now();
           final todayDate = DateTime(today.year, today.month, today.day);
 
-          // 가장 최근 출석일
           final lastAttendDate = DateTime(
-              dates[0].year,
-              dates[0].month,
-              dates[0].day
+            dates[0].year,
+            dates[0].month,
+            dates[0].day,
           );
 
-          // 마지막 출석이 오늘이거나 어제인 경우에만 연속 계산
-          final daysSinceLastAttend = todayDate.difference(lastAttendDate).inDays;
+          final daysSinceLastAttend =
+              todayDate.difference(lastAttendDate).inDays;
 
           if (daysSinceLastAttend <= 1) {
             calculatedCurrentStreak = 1;
 
-            // 역순으로 현재 연속 출석일 계산
             for (int i = 1; i < dates.length; i++) {
-              final currentDate = DateTime(dates[i].year, dates[i].month, dates[i].day);
-              final prevDate = DateTime(dates[i - 1].year, dates[i - 1].month, dates[i - 1].day);
+              final currentDate =
+              DateTime(dates[i].year, dates[i].month, dates[i].day);
+              final prevDate = DateTime(
+                dates[i - 1].year,
+                dates[i - 1].month,
+                dates[i - 1].day,
+              );
 
               final diffDays = prevDate.difference(currentDate).inDays;
 
               if (diffDays == 1) {
                 calculatedCurrentStreak += 1;
               } else {
-                break; // 연속이 끊기면 중단
+                break;
               }
             }
           } else {
-            // 오늘/어제 출석하지 않았으면 연속 0
             calculatedCurrentStreak = 0;
           }
         }
 
         setState(() {
           attendDay = attendList.length;
-          maxStreak = calculatedCurrentStreak; // 현재 연속 출석일수
+          maxStreak = calculatedCurrentStreak;
         });
 
         print("현재 연속 출석일수: $calculatedCurrentStreak");
@@ -219,19 +214,18 @@ class _MyPageState extends State<MyPage> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    const brown = Color(0xFF6B4E42);
-    final bg = Theme.of(context).scaffoldBackgroundColor;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg = theme.scaffoldBackgroundColor;
 
     if (isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFFFF9F0),
+      return Scaffold(
+        backgroundColor: bg,
         body: Center(
           child: CircularProgressIndicator(
-            color: brown,
+            color: scheme.primary,
           ),
         ),
       );
@@ -243,117 +237,107 @@ class _MyPageState extends State<MyPage> {
         backgroundColor: bg,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           "마이페이지",
-          style: TextStyle(
-            color: brown,
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
+            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
           ),
         ),
-        iconTheme: const IconThemeData(color: brown),
+        iconTheme: IconThemeData(
+          color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+        ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 상단 타이틀
-              const Text(
-                "내 계정",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: brown,
+        child: FooterSafeArea( // ✅ 푸터에 안 가리도록 공통 래퍼 적용
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SKPageHeader(
+                  title: "내 계정",
+                  subtitle: "프로필과 학습 환경을 한 곳에서 관리해요.",
                 ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                "프로필과 학습 환경을 한 곳에서 관리해요.",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF9C7C68),
+                const SizedBox(height: 20),
+
+                // 사용자 정보 카드
+                _buildUserCard(theme, scheme),
+
+                const SizedBox(height: 24),
+
+                // 계정 설정
+                const _SectionTitle("계정 설정"),
+                const SizedBox(height: 8),
+                _SettingCard(
+                  icon: Icons.person_outline,
+                  title: "정보 수정",
+                  subtitle: "닉네임, 전화번호, 비밀번호 등을 변경할 수 있어요.",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyInfoUpdatePage(),
+                      ),
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(height: 20),
 
-              // 사용자 정보 카드
-              _buildUserCard(),
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
+                // 학습 설정
+                const _SectionTitle("학습 설정"),
+                const SizedBox(height: 8),
+                _SettingCard(
+                  icon: Icons.category_outlined,
+                  title: "장르 설정",
+                  subtitle: "관심 있는 학습 주제를 선택해요.",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GenrePage(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                _SettingCard(
+                  icon: Icons.language_outlined,
+                  title: "언어 설정",
+                  subtitle: "앱에서 사용할 학습 언어를 바꿔요.",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LanguagePage(),
+                      ),
+                    );
+                  },
+                ),
 
-              // 계정 설정
-              const _SectionTitle("계정 설정"),
-              const SizedBox(height: 8),
-              _SettingCard(
-                icon: Icons.person_outline,
-                title: "정보 수정",
-                subtitle: "닉네임, 이메일, 비밀번호 등을 변경할 수 있어요.",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MyInfoUpdatePage(),
-                    ),
-                  );
-                },
-              ),
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
+                // 학습 기록
+                const _SectionTitle("학습 기록"),
+                const SizedBox(height: 8),
+                _SettingCard(
+                  icon: Icons.emoji_events_outlined,
+                  title: "완수한 주제 목록",
+                  subtitle: "지금까지 끝낸 학습 주제를 다시 확인해요.",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SuccessListPage(),
+                      ),
+                    );
+                  },
+                ),
 
-              // 학습 설정
-              const _SectionTitle("학습 설정"),
-              const SizedBox(height: 8),
-              _SettingCard(
-                icon: Icons.category_outlined,
-                title: "장르 설정",
-                subtitle: "관심 있는 학습 주제를 선택해요.",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const GenrePage(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 10),
-              _SettingCard(
-                icon: Icons.language_outlined,
-                title: "언어 설정",
-                subtitle: "앱에서 사용할 학습 언어를 바꿔요.",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LanguagePage(),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-
-              // 학습 기록
-              const _SectionTitle("학습 기록"),
-              const SizedBox(height: 8),
-              _SettingCard(
-                icon: Icons.emoji_events_outlined,
-                title: "완수한 주제 목록",
-                subtitle: "지금까지 끝낸 학습 주제를 다시 확인해요.",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SuccessListPage(),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -361,127 +345,124 @@ class _MyPageState extends State<MyPage> {
   }
 
   // ------------------- 위젯 조각들 ------------------- //
-  Widget _buildUserCard() {
-    const brown = Color(0xFF6B4E42);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.brown.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+  Widget _buildUserCard(ThemeData theme, ColorScheme scheme) {
+    final cardColor = scheme.surface;
+    final titleColor =
+        theme.appBarTheme.foregroundColor ?? const Color(0xFF6B4E42);
+    final labelColor = theme.textTheme.bodySmall?.color ??
+        scheme.onSurface.withOpacity(0.7);
+
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 2,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: scheme.outline.withOpacity(0.15),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 닉네임
-          Row(
-            children: const [
-              Icon(Icons.person, color: brown, size: 20),
-              SizedBox(width: 8),
-              Text(
-                "닉네임",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF9C7C68),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 닉네임
+            Row(
+              children: [
+                Icon(Icons.person, color: titleColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  "닉네임",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: labelColor,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            nickName.isNotEmpty ? nickName : "정보 없음",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: brown,
+              ],
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              nickName.isNotEmpty ? nickName : "정보 없음",
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: titleColor,
+              ),
+            ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // 가입일자
-          Row(
-            children: const [
-              Icon(Icons.calendar_today, color: brown, size: 20),
-              SizedBox(width: 8),
-              Text(
-                "가입일자",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF9C7C68),
+            // 가입일자
+            Row(
+              children: [
+                Icon(Icons.calendar_today, color: titleColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  "가입일자",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: labelColor,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            userDate.isNotEmpty ? userDate : "정보 없음",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: brown,
+              ],
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              userDate.isNotEmpty ? userDate : "정보 없음",
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: titleColor,
+              ),
+            ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // 총 출석 일수
-          Row(
-            children: const [
-              Icon(Icons.calendar_month, color: brown, size: 20),
-              SizedBox(width: 8),
-              Text(
-                "총 출석 일수",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF9C7C68),
+            // 총 출석 일수
+            Row(
+              children: [
+                Icon(Icons.calendar_month, color: titleColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  "총 출석 일수",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: labelColor,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            attendDay != null ? "${attendDay}일" : "정보 없음",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: brown,
+              ],
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              attendDay != null ? "${attendDay}일" : "정보 없음",
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: titleColor,
+              ),
+            ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // 현재 연속 출석 일수 (아직 null이라 임시)
-          Row(
-            children: const [
-              Icon(Icons.trending_up, color: brown, size: 20),
-              SizedBox(width: 8),
-              Text(
-                "현재 연속 출석 일수",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF9C7C68),
+            // 현재 연속 출석 일수
+            Row(
+              children: [
+                Icon(Icons.trending_up, color: titleColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  "현재 연속 출석 일수",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: labelColor,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            maxStreak != null ? "${maxStreak}일" : "정보 없음",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: brown,
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              maxStreak != null ? "${maxStreak}일" : "정보 없음",
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: titleColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -497,11 +478,14 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Text(
       text,
-      style: const TextStyle(
+      style: theme.textTheme.bodySmall?.copyWith(
         fontSize: 13,
-        color: Color(0xFF9C7C68),
+        color: scheme.onSurface.withOpacity(0.7),
       ),
     );
   }
@@ -523,8 +507,14 @@ class _SettingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const brown = Color(0xFF6B4E42);
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final titleColor =
+        theme.appBarTheme.foregroundColor ?? const Color(0xFF6B4E42);
+    final subtitleColor =
+        theme.textTheme.bodySmall?.color ?? const Color(0xFF9C7C68);
+
+    final cardColor = scheme.surface;
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -532,15 +522,18 @@ class _SettingCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.brown.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+          border: Border.all(
+            color: scheme.outline.withOpacity(0.12),
+          ),
         ),
         child: Row(
           children: [
@@ -565,18 +558,18 @@ class _SettingCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: brown,
+                      color: titleColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: theme.textTheme.bodySmall?.copyWith(
                       fontSize: 12,
-                      color: Color(0xFF9C7C68),
+                      color: subtitleColor,
                     ),
                   ),
                 ],

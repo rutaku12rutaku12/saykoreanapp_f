@@ -9,36 +9,30 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:saykoreanapp_f/api/api.dart';
-import 'dart:convert';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:saykoreanapp_f/pages/auth/find_page.dart';
-import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
-import 'package:saykoreanapp_f/pages/auth/social_login_webview.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
+// (소셜 로그인 다시 쓸 거면 아래 import 주석 해제해서 사용하면 됨)
+// import 'package:saykoreanapp_f/pages/auth/social_login_webview.dart';
 
-// 스타일 위젯 import
-import 'package:saykoreanapp_f/main.dart'; // themeColorNotifier
-
-// JWT → payload 추출
+/// JWT → payload 추출
 Map<String, dynamic> _decodeJwt(String token) {
   final parts = token.split('.');
   final payload = base64Url.normalize(parts[1]);
   return json.decode(utf8.decode(base64Url.decode(payload)));
 }
 
-//------------------------------------------------------
+// ─────────────────────────────────────────────────────────────
+// 로그인 페이지
+// ─────────────────────────────────────────────────────────────
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _LoginState();
-  }
+  State<LoginPage> createState() => _LoginState();
 }
 
 class _LoginState extends State<LoginPage> {
-  // 1. 입력상자 컨트롤러
+  // 입력 컨트롤러
   final TextEditingController emailCon = TextEditingController();
   final TextEditingController pwdCont = TextEditingController();
 
@@ -49,7 +43,9 @@ class _LoginState extends State<LoginPage> {
     super.dispose();
   }
 
+  // ───────────────────────────────────────────────────────────
   // 로그인 메소드
+  // ───────────────────────────────────────────────────────────
   Future<void> onLogin() async {
     print("onLogin.exe");
 
@@ -80,7 +76,7 @@ class _LoginState extends State<LoginPage> {
           response.data != '') {
         final token = response.data['token'];
 
-        // 🔥 1) JWT → userNo 추출
+        // 1) JWT → userNo 추출
         final decoded = _decodeJwt(token);
         final userNo = decoded['userNo'];
 
@@ -88,8 +84,9 @@ class _LoginState extends State<LoginPage> {
         await prefs.setString('token', token.toString());
         await prefs.setInt('myUserNo', userNo);
 
-        // 홈으로 이동
         if (!mounted) return;
+
+        // 홈으로 이동
         Navigator.pushReplacementNamed(context, '/home');
 
         // 출석 체크
@@ -151,7 +148,9 @@ class _LoginState extends State<LoginPage> {
     }
   }
 
-  // ───────────────── UI ─────────────────
+  // ───────────────────────────────────────────────────────────
+  // UI
+  // ───────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -212,22 +211,10 @@ class _LoginState extends State<LoginPage> {
                       obscure: true,
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: onLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFAAA5), // 딸기우유 핑크
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                        ),
-                        child: Text("login.button".tr()),
-                      ),
-                    )
-
-
-
-
+                    SKPrimaryButton(
+                      label: "login.button".tr(),
+                      onPressed: onLogin,
+                    ),
                   ],
                 ),
               ),
@@ -247,12 +234,8 @@ class _LoginState extends State<LoginPage> {
                       height: 44,
                       child: OutlinedButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => FindPage(),
-                            ),
-                          );
+                          // 🔥 이름 기반 라우트로 이동
+                          Navigator.pushReplacementNamed(context, '/find');
                         },
                         child: Text("login.find".tr()),
                       ),
@@ -262,12 +245,7 @@ class _LoginState extends State<LoginPage> {
                       height: 44,
                       child: OutlinedButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SignupPage(),
-                            ),
-                          );
+                          Navigator.pushReplacementNamed(context, '/signup');
                         },
                         child: Text("signup.signup".tr()),
                       ),
@@ -276,7 +254,7 @@ class _LoginState extends State<LoginPage> {
                 ),
               ),
 
-              // 소셜 로그인 영역 (원하면 그대로 살려서 디자인 바꿀 수 있음)
+              // 소셜 로그인 영역 (필요하면 다시 활성화)
               // const SizedBox(height: 24),
               // _buildCard(
               //   theme: theme,

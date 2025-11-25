@@ -5,7 +5,7 @@ import 'package:saykoreanapp_f/api/api.dart';
 import 'package:dio/dio.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:convert';
-import 'dart:io'; // 🔥 추가
+import 'dart:io'; // 추가
 
 // JWT → payload 추출
 Map<String, dynamic> _decodeJwt(String token) {

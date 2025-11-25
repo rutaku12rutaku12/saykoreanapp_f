@@ -1,36 +1,21 @@
-// main.dart — 그대로 복붙해서 실행 가능 (단일 샘플 앱 버전)
-// 실제 SayKorean 앱에 넣을 때는 MyApp/Theme는 이미 있으니까
-// 아래 GenrePage 부분만 가져가서 pages/... 쪽에 붙여도 됨.
+// lib/pages/setting/genre.dart
+//
+// ✅ SayKorean 공통 테마 + ApiClient + SKPageHeader / SKPrimaryButton 적용 버전
+//    그대로 붙여넣고, 필요한 곳에서 GenrePage()로 라우팅해서 사용하면 됨.
 
-import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 
-// 🔥 공통 UI (헤더/버튼)
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)
-String _detectBaseUrl() {
-  final env = const String.fromEnvironment('API_HOST'); // 예) --dart-define=API_HOST=http://192.168.0.10:8080
-  if (env.isNotEmpty) return env;
-
-  if (kIsWeb) return 'http://localhost:8080';
-  if (Platform.isAndroid) return 'http://10.0.2.2:8080'; // 안드 에뮬레이터→호스트
-  return 'http://localhost:8080';                        // iOS 시뮬레이터/데스크톱
-}
-
-final Dio dio = Dio(BaseOptions(
-  baseUrl: _detectBaseUrl(),
-  connectTimeout: const Duration(seconds: 5),
-  receiveTimeout: const Duration(seconds: 10),
-));
-
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // DTO
+// ─────────────────────────────────────────────────────────────
+
 class GenreDto {
   final int genreNo;
   final String genreName;
@@ -43,52 +28,10 @@ class GenreDto {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 앱 시작 (샘플용 MyApp)
-// 실제 프로젝트에선 이미 MyApp/테마 있으니까 GenrePage만 써도 됨
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SayKorean Genres',
-      themeMode: ThemeMode.system,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFFFF9F0),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFFAAA5), // 딸기우유 핑크
-          brightness: Brightness.light,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFFFF9F0),
-          foregroundColor: Color(0xFF6B4E42),
-          elevation: 0,
-          centerTitle: true,
-        ),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF1E1816),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6B4E42),
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: const GenrePage(),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // 장르 페이지
+// ─────────────────────────────────────────────────────────────
+
 class GenrePage extends StatefulWidget {
   const GenrePage({super.key});
 
@@ -123,11 +66,11 @@ class _GenreState extends State<GenrePage> {
     });
 
     try {
-      // (옵션) 저장된 언어 코드
+      // 저장된 언어 코드 (웹/앱에서 이미 관리 중이면 그 값 활용)
       final prefs = await SharedPreferences.getInstance();
       final lng = prefs.getString('lng') ?? 'ko';
 
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(
         '/saykorean/study/getGenre',
         queryParameters: {'lng': lng},
         options: Options(headers: {'Accept-Language': lng}),
@@ -151,12 +94,14 @@ class _GenreState extends State<GenrePage> {
     }
   }
 
-  // 탭 시 저장
+  // 탭 시 선택 저장
   Future<void> _saveGenre(int genreNo, String name) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('selectedGenreNo', genreNo);
     if (!mounted) return;
+
     setState(() => _selected = genreNo);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('선택한 장르: $name (No.$genreNo) 저장됨')),
     );
@@ -198,15 +143,10 @@ class _GenreState extends State<GenrePage> {
             ? _buildError(theme, scheme)
             : _buildContent(theme, scheme),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _fetchGenres,
-      //   backgroundColor: scheme.primary,
-      //   foregroundColor: Colors.white,
-      //   child: const Icon(Icons.refresh),
-      // ),
     );
   }
 
+  // 에러 UI
   Widget _buildError(ThemeData theme, ColorScheme scheme) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
@@ -238,6 +178,7 @@ class _GenreState extends State<GenrePage> {
     );
   }
 
+  // 정상 컨텐츠 UI
   Widget _buildContent(ThemeData theme, ColorScheme scheme) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
@@ -261,7 +202,8 @@ class _GenreState extends State<GenrePage> {
             )
                 : ListView.separated(
               itemCount: _items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, __) =>
+              const SizedBox(height: 10),
               itemBuilder: (context, i) {
                 final g = _items[i];
                 final selected = _selected == g.genreNo;
@@ -295,7 +237,8 @@ class _GenreState extends State<GenrePage> {
                             scheme.primary.withOpacity(0.12),
                             child: Text(
                               '${g.genreNo}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: scheme.primary,
                               ),
@@ -305,8 +248,8 @@ class _GenreState extends State<GenrePage> {
                           Expanded(
                             child: Text(
                               g.genreName,
-                              style:
-                              theme.textTheme.bodyLarge?.copyWith(
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: scheme.onSurface,
                               ),

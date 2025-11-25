@@ -4,7 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // ApiClient.dio 사용
-import 'package:saykoreanapp_f/main.dart' show setThemeMode, setThemeColor;
+
+// main.dart는 prefix로 가져오기
+import 'package:saykoreanapp_f/main.dart' as AppMain;
+
+// UI 공통 (FooterSafeArea, SKPageHeader 등)
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
+
 
 class StorePage extends StatefulWidget {
   const StorePage({super.key});
@@ -17,9 +23,9 @@ class _StorePageState extends State<StorePage> {
   bool _loading = false;
   String? _error;
 
-  int? _pointBalance;          // 내 포인트 잔액
-  bool _hasDarkTheme = false;  // 다크 테마 보유 여부 (로컬 캐시)
-  bool _hasMintTheme = false;  // 민트 테마 보유 여부 (로컬 캐시)
+  int? _pointBalance; // 내 포인트 잔액
+  bool _hasDarkTheme = false; // 다크 테마 보유 여부 (로컬 캐시)
+  bool _hasMintTheme = false; // 민트 테마 보유 여부 (로컬 캐시)
 
   @override
   void initState() {
@@ -57,8 +63,6 @@ class _StorePageState extends State<StorePage> {
 
   // ─────────────────────────────────────────────────────────────
   // 1) 포인트 잔액 조회
-  //   GET /saykorean/store/point
-  //   → 응답: 1234 (int)
   // ─────────────────────────────────────────────────────────────
   Future<int> _fetchPointBalance() async {
     try {
@@ -87,23 +91,20 @@ class _StorePageState extends State<StorePage> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 테마 적용 (전역 themeMode/themeColor 사용)
-  //   - 'dark'   : 다크 모드
-  //   - 'mint'   : 라이트 + 민트 팔레트
-  //   - 'default': 라이트 + 기본(핑크) 팔레트
+  // 테마 적용
   // ─────────────────────────────────────────────────────────────
   Future<void> _applyTheme(String themeKey) async {
     switch (themeKey) {
       case 'dark':
-        await setThemeMode(ThemeMode.dark);
+        await AppMain.setThemeMode(ThemeMode.dark);
         break;
       case 'mint':
-        await setThemeMode(ThemeMode.light);
-        await setThemeColor('mint');
+        await AppMain.setThemeMode(ThemeMode.light);
+        await AppMain.setThemeColor('mint');
         break;
       default:
-        await setThemeMode(ThemeMode.light);
-        await setThemeColor('default');
+        await AppMain.setThemeMode(ThemeMode.light);
+        await AppMain.setThemeColor('default');
         break;
     }
 
@@ -127,10 +128,7 @@ class _StorePageState extends State<StorePage> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 2) 다크 테마 구매 API 호출
-  //
-  //   POST /saykorean/store/theme/1/buy
-  //   응답: { "success": true, "newPoint": 900 }
+  // 2) 다크 테마 구매 API
   // ─────────────────────────────────────────────────────────────
   Future<bool> _purchaseDarkTheme() async {
     try {
@@ -163,10 +161,7 @@ class _StorePageState extends State<StorePage> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 3) 민트 테마 구매 API 호출
-  //
-  //   POST /saykorean/store/theme/2/buy
-  //   응답: { "success": true, "newPoint": 900 }
+  // 3) 민트 테마 구매 API
   // ─────────────────────────────────────────────────────────────
   Future<bool> _purchaseMintTheme() async {
     try {
@@ -199,7 +194,7 @@ class _StorePageState extends State<StorePage> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 4) 다크 테마 구매 버튼 핸들러
+  // 4) 다크 테마 구매 버튼
   // ─────────────────────────────────────────────────────────────
   Future<void> _onTapBuyDarkTheme() async {
     if (_pointBalance == null) return;
@@ -259,7 +254,7 @@ class _StorePageState extends State<StorePage> {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // 5) 민트 테마 구매 버튼 핸들러
+  // 5) 민트 테마 구매 버튼
   // ─────────────────────────────────────────────────────────────
   Future<void> _onTapBuyMintTheme() async {
     if (_pointBalance == null) return;
@@ -323,7 +318,7 @@ class _StorePageState extends State<StorePage> {
   // ─────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final theme  = Theme.of(context);
+    final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
@@ -345,11 +340,15 @@ class _StorePageState extends State<StorePage> {
           ),
         ),
       ),
-      body: _loading && _pointBalance == null
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? _buildErrorView(theme, scheme)
-          : _buildContent(theme, scheme, isDark),
+      body: SafeArea(
+        child: FooterSafeArea( // ✅ 푸터에 안 가리도록 공통 패딩
+          child: _loading && _pointBalance == null
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? _buildErrorView(theme, scheme)
+              : _buildContent(theme, scheme, isDark),
+        ),
+      ),
     );
   }
 
@@ -386,9 +385,8 @@ class _StorePageState extends State<StorePage> {
   }
 
   Widget _buildContent(ThemeData theme, ColorScheme scheme, bool isDark) {
-    final balanceText = _pointBalance == null
-        ? '불러오는 중...'
-        : '${_pointBalance} P';
+    final balanceText =
+    _pointBalance == null ? '불러오는 중...' : '${_pointBalance} P';
 
     return RefreshIndicator(
       onRefresh: _bootstrap,
@@ -449,15 +447,10 @@ class _StorePageState extends State<StorePage> {
           ),
           const SizedBox(height: 12),
 
-          // 기본 테마 카드
           _buildDefaultThemeItem(theme, scheme, isDark),
           const SizedBox(height: 12),
-
-          // 다크 테마 카드
           _buildDarkThemeItem(theme, scheme, isDark),
           const SizedBox(height: 12),
-
-          // 민트 테마 카드
           _buildMintThemeItem(theme, scheme, isDark),
         ],
       ),
@@ -468,9 +461,8 @@ class _StorePageState extends State<StorePage> {
   Widget _buildDefaultThemeItem(
       ThemeData theme, ColorScheme scheme, bool isDark) {
     final titleColor = isDark ? scheme.onSurface : const Color(0xFF6B4E42);
-    final descColor  = isDark
-        ? scheme.onSurface.withOpacity(0.7)
-        : const Color(0xFF6B7280);
+    final descColor =
+    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF6B7280);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
@@ -479,9 +471,8 @@ class _StorePageState extends State<StorePage> {
         color: isDark ? scheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isDark
-              ? scheme.outline.withOpacity(0.4)
-              : const Color(0xFFE5E7EB),
+          color:
+          isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -602,12 +593,10 @@ class _StorePageState extends State<StorePage> {
             child: ElevatedButton(
               onPressed: () => _applyTheme('default'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark
-                    ? scheme.primaryContainer
-                    : const Color(0xFFFFEEE9),
-                foregroundColor: isDark
-                    ? scheme.onPrimaryContainer
-                    : const Color(0xFF6B4E42),
+                backgroundColor:
+                isDark ? scheme.primaryContainer : const Color(0xFFFFEEE9),
+                foregroundColor:
+                isDark ? scheme.onPrimaryContainer : const Color(0xFF6B4E42),
                 elevation: 0,
                 padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
@@ -627,13 +616,12 @@ class _StorePageState extends State<StorePage> {
   Widget _buildDarkThemeItem(
       ThemeData theme, ColorScheme scheme, bool isDark) {
     const int price = 2000;
-    final bool owned    = _hasDarkTheme;
+    final bool owned = _hasDarkTheme;
     final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
     final titleColor = isDark ? scheme.onSurface : const Color(0xFF111827);
-    final descColor  = isDark
-        ? scheme.onSurface.withOpacity(0.7)
-        : const Color(0xFF6B7280);
+    final descColor =
+    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF6B7280);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
@@ -642,9 +630,8 @@ class _StorePageState extends State<StorePage> {
         color: isDark ? scheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isDark
-              ? scheme.outline.withOpacity(0.4)
-              : const Color(0xFFE5E7EB),
+          color:
+          isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -778,9 +765,7 @@ class _StorePageState extends State<StorePage> {
             child: ElevatedButton(
               onPressed: disabled
                   ? null
-                  : (owned
-                  ? () => _applyTheme('dark')
-                  : _onTapBuyDarkTheme),
+                  : (owned ? () => _applyTheme('dark') : _onTapBuyDarkTheme),
               style: ElevatedButton.styleFrom(
                 backgroundColor: owned
                     ? (isDark
@@ -817,13 +802,12 @@ class _StorePageState extends State<StorePage> {
   Widget _buildMintThemeItem(
       ThemeData theme, ColorScheme scheme, bool isDark) {
     const int price = 2000;
-    final bool owned    = _hasMintTheme;
+    final bool owned = _hasMintTheme;
     final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
     final titleColor = isDark ? scheme.onSurface : const Color(0xFF064E3B);
-    final descColor  = isDark
-        ? scheme.onSurface.withOpacity(0.7)
-        : const Color(0xFF047857);
+    final descColor =
+    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF047857);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
@@ -832,9 +816,8 @@ class _StorePageState extends State<StorePage> {
         color: isDark ? scheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isDark
-              ? scheme.outline.withOpacity(0.4)
-              : const Color(0xFFE5E7EB),
+          color:
+          isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -955,9 +938,7 @@ class _StorePageState extends State<StorePage> {
             child: ElevatedButton(
               onPressed: disabled
                   ? null
-                  : (owned
-                  ? () => _applyTheme('mint')
-                  : _onTapBuyMintTheme),
+                  : (owned ? () => _applyTheme('mint') : _onTapBuyMintTheme),
               style: ElevatedButton.styleFrom(
                 backgroundColor: owned
                     ? (isDark
@@ -965,9 +946,7 @@ class _StorePageState extends State<StorePage> {
                     : const Color(0xFFD1FAE5))
                     : const Color(0xFFE0FFF5),
                 foregroundColor: owned
-                    ? (isDark
-                    ? Colors.white
-                    : const Color(0xFF047857))
+                    ? (isDark ? Colors.white : const Color(0xFF047857))
                     : const Color(0xFF064E3B),
                 elevation: 0,
                 padding:
@@ -1003,7 +982,7 @@ class _StorePageState extends State<StorePage> {
   }
 }
 
-// 기본 테마 썸네일용 점 위젯 (StorePage 바깥, 최상위)
+// 기본 테마 썸네일용 점
 class _DefaultDot extends StatelessWidget {
   const _DefaultDot();
 

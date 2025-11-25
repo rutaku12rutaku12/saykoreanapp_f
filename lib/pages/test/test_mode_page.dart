@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/test/test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
 class TestModePage extends StatefulWidget {
   const TestModePage({super.key});
@@ -240,24 +241,24 @@ class _TestModePageState extends State<TestModePage> {
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        title: Text(
-          '시험 모드 선택',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: scheme.onSurface,
-          ),
-        ),
         backgroundColor: bg,
         elevation: 0,
-        foregroundColor: scheme.onSurface,
+        centerTitle: true,
+        title: const SizedBox.shrink(), // 🔥 타이틀은 SKPageHeader가 담당
+        iconTheme: IconThemeData(
+          color: theme.appBarTheme.foregroundColor
+              ?? theme.colorScheme.primary,
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
           ? _buildError(theme, scheme)
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: _buildContent(theme, scheme, isDark),
+          : SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          child: _buildContent(theme, scheme, isDark),
+        ),
       ),
     );
   }
@@ -286,7 +287,14 @@ class _TestModePageState extends State<TestModePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 무한모드 카드 (포인트 컬러 = primary)
+        // 공통 헤더
+        const SKPageHeader(
+          title: '시험 모드 선택',
+          subtitle: '원하는 모드를 골라서 실력을 테스트해 보세요.',
+        ),
+        const SizedBox(height: 16),
+
+        // 무한모드 카드
         _buildModeCard(
           theme: theme,
           scheme: scheme,
@@ -299,7 +307,7 @@ class _TestModePageState extends State<TestModePage> {
         ),
         const SizedBox(height: 16),
 
-        // 하드모드 카드 (포인트 컬러 = error)
+        // 하드모드 카드
         _buildModeCard(
           theme: theme,
           scheme: scheme,
@@ -330,7 +338,6 @@ class _TestModePageState extends State<TestModePage> {
         ),
         const SizedBox(height: 16),
 
-        // 정기시험 목록
         if (_regularTests.isEmpty)
           Center(
             child: Padding(
@@ -348,6 +355,7 @@ class _TestModePageState extends State<TestModePage> {
       ],
     );
   }
+
 
   Widget _buildModeCard({
     required ThemeData theme,

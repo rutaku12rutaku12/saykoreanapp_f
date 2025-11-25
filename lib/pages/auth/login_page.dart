@@ -1,21 +1,18 @@
+// lib/pages/auth/login_page.dart
+
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
-import 'package:saykoreanapp_f/pages/home/home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/social_login_webview.dart';
-
-import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
-import 'package:recaptcha_enterprise_flutter/recaptcha_action.dart';
-
-// 은주
-import 'dart:convert';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
 // JWT → payload 추출
 Map<String, dynamic> _decodeJwt(String token) {
@@ -35,23 +32,31 @@ class LoginPage extends StatefulWidget {
   }
 }
 
-class _LoginState extends State<LoginPage>{
+class _LoginState extends State<LoginPage> {
   // 1. 입력상자 컨트롤러
-  TextEditingController emailCon = TextEditingController();
-  TextEditingController pwdCont = TextEditingController();
+  final TextEditingController emailCon = TextEditingController();
+  final TextEditingController pwdCont = TextEditingController();
 
-  // user02@example.com , pass#02!
+  @override
+  void dispose() {
+    emailCon.dispose();
+    pwdCont.dispose();
+    super.dispose();
+  }
 
   // 로그인 메소드
   Future<void> onLogin() async {
     print("onLogin.exe");
-    // 2. 자바와 통신
+
     try {
-      final sendData = { "email": emailCon.text, "password": pwdCont.text};
+      final sendData = {
+        "email": emailCon.text.trim(),
+        "password": pwdCont.text,
+      };
       print(sendData);
-      // baseUrl + path만 사용
+
       final response = await ApiClient.dio.post(
-        '/saykorean/login',     // 슬래시로 시작하는 path만 적기
+        '/saykorean/login',
         data: sendData,
         options: Options(
           headers: {'Content-Type': 'application/json'},
@@ -65,34 +70,28 @@ class _LoginState extends State<LoginPage>{
       print("응답 상태: ${response.statusCode}");
       print("응답 데이터: ${response.data}");
 
-      final data = response.data;
-      print(data);
-
-      if (response.statusCode == 200 && response.data != null && response.data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data != '') {
         final token = response.data['token'];
 
         // 🔥 1) JWT → userNo 추출
         final decoded = _decodeJwt(token);
         final userNo = decoded['userNo'];
 
-        // 1. 전역변수 호출
         final prefs = await SharedPreferences.getInstance();
-        // 2. 전역변수 값 추가
-        await prefs.setString( 'token', token.toString() );
-
-        // * 은주 추가 코드
+        await prefs.setString('token', token.toString());
         await prefs.setInt('myUserNo', userNo);
 
-        // * 로그인 성공 시 페이지 전환 //
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (content) => HomePage()),
-        // );
+        // 홈으로 이동
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
+
+        // 출석 체크
         await onAttend(userNo);
-      }
-      else {
+      } else {
         print("로그인 실패: ${response.statusCode}");
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('로그인 실패: ${response.statusCode}')),
         );
@@ -103,104 +102,309 @@ class _LoginState extends State<LoginPage>{
         print("응답 데이터: ${e.response?.data}");
         print("상태 코드: ${e.response?.statusCode}");
       }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('로그인 중 오류가 발생했습니다.')),
+        const SnackBar(content: Text('로그인 중 오류가 발생했습니다.')),
       );
     }
-  } // c end
+  }
 
   // 출석 메소드
-  Future<void> onAttend(userNo) async {
-    try{
-      final sendData = {"userNo":userNo};
+  Future<void> onAttend(int userNo) async {
+    try {
+      final sendData = {"userNo": userNo};
       print(sendData);
+
       final response = await ApiClient.dio.post(
         '/saykorean/attend',
         data: sendData,
         options: Options(
-          validateStatus: (status) =>true,
+          validateStatus: (status) => true,
         ),
       );
-      if(response.statusCode == 200 && response.data != null && response.data == 1){
-        Fluttertoast.showToast(msg: "출석이 완료되었습니다.",backgroundColor: Colors.greenAccent);
+
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data == 1) {
+        Fluttertoast.showToast(
+          msg: "출석이 완료되었습니다.",
+          backgroundColor: Colors.greenAccent,
+        );
+      } else if (response.statusCode == 222) {
+        Fluttertoast.showToast(
+          msg: "이미 출석이 완료되었습니다.",
+          backgroundColor: Colors.red,
+        );
+      } else {
+        Fluttertoast.showToast(
+          msg: "출석 체크 중 오류가 발생하였습니다.",
+          backgroundColor: Colors.red,
+        );
       }
-      else if( response.statusCode == 222 ){
-        Fluttertoast.showToast(msg: "이미 출석이 완료되었습니다.",backgroundColor: Colors.red);
-      }else{Fluttertoast.showToast(msg: "출석 체크 중 오류가 발생하였습니다.",backgroundColor: Colors.red);}
-    }catch(e){print(e);}
+    } catch (e) {
+      print(e);
+    }
   }
 
-
+  // ───────────────── UI ─────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("로그인 페이지"),),// 레이아웃 위젯
-      body: Container( // 여백 제공하는 박스 위젯
-        padding: EdgeInsets.all(30), // 박스 안쪽 여백
-        margin: EdgeInsets.all(30), // 박스 바깥 여백
-        child: Column( // 하위 요소 세로 위젯
-          mainAxisAlignment: MainAxisAlignment.center,
-          // 현재 축(Column) 기준으로 정렬
-          children: [ // 하위 요소를 위젯
-            TextField(controller: emailCon,
-              decoration: InputDecoration(
-                  labelText: "이메일", border: OutlineInputBorder()),
-            ),
-            SizedBox(height: 20,),
-            TextField(controller: pwdCont, obscureText: true, // 입력값 감추기
-              decoration: InputDecoration(
-                  labelText: "비밀번호", border: OutlineInputBorder()),
-            ),
-            SizedBox(height: 20,),
-            ElevatedButton(onPressed: onLogin, child: Text("login.button".tr()),
-            ),
-            SizedBox(height: 20,),
-            ElevatedButton(onPressed: () =>
-            {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => FindPage()))
-            }, child: Text("login.find".tr()),
-            ),
-            SizedBox(height: 20,),
-            ElevatedButton(onPressed: () =>
-            {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => SignupPage())),
-            }, child: Text("signup.signup".tr()) ),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg = theme.scaffoldBackgroundColor;
 
-            // SizedBox( height: 20,),
-            // ElevatedButton(
-            //     onPressed: () {
-            //       Navigator.push(
-            //         context,
-            //         MaterialPageRoute(
-            //           builder: (_) => SocialLoginWebView(
-            //             loginUrl: "http://10.0.2.2:8080/oauth2/authorization/kakao",
-            //           ),
-            //         ),
-            //       );
-            //     },
-            //     child: Text("카카오 로그인")
-            // ),
-            //
-            // SizedBox(height: 20),
-            // ElevatedButton(
-            //     onPressed: () {
-            //       Navigator.push(
-            //         context,
-            //         MaterialPageRoute(
-            //           builder: (_) => SocialLoginWebView(
-            //             loginUrl: "http://10.0.2.2:8080/oauth2/authorization/google",
-            //           ),
-            //         ),
-            //       );
-            //     },
-            //     child: Text("구글 로그인")
-            // ),
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: bg,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          "로그인",
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+          ),
+        ),
+        iconTheme: IconThemeData(
+          color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SKPageHeader(
+                title: '다시 만나 반가워요!',
+                subtitle: '등록한 이메일과 비밀번호로 로그인해 주세요.',
+              ),
+              const SizedBox(height: 24),
+
+              // 이메일 / 비밀번호 카드
+              _buildCard(
+                theme: theme,
+                scheme: scheme,
+                title: '이메일 로그인',
+                description: 'SayKorean 계정으로 바로 로그인할 수 있어요.',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTextField(
+                      theme: theme,
+                      scheme: scheme,
+                      controller: emailCon,
+                      label: '이메일',
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      theme: theme,
+                      scheme: scheme,
+                      controller: pwdCont,
+                      label: '비밀번호',
+                      obscure: true,
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: onLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFAAA5), // 딸기우유 핑크
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                        ),
+                        child: Text("login.button".tr()),
+                      ),
+                    )
+
+
+
+
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 회원/찾기 카드
+              _buildCard(
+                theme: theme,
+                scheme: scheme,
+                title: '도움이 필요하신가요?',
+                description: '계정이 없거나 비밀번호를 잊어버리셨나요?',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      height: 44,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FindPage(),
+                            ),
+                          );
+                        },
+                        child: Text("login.find".tr()),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 44,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SignupPage(),
+                            ),
+                          );
+                        },
+                        child: Text("signup.signup".tr()),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 소셜 로그인 영역 (원하면 그대로 살려서 디자인 바꿀 수 있음)
+              // const SizedBox(height: 24),
+              // _buildCard(
+              //   theme: theme,
+              //   scheme: scheme,
+              //   title: '간편 로그인',
+              //   description: '카카오, 구글 계정으로 빠르게 로그인해요.',
+              //   child: Column(
+              //     crossAxisAlignment: CrossAxisAlignment.stretch,
+              //     children: [
+              //       SizedBox(
+              //         height: 44,
+              //         child: OutlinedButton(
+              //           onPressed: () {
+              //             Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                 builder: (_) => SocialLoginWebView(
+              //                   loginUrl:
+              //                       "http://10.0.2.2:8080/oauth2/authorization/kakao",
+              //                 ),
+              //               ),
+              //             );
+              //           },
+              //           child: const Text("카카오 로그인"),
+              //         ),
+              //       ),
+              //       const SizedBox(height: 10),
+              //       SizedBox(
+              //         height: 44,
+              //         child: OutlinedButton(
+              //           onPressed: () {
+              //             Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                 builder: (_) => SocialLoginWebView(
+              //                   loginUrl:
+              //                       "http://10.0.2.2:8080/oauth2/authorization/google",
+              //                 ),
+              //               ),
+              //             );
+              //           },
+              //           child: const Text("구글 로그인"),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 공통 카드 UI
+  Widget _buildCard({
+    required ThemeData theme,
+    required ColorScheme scheme,
+    required String title,
+    required String description,
+    required Widget child,
+  }) {
+    final cardColor = scheme.surface;
+
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 2,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: scheme.outline.withOpacity(0.15),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: scheme.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            child,
           ],
-        ), // c end
-      ), // c end
-    ); // s end
+        ),
+      ),
+    );
+  }
+
+  // 공통 TextField
+  Widget _buildTextField({
+    required ThemeData theme,
+    required ColorScheme scheme,
+    required TextEditingController controller,
+    required String label,
+    bool obscure = false,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(
+          color: scheme.onSurface.withOpacity(0.7),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: scheme.primary,
+            width: 1.5,
+          ),
+        ),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      ),
+    );
   }
 }
-

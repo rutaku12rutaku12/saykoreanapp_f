@@ -1,22 +1,24 @@
-// language_page.dart — 그대로 복붙해서 사용하세요.
-// (라우트는 '/language' 등으로 등록해서 화면 전환하세요. 선택 후 '/info'로 이동하도록 되어 있습니다.)
+// lib/pages/setting/language_page.dart — 장르 스타일 리스트 버전
 
-import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 환경별 baseUrl 감지 (dart-define로 API_HOST 넘기면 그것을 우선 사용)
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // SKPageHeader, SKPrimaryButton
+
+// ─────────────────────────────────────────────────────────────
+// 환경별 baseUrl 감지
+// ─────────────────────────────────────────────────────────────
 String _detectBaseUrl() {
-  final env = const String.fromEnvironment('API_HOST'); // 예) --dart-define=API_HOST=http://192.168.0.10:8080
+  final env = const String.fromEnvironment('API_HOST');
   if (env.isNotEmpty) return env;
 
   if (kIsWeb) return 'http://localhost:8080';
-  if (Platform.isAndroid) return 'http://10.0.2.2:8080'; // 안드 에뮬레이터→호스트
-  return 'http://localhost:8080';                        // iOS 시뮬레이터/데스크톱
+  if (Platform.isAndroid) return 'http://10.0.2.2:8080';
+  return 'http://localhost:8080';
 }
 
 Locale _toLocale(String code) {
@@ -27,19 +29,25 @@ Locale _toLocale(String code) {
   return Locale(code);
 }
 
-final Dio dio = Dio(BaseOptions(
-  baseUrl: _detectBaseUrl(),
-  connectTimeout: const Duration(seconds: 5),
-  receiveTimeout: const Duration(seconds: 10),
-));
+final Dio dio = Dio(
+  BaseOptions(
+    baseUrl: _detectBaseUrl(),
+    connectTimeout: const Duration(seconds: 5),
+    receiveTimeout: const Duration(seconds: 10),
+  ),
+);
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // DTO
+// ─────────────────────────────────────────────────────────────
 class LanguageDto {
   final int langNo;
   final String langName;
 
-  LanguageDto({required this.langNo, required this.langName});
+  LanguageDto({
+    required this.langNo,
+    required this.langName,
+  });
 
   factory LanguageDto.fromJson(Map<String, dynamic> j) => LanguageDto(
     langNo: j['langNo'] as int,
@@ -47,8 +55,9 @@ class LanguageDto {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // 페이지
+// ─────────────────────────────────────────────────────────────
 class LanguagePage extends StatefulWidget {
   const LanguagePage({super.key});
 
@@ -99,7 +108,6 @@ class _LanguagePageState extends State<LanguagePage> {
     });
 
     try {
-      // (옵션) 저장된 언어 코드로 서버에 힌트 전달
       final prefs = await SharedPreferences.getInstance();
       final lng = prefs.getString('lng') ?? 'ko';
 
@@ -122,7 +130,9 @@ class _LanguagePageState extends State<LanguagePage> {
       if (!mounted) return;
       setState(() => _error = '언어 목록을 불러오지 못했습니다.');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -133,10 +143,9 @@ class _LanguagePageState extends State<LanguagePage> {
     final prefs = await SharedPreferences.getInstance();
     final code = _LANG_MAP[n] ?? 'ko';
 
-    
     await prefs.setInt('selectedLangNo', n);
     await prefs.setString('lng', code);
-    
+
     await context.setLocale(_toLocale(code));
 
     if (!mounted) return;
@@ -146,63 +155,93 @@ class _LanguagePageState extends State<LanguagePage> {
       SnackBar(content: Text('언어가 변경되었습니다: $name ($code)')),
     );
 
-    // 필요 시 마이페이지로 이동 (React의 navigate("/mypage") 대응)
-    if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/info', (r) => false);
-    }
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/info', (r) => false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('언어 선택')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
+    Widget content;
+
+    if (_loading) {
+      content = const Center(child: CircularProgressIndicator());
+    } else if (_error != null) {
+      content = Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_error!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 12),
-            ElevatedButton(
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            SKPrimaryButton(
+              label: '다시 시도',
               onPressed: _fetchLanguages,
-              child: const Text('다시 시도'),
             ),
           ],
         ),
-      )
-          : _items.isEmpty
-          ? const Center(child: Text('지원 언어가 없습니다.'))
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: _items.map((l) {
-            final isActive = _selected == l.langNo;
-            final label =
-                _LANG_DISPLAY[l.langNo] ?? l.langName;
-            return _PillButton(
-              label: label,
-              active: isActive,
-              onTap: () => _pickLang(l.langNo, label),
-            );
-          }).toList(),
+      );
+    } else if (_items.isEmpty) {
+      content = const Center(
+        child: Text('지원 언어가 없습니다.'),
+      );
+    } else {
+      // ✅ 장르 선택 페이지처럼: 한 줄에 한 언어 카드
+      content = ListView.separated(
+        itemCount: _items.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          final l = _items[index];
+          final isActive = _selected == l.langNo;
+          final label = _LANG_DISPLAY[l.langNo] ?? l.langName;
+
+          return _LanguageTile(
+            index: index + 1,
+            label: label,
+            active: isActive,
+            onTap: () => _pickLang(l.langNo, label),
+          );
+        },
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(''),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SKPageHeader(
+                title: '언어 선택',
+                subtitle: '학습에 사용할 언어를 골라주세요.',
+              ),
+              const SizedBox(height: 16),
+              Expanded(child: content),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// UI 컴포넌트: 필(알약) 버튼
-class _PillButton extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────
+// 장르 스타일 언어 카드
+// ─────────────────────────────────────────────────────────────
+class _LanguageTile extends StatelessWidget {
+  final int index;
   final String label;
   final bool active;
   final VoidCallback onTap;
 
-  const _PillButton({
+  const _LanguageTile({
+    required this.index,
     required this.label,
     required this.active,
     required this.onTap,
@@ -210,38 +249,110 @@ class _PillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = active ? const Color(0xFFFFEEE9) : Colors.white;
-    final fg = active ? const Color(0xFFFF7F79) : const Color(0xFF444444);
-    final br = active ? const Color(0xFFFFC7C2) : const Color(0xFFE5E7EB);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // 기본 / 민트 / 다크 모두 잘 어울리도록 ColorScheme 기반
+    final Color cardBg = active
+        ? scheme.secondaryContainer
+        : (isDark ? scheme.surfaceContainerHigh : theme.cardColor);
+    final Color badgeBg = active
+        ? scheme.primary.withOpacity(0.12)
+        : scheme.secondaryContainer.withOpacity(isDark ? 0.35 : 0.6);
+    final Color badgeText =
+    active ? scheme.primary : scheme.onSecondaryContainer;
+    final Color textColor =
+    active ? scheme.onSecondaryContainer : scheme.onSurface;
+    final Color borderColor =
+    active ? Colors.transparent : scheme.outline.withOpacity(0.12);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(18),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+          height: 68,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: bg,
-            border: Border.all(color: br),
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: const [
+            color: cardBg,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: borderColor),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 6,
-                offset: Offset(0, 2),
+                color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: fg,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              letterSpacing: 0.2,
-            ),
+          child: Row(
+            children: [
+              // 왼쪽 번호 원
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$index',
+                  style: TextStyle(
+                    color: badgeText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // 언어 이름
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                    color: textColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 오른쪽 체크/동그라미
+              _buildCheck(active, scheme, isDark),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCheck(bool active, ColorScheme scheme, bool isDark) {
+    if (active) {
+      return Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: scheme.primary,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.check,
+          size: 16,
+          color: Colors.white,
+        ),
+      );
+    }
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: scheme.outline.withOpacity(isDark ? 0.7 : 0.5),
+          width: 2,
         ),
       ),
     );

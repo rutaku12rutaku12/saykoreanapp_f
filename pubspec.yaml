@@ -85,6 +85,15 @@ flutter:
     # 다국어
     - assets/i18n/
 
+    # 로딩페이지
+    - assets/loading/1_loading_img.png
+    - assets/loading/2_loading_img.png
+    - assets/loading/3_loading_img.png
+    - assets/loading/4_loading_img.png
+    - assets/loading/5_loading_img.png
+    - assets/loading/6_loading_img.png
+    - assets/loading/7_loading_img.png
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

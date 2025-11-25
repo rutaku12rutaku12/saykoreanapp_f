@@ -794,14 +794,14 @@ class _TestPageState extends State<TestPage> {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   Widget _buildMultipleChoice(Map<String, dynamic>? cur) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final titleColor = scheme.primary;
 
     final options = cur?['options'];
-    final hasOptions =
-        options is List && options.isNotEmpty;
+    final hasOptions = options is List && options.isNotEmpty;
 
     int? _toInt(dynamic v) {
       if (v == null) return null;
@@ -822,25 +822,24 @@ class _TestPageState extends State<TestPage> {
           ),
         ),
         const SizedBox(height: 8),
+
+        // ✅ 여기부터 바뀐 부분
         if (hasOptions)
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children:
-            (options as List).map<Widget>((opt) {
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: (options as List).map<Widget>((opt) {
               final map = opt as Map<String, dynamic>;
               final label = map['examSelected'] ??
                   map['examKo'] ??
                   "보기 로드 실패";
-              return _ChoiceButton(
-                label: label.toString(),
-                onTap: feedback == null
-                    ? () =>
-                    submitAnswer(
-                      selectedExamNo:
-                      _toInt(map['examNo']),
-                    )
-                    : null,
+
+              return buildChoiceButton(
+                context,
+                label.toString(),
+                feedback == null
+                    ? () => submitAnswer(
+                  selectedExamNo: _toInt(map['examNo']),
+                ) : null,
               );
             }).toList(),
           )
@@ -849,6 +848,7 @@ class _TestPageState extends State<TestPage> {
       ],
     );
   }
+
 
   Widget _buildSubjective() {
     final theme = Theme.of(context);
@@ -956,4 +956,47 @@ class _ChoiceButton extends StatelessWidget {
       ),
     );
   }
+}
+// 공통으로 쓰면 좋은 객관식 버튼 빌더
+Widget buildChoiceButton(
+    BuildContext context,
+    String text,
+    VoidCallback? onTap,
+    ) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final isDark = theme.brightness == Brightness.dark;
+
+  final borderColor =
+  isDark ? scheme.outline.withOpacity(0.5) : const Color(0xFFE5E7EB);
+  final fgColor =
+  isDark ? scheme.onSurface : const Color(0xFF6B4E42); // 브라운 톤
+  final bgColor = isDark ? scheme.surface : Colors.white;
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6.0),
+    child: SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: fgColor,
+          side: BorderSide(color: borderColor, width: 1.4),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    ),
+  );
 }

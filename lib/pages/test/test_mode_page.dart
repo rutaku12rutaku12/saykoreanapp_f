@@ -182,7 +182,7 @@ class _TestModePageState extends State<TestModePage> {
       builder: (context) => AlertDialog(
         title: const Text('🔥 하드모드'),
         content: const Text(
-          '전체 DB의 모든 문항이 출제됩니다.\n'
+          '재밌는한국어가 보유한 모든 문항이 출제됩니다.\n'
               '배우지 않은 내용도 포함될 수 있어요.\n'
               '도전하시겠어요?',
         ),

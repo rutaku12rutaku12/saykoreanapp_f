@@ -1,10 +1,13 @@
 // lib/pages/home/home_page.dart
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ FooterSafeArea 사용
 
 class HomePage extends StatefulWidget {
   @override
@@ -63,16 +66,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final size       = MediaQuery.of(context).size;
-    final theme      = Theme.of(context);
-    final scheme     = theme.colorScheme;
-    final bg         = theme.scaffoldBackgroundColor;
-    final isDark     = theme.brightness == Brightness.dark;
-    final topPadding = MediaQuery.of(context).padding.top;
+    final theme  = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg     = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
 
     // 민트 테마 여부 (mintTheme에서 설정한 배경색으로 판별)
-    final bool isMintTheme =
-        bg.value == const Color(0xFFE7FFF6).value;
+    final bool isMintTheme = bg.value == const Color(0xFFE7FFF6).value;
 
     // 로딩 중일 때
     if (myUserNo == null) {
@@ -93,39 +93,49 @@ class _HomePageState extends State<HomePage> {
       logoutBg = const Color(0xFFD3F8EA); // 연민트
       logoutFg = const Color(0xFF2F7A69); // 진한 민트
     } else {
-      logoutBg = const Color(0xFFFFEEE9); // 연핑크
+      logoutBg = const Color(0xFFFFEEE9); // 연살구/핑크
       logoutFg = const Color(0xFF6B4E42); // 갈색
     }
 
+    // ❗ 전체 페이지를 FooterSafeArea로 감싸서
+    //    하단 물결 + 콘텐츠 모두가 푸터 영역에 안 겹치도록 함
     return Scaffold(
       backgroundColor: bg,
-      body: Stack(
-        children: [
-          // ── 상단 웨이브
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: size.height * 0.22,
-            child: isDark
-                ? CustomPaint(painter: _TopWaveDark(scheme))
-                : (isMintTheme
-                ? const CustomPaint(painter: _TopWaveMint())
-                : const CustomPaint(painter: _TopWavePink())),
-          ),
+      body: FooterSafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // FooterSafeArea가 한 번 정리해 준 영역 안에서의 실제 높이
+            final size = Size(constraints.maxWidth, constraints.maxHeight);
+            final topPadding = MediaQuery.of(context).padding.top;
 
-          // ── 하단 웨이브
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: size.height * 0.18,
-            child: isDark
-                ? CustomPaint(painter: _BottomWaveDark(scheme))
-                : (isMintTheme
-                ? const CustomPaint(painter: _BottomWaveMint())
-                : const CustomPaint(painter: _BottomWavePink())),
-          ),
+            return Stack(
+              children: [
+                // ── 상단 웨이브
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: size.height * 0.22,
+                  child: isDark
+                      ? CustomPaint(painter: _TopWaveDark(scheme))
+                      : (isMintTheme
+                      ? const CustomPaint(painter: _TopWaveMint())
+                      : const CustomPaint(painter: _TopWavePink())),
+                ),
+
+                // ── 하단 웨이브 (이제 FooterSafeArea 안이기 때문에
+                //    실제 화면 하단이 아니라, 푸터 위쪽까지만 그려짐)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: size.height * 0.18,
+                  child: isDark
+                      ? CustomPaint(painter: _BottomWaveDark(scheme))
+                      : (isMintTheme
+                      ? const CustomPaint(painter: _BottomWaveMint())
+                      : const CustomPaint(painter: _BottomWavePink())),
+                ),
 
           // ── 상단 아이콘들
 //   - 왼쪽 끝 : 내정보
@@ -169,25 +179,27 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-
-          // ── 메인 컨텐츠 영역
-          SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const _TitleFancy(),
-                    const SizedBox(height: 16),
-                    AspectRatio(
-                      aspectRatio: 1.6,
-                      child: Image.asset(
-                        _mascot,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                // ── 메인 컨텐츠 영역 (이제 별도의 FooterSafeArea 없이도
+                //    이미 하단이 푸터에 안 겹치도록 보장됨)
+                SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const _TitleFancy(),
+                          const SizedBox(height: 16),
+                          AspectRatio(
+                            aspectRatio: 1.6,
+                            child: Image.asset(
+                              _mascot,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
 
                     if (isLogin)
                       SizedBox(
@@ -235,13 +247,16 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                    const SizedBox(height: 10),
-                  ],
+                          const SizedBox(height: 10),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
-        ],
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -442,10 +457,6 @@ class _TopWaveDark extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ─────────────────────────────────────────────────────────────
-// 하단 웨이브 (라이트: 핑크 / 민트: 진한 민트 / 다크: 기존)
-// ─────────────────────────────────────────────────────────────
-
 class _BottomWavePink extends CustomPainter {
   const _BottomWavePink();
 
@@ -584,11 +595,10 @@ class _HomeTopIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme      = Theme.of(context);
-    final isDark     = theme.brightness == Brightness.dark;
-    final bg         = theme.scaffoldBackgroundColor;
-    final bool isMintTheme =
-        bg.value == const Color(0xFFE7FFF6).value;
+    final theme  = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bg     = theme.scaffoldBackgroundColor;
+    final bool isMintTheme = bg.value == const Color(0xFFE7FFF6).value;
 
     late final Color bgColor;
     late final Color iconColor;

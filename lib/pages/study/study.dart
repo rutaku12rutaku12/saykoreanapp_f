@@ -228,8 +228,8 @@ class _StudyPageState extends State<StudyPage> {
         queryParameters: {'studyNo': studyNo, 'langNo': _langNo},
         options: Options(headers: {'Accept-Language': _langNo.toString()}),
       );
-      setState(
-              () => _subject = StudyDto.fromJson(Map<String, dynamic>.from(res.data)));
+      setState(() =>
+      _subject = StudyDto.fromJson(Map<String, dynamic>.from(res.data)));
     } on DioException catch (e) {
       setState(() => _error = e.message ?? "study.topic.detailFailed".tr());
     } catch (_) {
@@ -358,8 +358,16 @@ class _StudyPageState extends State<StudyPage> {
     final isDark = theme.brightness == Brightness.dark;
 
     final bg = theme.scaffoldBackgroundColor;
-    final titleColor =
-    isDark ? scheme.onSurface : const Color(0xFF6B4E42); // 브라운 포인트
+
+    // mintTheme 판별: 배경색 + notifier 둘 다 사용
+    final bool isMintTheme =
+        !isDark &&
+            (themeColorNotifier.value == 'mint' ||
+                bg.value == const Color(0xFFE7FFF6).value);
+
+    final titleColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF6B4E42));
 
     // 🔥 각 상태별로 보여줄 내용 한 번에 정리
     Widget content;
@@ -370,7 +378,7 @@ class _StudyPageState extends State<StudyPage> {
     } else {
       content = (_subject == null)
           ? _buildList(theme, scheme, isDark)
-          : _buildDetail(theme, scheme, isDark);
+          : _buildDetail(theme, scheme, isDark, isMintTheme);
     }
 
     return Scaffold(
@@ -389,7 +397,8 @@ class _StudyPageState extends State<StudyPage> {
         elevation: 0,
       ),
       body: SafeArea(
-        child: FooterSafeArea(        // 여기서 한 번만 FooterSafeArea 적용
+        child: FooterSafeArea(
+          // 여기서 한 번만 FooterSafeArea 적용
           child: content,
         ),
       ),
@@ -400,13 +409,10 @@ class _StudyPageState extends State<StudyPage> {
   // 주제 목록 화면 - 장르 스타일 카드 리스트
   // ───────────────────────────────────────────────────────────────────────────
   Widget _buildList(ThemeData theme, ColorScheme scheme, bool isDark) {
-    final titleColor =
-    isDark ? scheme.onSurface : const Color(0xFF6B4E42); // 상단 타이틀 포인트
-    final subtitleColor =
-    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF9C7C68);
-
     if (_subjects.isEmpty) {
-      // 주제가 하나도 없을 때
+      final subtitleColor =
+      isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF9C7C68);
+
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -439,34 +445,22 @@ class _StudyPageState extends State<StudyPage> {
       itemBuilder: (context, index) {
         // 0번 인덱스: 상단 텍스트 영역
         if (index == 0) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "study.myList".tr(),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: titleColor,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "study.topic.pickOne".tr(),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: subtitleColor,
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
+          return const Padding(
+            padding: EdgeInsets.only(bottom: 8.0),
+            child: SKPageHeader(
+              title: "study.myList".tr(),
+              subtitle: "study.topic.pickOne".tr(),
+            ),
           );
         }
 
         final s = _subjects[index - 1];
         final label = s.themeSelected ?? s.themeKo ?? "study.noTitle".tr();
 
-        return _StudyTile(
-          index: index, // 1부터 시작하도록 그대로 사용
-          label: label,
+        return SKSelectTile(
+          index: index, // 1,2,3,... 번호
+          label: label, // 주제 이름
+          selected: false, // 목록이니까 기본은 선택 상태 아님
           onTap: () async {
             setState(() {
               _loading = true;
@@ -486,16 +480,20 @@ class _StudyPageState extends State<StudyPage> {
   // ───────────────────────────────────────────────────────────────────────────
   // 주제 상세 + 예문 학습 화면
   // ───────────────────────────────────────────────────────────────────────────
-  Widget _buildDetail(ThemeData theme, ColorScheme scheme, bool isDark) {
+  Widget _buildDetail(
+      ThemeData theme, ColorScheme scheme, bool isDark, bool isMintTheme) {
     final t = _subject!;
     final title = t.themeSelected ?? t.themeKo ?? "study.noTitle".tr();
 
-    final mainTitleColor =
-    isDark ? scheme.onSurface : const Color(0xFF6B4E42);
-    final subtitleColor =
-    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF9C7C68);
-    final sectionColor =
-    isDark ? scheme.onSurface : const Color(0xFF7C5A48);
+    final mainTitleColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF6B4E42));
+    final subtitleColor = isDark
+        ? scheme.onSurface.withOpacity(0.7)
+        : (isMintTheme ? const Color(0xFF4E8476) : const Color(0xFF9C7C68));
+    final sectionColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF7C5A48));
     final cardColor = isDark ? scheme.surface : Colors.white;
 
     // 테마 기반 버튼 색
@@ -560,8 +558,7 @@ class _StudyPageState extends State<StudyPage> {
                     color: mainTitleColor,
                   ),
                 ),
-                if (t.commenSelected != null &&
-                    t.commenSelected!.isNotEmpty)
+                if (t.commenSelected != null && t.commenSelected!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
@@ -651,7 +648,7 @@ class _StudyPageState extends State<StudyPage> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 장르 스타일 주제 카드
+// 장르 선택 카드 느낌으로 맞춘 주제 카드 (현재는 사용 X, 혹시 몰라 정리만)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _StudyTile extends StatelessWidget {
@@ -670,41 +667,63 @@ class _StudyTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final bg = theme.scaffoldBackgroundColor;
 
-    final Color cardBg =
-    isDark ? scheme.surfaceContainerHigh : theme.cardColor;
-    final Color badgeBg =
-    scheme.secondaryContainer.withOpacity(isDark ? 0.35 : 0.6);
-    final Color badgeText = scheme.onSecondaryContainer;
-    final Color textColor = scheme.onSurface;
-    final Color borderColor = scheme.outline.withOpacity(0.12);
+    final bool isMintTheme =
+    (!isDark &&
+        (themeColorNotifier.value == 'mint' ||
+            bg.value == const Color(0xFFE7FFF6).value));
 
-    return Material(
-      color: Colors.transparent,
+    // 기본(라이트 테마) 톤 – 장르/언어 선택 화면과 같은 계열
+    Color cardBg = const Color(0xFFFFF5ED); // 카드 배경
+    Color badgeBg = const Color(0xFFFBE3D6); // 번호 동그라미 배경
+    Color badgeText = const Color(0xFF9C7C68);
+    Color titleColor = const Color(0xFF6B4E42);
+    Color chevronColor = const Color(0xFFCCB3A5);
+
+    if (isMintTheme && !isDark) {
+      // 🌿 민트 테마
+      cardBg = const Color(0xFFF4FFFA);
+      badgeBg = const Color(0xFFE7FFF6);
+      badgeText = const Color(0xFF2F7A69);
+      titleColor = const Color(0xFF2F7A69);
+      chevronColor = const Color(0x802F7A69);
+    }
+
+    if (isDark) {
+      // 🌙 다크 테마
+      cardBg = scheme.surfaceContainer;
+      badgeBg = scheme.surfaceContainerHigh;
+      badgeText = scheme.onSurface.withOpacity(0.8);
+      titleColor = scheme.onSurface;
+      chevronColor = scheme.outline;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: InkWell(
-        onTap: onTap,
         borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
         child: Container(
-          height: 68,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 72,
           decoration: BoxDecoration(
             color: cardBg,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: Color(0x11000000),
+                blurRadius: 6,
+                offset: Offset(0, 2),
               ),
             ],
           ),
           child: Row(
             children: [
-              // 왼쪽 번호 원
+              const SizedBox(width: 16),
+              // 왼쪽 번호 동그라미
               Container(
-                width: 36,
-                height: 36,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: badgeBg,
                   shape: BoxShape.circle,
@@ -713,12 +732,13 @@ class _StudyTile extends StatelessWidget {
                 child: Text(
                   '$index',
                   style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                     color: badgeText,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               // 주제 이름
               Expanded(
                 child: Text(
@@ -727,17 +747,17 @@ class _StudyTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: textColor,
+                    color: titleColor,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              // 오른쪽 chevron (이동 느낌)
               Icon(
                 Icons.chevron_right_rounded,
-                color: scheme.outline,
                 size: 22,
+                color: chevronColor,
               ),
+              const SizedBox(width: 16),
             ],
           ),
         ),
@@ -778,8 +798,9 @@ class _PillButton extends StatelessWidget {
     } else {
       bg = isDark ? scheme.surface : Colors.white;
       fg = isDark ? scheme.onSurface : const Color(0xFF444444);
-      br =
-      isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB);
+      br = isDark
+          ? scheme.outline.withOpacity(0.4)
+          : const Color(0xFFE5E7EB);
     }
 
     return Material(
@@ -788,8 +809,7 @@ class _PillButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding:
-          const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
           decoration: BoxDecoration(
             color: bg,
             border: Border.all(color: br),
@@ -886,7 +906,6 @@ class _ExamCard extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 12),
-
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -899,7 +918,6 @@ class _ExamCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-
           Row(
             children: [
               Expanded(
@@ -979,8 +997,7 @@ class _ErrorView extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    final cardColor =
-    isDark ? scheme.surface : theme.cardColor;
+    final cardColor = isDark ? scheme.surface : theme.cardColor;
 
     return Center(
       child: Padding(
@@ -1001,8 +1018,7 @@ class _ErrorView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline,
-                  color: scheme.error, size: 32),
+              Icon(Icons.error_outline, color: scheme.error, size: 32),
               const SizedBox(height: 8),
               Text(
                 message,

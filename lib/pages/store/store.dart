@@ -5,12 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // ApiClient.dio 사용
 
-// main.dart는 prefix로 가져오기
+// main.dart는 prefix로 가져오기 (테마 변경용)
 import 'package:saykoreanapp_f/main.dart' as AppMain;
 
-// UI 공통 (FooterSafeArea, SKPageHeader 등)
+// UI 공통 (FooterSafeArea, themeColorNotifier 등)
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
-
 
 class StorePage extends StatefulWidget {
   const StorePage({super.key});
@@ -24,8 +23,8 @@ class _StorePageState extends State<StorePage> {
   String? _error;
 
   int? _pointBalance; // 내 포인트 잔액
-  bool _hasDarkTheme = false; // 다크 테마 보유 여부 (로컬 캐시)
-  bool _hasMintTheme = false; // 민트 테마 보유 여부 (로컬 캐시)
+  bool _hasDarkTheme = false; // 다크 테마 보유 여부
+  bool _hasMintTheme = false; // 민트 테마 보유 여부
 
   @override
   void initState() {
@@ -42,11 +41,9 @@ class _StorePageState extends State<StorePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // 이미 구매한 적 있는지 (로컬에 저장된 플래그)
       _hasDarkTheme = prefs.getBool('hasDarkTheme') ?? false;
       _hasMintTheme = prefs.getBool('hasMintTheme') ?? false;
 
-      // 포인트 잔액 불러오기
       _pointBalance = await _fetchPointBalance();
 
       setState(() {});
@@ -75,14 +72,9 @@ class _StorePageState extends State<StorePage> {
 
       if (res.statusCode == 200) {
         final data = res.data;
-        if (data is int) {
-          return data;
-        }
-        if (data is String) {
-          return int.tryParse(data) ?? 0;
-        }
+        if (data is int) return data;
+        if (data is String) return int.tryParse(data) ?? 0;
       }
-
       return 0;
     } catch (e) {
       debugPrint('point balance fetch error: $e');
@@ -125,6 +117,7 @@ class _StorePageState extends State<StorePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(label)),
     );
+
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -321,9 +314,16 @@ class _StorePageState extends State<StorePage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final isMintTheme = themeColorNotifier.value == 'mint';
 
     final bg = theme.scaffoldBackgroundColor;
-    final titleColor = isDark ? scheme.onSurface : const Color(0xFF6B4E42);
+
+    // 앱바/섹션 타이틀 컬러
+    final Color mainTitleColor = isDark
+        ? (theme.appBarTheme.foregroundColor ?? scheme.onSurface)
+        : (isMintTheme
+        ? const Color(0xFF2F7A69) // 민트 테마일 때
+        : const Color(0xFFFFAAA5)); // 기본(핑크)
 
     return Scaffold(
       backgroundColor: bg,
@@ -331,22 +331,22 @@ class _StorePageState extends State<StorePage> {
         backgroundColor: bg,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: titleColor),
+        iconTheme: IconThemeData(color: mainTitleColor),
         title: Text(
           '스토어',
           style: theme.textTheme.titleLarge?.copyWith(
-            color: titleColor,
+            color: mainTitleColor,
             fontWeight: FontWeight.w700,
           ),
         ),
       ),
       body: SafeArea(
-        child: FooterSafeArea( // ✅ 푸터에 안 가리도록 공통 패딩
+        child: FooterSafeArea(
           child: _loading && _pointBalance == null
               ? const Center(child: CircularProgressIndicator())
               : _error != null
               ? _buildErrorView(theme, scheme)
-              : _buildContent(theme, scheme, isDark),
+              : _buildContent(theme, scheme, isDark, isMintTheme, mainTitleColor),
         ),
       ),
     );
@@ -384,9 +384,22 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-  Widget _buildContent(ThemeData theme, ColorScheme scheme, bool isDark) {
+  Widget _buildContent(
+      ThemeData theme,
+      ColorScheme scheme,
+      bool isDark,
+      bool isMintTheme,
+      Color mainTitleColor,
+      ) {
     final balanceText =
     _pointBalance == null ? '불러오는 중...' : '${_pointBalance} P';
+
+    // 포인트 글씨 색: 다크모드면 흰색, 민트테마면 민트, 기본은 핑크
+    final Color pointTextColor = isDark
+        ? Colors.white
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFFFFAAA5));
+
+    final Color sectionTitleColor = mainTitleColor;
 
     return RefreshIndicator(
       onRefresh: _bootstrap,
@@ -401,9 +414,8 @@ class _StorePageState extends State<StorePage> {
               color: isDark ? scheme.surfaceVariant : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark
-                    ? scheme.outline.withOpacity(0.4)
-                    : const Color(0xFFE5E7EB),
+                color:
+                isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB),
               ),
               boxShadow: const [
                 BoxShadow(
@@ -422,6 +434,7 @@ class _StorePageState extends State<StorePage> {
                     '내 포인트',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: sectionTitleColor,
                     ),
                   ),
                 ),
@@ -429,7 +442,7 @@ class _StorePageState extends State<StorePage> {
                   balanceText,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF6B4E42),
+                    color: pointTextColor,
                   ),
                 ),
               ],
@@ -442,37 +455,37 @@ class _StorePageState extends State<StorePage> {
             '테마',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
-              color: isDark ? scheme.onSurface : const Color(0xFF6B4E42),
+              color: sectionTitleColor,
             ),
           ),
           const SizedBox(height: 12),
 
-          _buildDefaultThemeItem(theme, scheme, isDark),
+          _buildDefaultThemeItem(theme),
           const SizedBox(height: 12),
-          _buildDarkThemeItem(theme, scheme, isDark),
+          _buildDarkThemeItem(theme, isDark),
           const SizedBox(height: 12),
-          _buildMintThemeItem(theme, scheme, isDark),
+          _buildMintThemeItem(theme, isDark),
         ],
       ),
     );
   }
 
-  // 기본 테마 카드
-  Widget _buildDefaultThemeItem(
-      ThemeData theme, ColorScheme scheme, bool isDark) {
-    final titleColor = isDark ? scheme.onSurface : const Color(0xFF6B4E42);
-    final descColor =
-    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF6B7280);
+  // ─────────────────────────────────────────────────────────────
+  // 기본 테마 카드 (항상 핑크 계열)
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildDefaultThemeItem(ThemeData theme) {
+    const titleColor = Color(0xFFFFAAA5);
+    const descColor = Color(0xFF6B4E42);
+    const freeColor = Color(0xFFFFAAA5);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? scheme.surface : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color:
-          isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB),
+          color: const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -508,7 +521,7 @@ class _StorePageState extends State<StorePage> {
                   height: 10,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFAAA5),
+                      color: Color(0xFFFFAAA5),
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
@@ -525,11 +538,11 @@ class _StorePageState extends State<StorePage> {
                     ),
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   left: 12,
                   bottom: 10,
                   child: Row(
-                    children: const [
+                    children: [
                       _DefaultDot(),
                       SizedBox(width: 4),
                       _DefaultDot(),
@@ -569,14 +582,14 @@ class _StorePageState extends State<StorePage> {
                     const Icon(
                       Icons.check_circle,
                       size: 16,
-                      color: Color(0xFFFFAAA5),
+                      color: freeColor,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '무료',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF6B4E42),
+                        color: freeColor,
                       ),
                     ),
                   ],
@@ -587,16 +600,14 @@ class _StorePageState extends State<StorePage> {
 
           const SizedBox(width: 8),
 
-          // 버튼
+          // 버튼 (항상 핑크 계열)
           SizedBox(
             height: 40,
             child: ElevatedButton(
               onPressed: () => _applyTheme('default'),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                isDark ? scheme.primaryContainer : const Color(0xFFFFEEE9),
-                foregroundColor:
-                isDark ? scheme.onPrimaryContainer : const Color(0xFF6B4E42),
+                backgroundColor: const Color(0xFFFFEEE9),
+                foregroundColor: freeColor,
                 elevation: 0,
                 padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
@@ -612,26 +623,27 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-  // 다크 테마 카드
-  Widget _buildDarkThemeItem(
-      ThemeData theme, ColorScheme scheme, bool isDark) {
+  // ─────────────────────────────────────────────────────────────
+  // 다크 테마 카드 (항상 브라운 계열, 버튼도 브라운)
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildDarkThemeItem(ThemeData theme, bool isDarkMode) {
     const int price = 2000;
     final bool owned = _hasDarkTheme;
     final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
-    final titleColor = isDark ? scheme.onSurface : const Color(0xFF111827);
-    final descColor =
-    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF6B7280);
+    const Color titleColor = Color(0xFF6B4E42);
+    const Color descColor = Color(0xFF7C5A48);
+    // 다크 모드일 때 포인트 글씨는 흰색
+    final Color priceColor = isDarkMode ? Colors.white : const Color(0xFF6B4E42);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? scheme.surface : Colors.white,
+        color: isDarkMode ? const Color(0xFF261E1B) : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color:
-          isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB),
+          color: isDarkMode ? const Color(0xFF3A2D28) : const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -748,7 +760,7 @@ class _StorePageState extends State<StorePage> {
                       '$price P',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF6B4E42),
+                        color: priceColor,
                       ),
                     ),
                   ],
@@ -759,7 +771,7 @@ class _StorePageState extends State<StorePage> {
 
           const SizedBox(width: 8),
 
-          // 버튼
+          // 버튼 – 항상 브라운 계열 사용
           SizedBox(
             height: 40,
             child: ElevatedButton(
@@ -768,15 +780,11 @@ class _StorePageState extends State<StorePage> {
                   : (owned ? () => _applyTheme('dark') : _onTapBuyDarkTheme),
               style: ElevatedButton.styleFrom(
                 backgroundColor: owned
-                    ? (isDark
-                    ? scheme.primaryContainer
-                    : const Color(0xFFD1FAE5))
-                    : const Color(0xFFFFEEE9),
+                    ? const Color(0xFF6B4E42) // 소유중이면 진한 브라운 풀 필
+                    : const Color(0xFFFFEEE9), // 미소유면 연살구 배경
                 foregroundColor: owned
-                    ? (isDark
-                    ? scheme.onPrimaryContainer
-                    : const Color(0xFF047857))
-                    : const Color(0xFF6B4E42),
+                    ? Colors.white // 소유중일 때 텍스트 흰색
+                    : const Color(0xFF6B4E42), // 미소유일 땐 브라운 텍스트
                 elevation: 0,
                 padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
@@ -798,26 +806,26 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-  // 민트 테마 카드
-  Widget _buildMintThemeItem(
-      ThemeData theme, ColorScheme scheme, bool isDark) {
+  // ─────────────────────────────────────────────────────────────
+  // 민트 테마 카드 (항상 민트 계열)
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildMintThemeItem(ThemeData theme, bool isDarkMode) {
     const int price = 2000;
     final bool owned = _hasMintTheme;
     final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
-    final titleColor = isDark ? scheme.onSurface : const Color(0xFF064E3B);
-    final descColor =
-    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF047857);
+    const Color titleColor = Color(0xFF064E3B);
+    const Color descColor = Color(0xFF047857);
+    final Color priceColor = isDarkMode ? Colors.white : const Color(0xFF047857);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? scheme.surface : Colors.white,
+        color: isDarkMode ? const Color(0xFF261E1B) : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color:
-          isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB),
+          color: isDarkMode ? const Color(0xFF3A2D28) : const Color(0xFFE5E7EB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -921,7 +929,7 @@ class _StorePageState extends State<StorePage> {
                       '$price P',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF047857),
+                        color: priceColor,
                       ),
                     ),
                   ],
@@ -932,7 +940,7 @@ class _StorePageState extends State<StorePage> {
 
           const SizedBox(width: 8),
 
-          // 버튼
+          // 버튼 – 민트 계열 고정
           SizedBox(
             height: 40,
             child: ElevatedButton(
@@ -941,13 +949,10 @@ class _StorePageState extends State<StorePage> {
                   : (owned ? () => _applyTheme('mint') : _onTapBuyMintTheme),
               style: ElevatedButton.styleFrom(
                 backgroundColor: owned
-                    ? (isDark
-                    ? const Color(0xFF064E3B)
-                    : const Color(0xFFD1FAE5))
+                    ? const Color(0xFF2F7A69)
                     : const Color(0xFFE0FFF5),
-                foregroundColor: owned
-                    ? (isDark ? Colors.white : const Color(0xFF047857))
-                    : const Color(0xFF064E3B),
+                foregroundColor:
+                owned ? Colors.white : const Color(0xFF064E3B),
                 elevation: 0,
                 padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 0),

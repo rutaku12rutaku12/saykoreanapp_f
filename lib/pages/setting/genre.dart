@@ -103,15 +103,9 @@ class _GenreState extends State<GenrePage> {
 
     setState(() => _selected = genreNo);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "genre.saved".tr(namedArgs: {
-            "name": name,
-            "no": genreNo.toString(),
-          }),
-        ),
-      ),
+    showFooterSnackBar(
+      context,
+      '선택한 장르: $name (No.$genreNo) 저장됨',
     );
 
     // 필요 시 다른 페이지로 이동할 때 여기서 Navigator.pushReplacement 사용

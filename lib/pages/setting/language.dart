@@ -1,45 +1,24 @@
-// lib/pages/setting/language_page.dart — 장르 스타일 리스트 버전
+// lib/pages/setting/language.dart
+//
+// ✅ 장르 페이지와 동일한 구조/스타일로 맞춘 언어 선택 페이지
+//    - ApiClient.dio 사용
+//    - SKPageHeader / SKPrimaryButton 사용
+//    - 장르 카드 스타일 그대로 재사용
 
-import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // SKPageHeader, SKPrimaryButton, FooterSafeArea
-
-// ─────────────────────────────────────────────────────────────
-// 환경별 baseUrl 감지
-// ─────────────────────────────────────────────────────────────
-String _detectBaseUrl() {
-  final env = const String.fromEnvironment('API_HOST');
-  if (env.isNotEmpty) return env;
-
-  if (kIsWeb) return 'http://localhost:8080';
-  if (Platform.isAndroid) return 'http://10.0.2.2:8080';
-  return 'http://localhost:8080';
-}
-
-Locale _toLocale(String code) {
-  if (code.contains('-')) {
-    final parts = code.split('-');
-    return Locale(parts[0], parts[1]);
-  }
-  return Locale(code);
-}
-
-final Dio dio = Dio(
-  BaseOptions(
-    baseUrl: _detectBaseUrl(),
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 10),
-  ),
-);
+import 'package:saykoreanapp_f/api/api.dart';
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
 // ─────────────────────────────────────────────────────────────
 // DTO
 // ─────────────────────────────────────────────────────────────
+
 class LanguageDto {
   final int langNo;
   final String langName;
@@ -55,9 +34,37 @@ class LanguageDto {
   );
 }
 
+// i18n 코드 → Locale
+Locale _toLocale(String code) {
+  if (code.contains('-')) {
+    final parts = code.split('-');
+    return Locale(parts[0], parts[1]);
+  }
+  return Locale(code);
+}
+
+// 번호 → 표시명(폴백용)
+const Map<int, String> _LANG_DISPLAY = {
+  1: '한국어',
+  2: '日本語',
+  3: '中文',
+  4: 'English',
+  5: 'Español',
+};
+
+// 번호 → i18n 코드
+const Map<int, String> _LANG_MAP = {
+  1: 'ko',
+  2: 'ja',
+  3: 'zh-CN',
+  4: 'en',
+  5: 'es',
+};
+
 // ─────────────────────────────────────────────────────────────
-// 페이지
+// 언어 페이지
 // ─────────────────────────────────────────────────────────────
+
 class LanguagePage extends StatefulWidget {
   const LanguagePage({super.key});
 
@@ -71,24 +78,6 @@ class _LanguagePageState extends State<LanguagePage> {
   List<LanguageDto> _items = const [];
   int? _selected; // 저장된 선택값 표시용
 
-  // 번호 → 표시명(폴백용)
-  static const Map<int, String> _LANG_DISPLAY = {
-    1: '한국어',
-    2: '日本語',
-    3: '中文',
-    4: 'English',
-    5: 'Español',
-  };
-
-  // 번호 → i18n 코드
-  static const Map<int, String> _LANG_MAP = {
-    1: 'ko',
-    2: 'ja',
-    3: 'zh-CN',
-    4: 'en',
-    5: 'es',
-  };
-
   @override
   void initState() {
     super.initState();
@@ -96,11 +85,13 @@ class _LanguagePageState extends State<LanguagePage> {
     _fetchLanguages();
   }
 
+  // 저장된 선택값 불러오기
   Future<void> _loadSelected() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() => _selected = prefs.getInt('selectedLangNo'));
   }
 
+  // 언어 목록 호출 (백엔드가 i18n을 수행한다면 lng를 함께 전달)
   Future<void> _fetchLanguages() async {
     setState(() {
       _loading = true;
@@ -111,13 +102,14 @@ class _LanguagePageState extends State<LanguagePage> {
       final prefs = await SharedPreferences.getInstance();
       final lng = prefs.getString('lng') ?? 'ko';
 
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(
         '/saykorean/study/getlang',
+        queryParameters: {'lng': lng},
         options: Options(headers: {'Accept-Language': lng}),
       );
 
       final raw = res.data;
-      final list = (raw is List ? raw : <dynamic>[])
+      final list = (raw is List ? raw : (jsonDecode(raw as String) as List))
           .map((e) => LanguageDto.fromJson(Map<String, dynamic>.from(e)))
           .toList();
 
@@ -130,232 +122,202 @@ class _LanguagePageState extends State<LanguagePage> {
       if (!mounted) return;
       setState(() => _error = 'language.error.load'.tr());
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _pickLang(int langNo, String name) async {
-    final n = int.tryParse('$langNo');
-    if (n == null || n <= 0) return;
-
+  // 언어 선택 저장 + locale 변경
+  Future<void> _saveLanguage(int langNo, String name) async {
     final prefs = await SharedPreferences.getInstance();
-    final code = _LANG_MAP[n] ?? 'ko';
+    final code = _LANG_MAP[langNo] ?? 'ko';
 
-    await prefs.setInt('selectedLangNo', n);
+    await prefs.setInt('selectedLangNo', langNo);
     await prefs.setString('lng', code);
 
+    // EasyLocalization locale 변경
     await context.setLocale(_toLocale(code));
 
     if (!mounted) return;
-    setState(() => _selected = n);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('언어가 변경되었습니다: $name ($code)')),
+    setState(() => _selected = langNo);
+
+    showFooterSnackBar(
+      context,
+      '선택한 언어: $name ($code) 저장됨',
     );
 
-    if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/info', (r) => false);
+    // 필요하면 여기서 화면 이동
+    // Navigator.of(context).pushNamedAndRemoveUntil('/info', (r) => false);
   }
-
-  @override
-  Widget build(BuildContext context) {
-    Widget content;
-
-    if (_loading) {
-      content = const Center(child: CircularProgressIndicator());
-    } else if (_error != null) {
-      content = Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _error!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            SKPrimaryButton(
-              label: 'common.confirm'.tr(),
-              onPressed: _fetchLanguages,
-            ),
-          ],
-        ),
-      );
-    } else if (_items.isEmpty) {
-      content = Center(
-        child: Text('common.notset'.tr()));
-    } else {
-      // ✅ 장르 선택 페이지처럼: 한 줄에 한 언어 카드
-      content = ListView.separated(
-        padding: const EdgeInsets.only(top: 8, bottom: 8),
-        itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          final l = _items[index];
-          final isActive = _selected == l.langNo;
-          final label = _LANG_DISPLAY[l.langNo] ?? l.langName;
-
-          return _LanguageTile(
-            index: index + 1,
-            label: label,
-            active: isActive,
-            onTap: () => _pickLang(l.langNo, label),
-          );
-        },
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(''),
-      ),
-      body: SafeArea(
-        child: FooterSafeArea( // 🔥 푸터에 안 가리도록 여기서만 패딩 처리
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SKPageHeader(
-                  title: 'language.title'.tr(),
-                  subtitle: 'mypage.selectLanguage'.tr(),
-                ),
-                const SizedBox(height: 16),
-                Expanded(child: content),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// 장르 스타일 언어 카드
-// ─────────────────────────────────────────────────────────────
-class _LanguageTile extends StatelessWidget {
-  final int index;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _LanguageTile({
-    required this.index,
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final bg = theme.scaffoldBackgroundColor;
 
-    // 기본 / 민트 / 다크 모두 잘 어울리도록 ColorScheme 기반
-    final Color cardBg = active
-        ? scheme.secondaryContainer
-        : (isDark ? scheme.surfaceContainerHigh : theme.cardColor);
-    final Color badgeBg = active
-        ? scheme.primary.withOpacity(0.12)
-        : scheme.secondaryContainer.withOpacity(isDark ? 0.35 : 0.6);
-    final Color badgeText =
-    active ? scheme.primary : scheme.onSecondaryContainer;
-    final Color textColor =
-    active ? scheme.onSecondaryContainer : scheme.onSurface;
-    final Color borderColor =
-    active ? Colors.transparent : scheme.outline.withOpacity(0.12);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          height: 68,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // 왼쪽 번호 원
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$index',
-                  style: TextStyle(
-                    color: badgeText,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // 언어 이름
-              Expanded(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                    color: textColor,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // 오른쪽 체크/동그라미
-              _buildCheck(active, scheme, isDark),
-            ],
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: bg,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          '언어 선택',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
           ),
         ),
+        iconTheme: IconThemeData(
+          color: theme.appBarTheme.foregroundColor ?? scheme.primary,
+        ),
+      ),
+      body: SafeArea(
+        child: _loading
+            ? Center(
+          child: CircularProgressIndicator(
+            color: scheme.primary,
+          ),
+        )
+            : _error != null
+            ? _buildError(theme, scheme)
+            : _buildContent(theme, scheme),
       ),
     );
   }
 
-  Widget _buildCheck(bool active, ColorScheme scheme, bool isDark) {
-    if (active) {
-      return Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          color: scheme.primary,
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.check,
-          size: 16,
-          color: Colors.white,
-        ),
-      );
-    }
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: scheme.outline.withOpacity(isDark ? 0.7 : 0.5),
-          width: 2,
-        ),
+  // 에러 UI (장르 페이지와 동일 패턴)
+  Widget _buildError(ThemeData theme, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '에러가 발생했어요',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: scheme.error,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _error ?? '',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          SKPrimaryButton(
+            label: '다시 시도',
+            onPressed: _fetchLanguages,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 정상 컨텐츠 UI (장르 페이지와 동일 레이아웃)
+  Widget _buildContent(ThemeData theme, ColorScheme scheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SKPageHeader(
+            title: '언어 선택',
+            subtitle: '학습에 사용할 언어를 골라주세요.',
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: _items.isEmpty
+                ? Center(
+              child: Text(
+                '지원 언어가 없습니다.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            )
+                : ListView.separated(
+              itemCount: _items.length,
+              separatorBuilder: (_, __) =>
+              const SizedBox(height: 10),
+              itemBuilder: (context, i) {
+                final l = _items[i];
+                final selected = _selected == l.langNo;
+
+                final displayName =
+                    _LANG_DISPLAY[l.langNo] ?? l.langName;
+
+                final cardColor = scheme.surface;
+                final borderColor = selected
+                    ? scheme.primary.withOpacity(0.5)
+                    : scheme.outline.withOpacity(0.15);
+
+                return Material(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  elevation: selected ? 3 : 1,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () =>
+                        _saveLanguage(l.langNo, displayName),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundColor:
+                            scheme.primary.withOpacity(0.12),
+                            child: Text(
+                              '${l.langNo}',
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              displayName,
+                              style: theme.textTheme.bodyLarge
+                                  ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: scheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            selected
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            color: selected
+                                ? scheme.primary
+                                : scheme.outline,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

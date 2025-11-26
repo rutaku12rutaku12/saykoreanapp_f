@@ -220,9 +220,17 @@ class _FriendsPageState extends State<FriendsPage>
     }
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  void _showSnack(String msg, {Color? bg, Color? fg}) {
+    showFooterSnackBar(
+      context,
+      msg,
+      backgroundColor: bg,
+      foregroundColor: fg, // ✅ 이름 맞추기
+    );
   }
+
+
+
 
   void _showError(String msg) {
     final scheme = Theme.of(context).colorScheme;

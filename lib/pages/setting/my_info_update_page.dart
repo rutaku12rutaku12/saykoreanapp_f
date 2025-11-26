@@ -393,6 +393,20 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final bg = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
+
+    // 🔥 이 페이지 전용 버튼 색: 기본 테마(라이트 + default)일 때만 연핑크 + 갈색
+    Color primaryBtnBg;
+    Color primaryBtnFg;
+
+    if (!isDark && !isMint) {
+      primaryBtnBg = const Color(0xFFFFEEED); // 연핑크
+      primaryBtnFg = const Color(0xFF6B4E42); // 갈색
+    } else {
+      primaryBtnBg = scheme.primary;
+      primaryBtnFg = scheme.onPrimary;
+    }
 
     return Scaffold(
       backgroundColor: bg,
@@ -412,16 +426,18 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SKPageHeader(
-                title: "myinfoupdate.title".tr(),
-                subtitle: 'mypage.updateInfoDesc'.tr(),
-              ),
-              const SizedBox(height: 24),
+        // ✅ 푸터에 안 가리도록 FooterSafeArea 추가
+        child: FooterSafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SKPageHeader(
+                  title: "myinfoupdate.title".tr(),
+                  subtitle: 'mypage.updateInfoDesc'.tr(),
+                ),
+                const SizedBox(height: 24),
 
               // 섹션 1: 기본 정보 카드
               _buildCard(
@@ -453,8 +469,8 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       child: ElevatedButton(
                         onPressed: checkPhone,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
+                          backgroundColor: primaryBtnBg,
+                          foregroundColor: primaryBtnFg,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -472,8 +488,8 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       child: ElevatedButton(
                         onPressed: updateUserInfo,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
+                          backgroundColor: primaryBtnBg,
+                          foregroundColor: primaryBtnFg,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -490,7 +506,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
               // 섹션 2: 비밀번호 변경 카드
               _buildCard(
@@ -530,8 +546,8 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       child: ElevatedButton(
                         onPressed: updatePwrd,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
+                          backgroundColor: primaryBtnBg,
+                          foregroundColor: primaryBtnFg,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -567,14 +583,32 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    SKPrimaryButton(
-                      label: "myInfoUpdate.deleteUser".tr(),
-                      onPressed: deleteUserStatus,
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: deleteUserStatus,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryBtnBg,
+                          foregroundColor: primaryBtnFg,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: const Text("myInfoUpdate.deleteUser".tr(),),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
+
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
       ),
@@ -593,7 +627,24 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     Color? accentColor,
     required Widget child,
   }) {
-    final cardColor = scheme.surface;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
+
+    // ✅ 이 페이지는 카드도 기본테마에서 흰색으로
+    Color cardColor;
+    if (isDark) {
+      cardColor = scheme.surfaceContainer;
+    } else {
+      cardColor = Colors.white;
+    }
+
+    Color titleColor = accentColor ?? scheme.primary;
+    Color descColor = scheme.onSurface.withOpacity(0.7);
+
+    if (isMint && !isDark && accentColor == null) {
+      titleColor = const Color(0xFF2F7A69);
+      descColor = const Color(0xFF4E8476);
+    }
 
     return Material(
       color: cardColor,
@@ -615,14 +666,14 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
               style: theme.textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: accentColor ?? scheme.primary,
+                color: titleColor,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               description,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurface.withOpacity(0.7),
+                color: descColor,
               ),
             ),
             const SizedBox(height: 16),

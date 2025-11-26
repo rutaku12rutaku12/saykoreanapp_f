@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/api/api.dart';
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ FooterSafeArea 사용
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -186,90 +187,98 @@ class _LoadingPageState extends State<LoadingPage> {
   Widget build(BuildContext context) {
     final theme  = Theme.of(context);
     final scheme = theme.colorScheme;
-    final size   = MediaQuery.of(context).size;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              // 푸터-padding 때문에 화면보다 작아질 수 있어서 스크롤 허용
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // ── 상단 이미지 + 타이틀/설명
-                      Column(
+      body: FooterSafeArea( // ✅ 푸터에 안 가리도록 공통 래퍼
+        child: SafeArea(
+          top: true,
+          bottom: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth;
+
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Text(
-                              _slide.title,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF6B4E42),
-                              ),
+                          // ── 상단 타이틀
+                          Text(
+                            _slide.title,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? scheme.onSurface
+                                  : const Color(0xFF6B4E42),
                             ),
                           ),
                           const SizedBox(height: 12),
 
-                          Container(
-                            width: size.width * 0.85,
-                            height: size.height * 0.55,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x22000000),
-                                  blurRadius: 12,
-                                  offset: Offset(0, 6),
-                                ),
-                              ],
-                              image: DecorationImage(
-                                image: AssetImage(_slide.asset),
-                                fit: BoxFit.cover,
-                              ),
+                          // ── 중앙 카드 (화면 폭 기준으로 크게)
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: 420,
+                              // 폭은 화면의 85%
+                              minWidth: maxWidth * 0.85,
                             ),
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
+                            child: AspectRatio(
+                              aspectRatio: 3 / 4, // 세로로 좀 더 긴 카드
                               child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.45),
-                                  borderRadius: const BorderRadius.vertical(
-                                    bottom: Radius.circular(24),
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x22000000),
+                                      blurRadius: 12,
+                                      offset: Offset(0, 6),
+                                    ),
+                                  ],
+                                  image: DecorationImage(
+                                    image: AssetImage(_slide.asset),
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                                child: Text(
-                                  _slide.description,
-                                  textAlign: TextAlign.left,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    height: 1.4,
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.45),
+                                      borderRadius: const BorderRadius.vertical(
+                                        bottom: Radius.circular(24),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _slide.description,
+                                      textAlign: TextAlign.left,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        height: 1.4,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
 
-                      // ── 하단 로딩 문구 + 프로그레스
-                      Column(
-                        children: [
+                          const SizedBox(height: 32),
+
+                          // ── 하단 로딩 인디케이터 + 문구
                           SizedBox(
                             width: 28,
                             height: 28,
@@ -285,17 +294,19 @@ class _LoadingPageState extends State<LoadingPage> {
                             _phrase, // 랜덤 문구
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: const Color(0xFF6B4E42),
+                              color: isDark
+                                  ? scheme.onSurface.withOpacity(0.9)
+                                  : const Color(0xFF6B4E42),
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

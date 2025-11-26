@@ -434,7 +434,7 @@ class _SignupState extends State<SignupPage> {
     );
   }
 
-  // 공통 카드 UI (Theme의 cardTheme를 최대한 활용)
+  // 공통 카드 UI (항상 흰 카드 / 다크에서는 surface)
   Widget _buildCard({
     required ThemeData theme,
     required ColorScheme scheme,
@@ -442,6 +442,8 @@ class _SignupState extends State<SignupPage> {
     required String description,
     required Widget child,
   }) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
       margin: EdgeInsets.zero,
       elevation: theme.cardTheme.elevation ?? 2,
@@ -449,6 +451,7 @@ class _SignupState extends State<SignupPage> {
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
+      color: isDark ? scheme.surface : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

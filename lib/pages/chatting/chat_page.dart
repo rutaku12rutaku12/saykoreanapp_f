@@ -6,6 +6,9 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../api/chatting_api.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+// 🔥 푸터에 안 가리게 해주는 공용 래퍼
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
+
 class ChatPage extends StatefulWidget {
   final int roomNo;
   final String friendName;
@@ -148,7 +151,6 @@ class _ChatPageState extends State<ChatPage> {
 
       // 부모에게 알려줄 필요 있을 때
       widget.onMessageSent?.call();
-
     } catch (e) {
       print("❌ 메시지 전송 오류: $e");
       _connectSocket(); // 자동 재연결
@@ -241,159 +243,168 @@ class _ChatPageState extends State<ChatPage> {
           color: theme.appBarTheme.foregroundColor ?? scheme.primary,
         ),
       ),
-      body: Column(
-        children: [
-          // 메시지 목록
-          Expanded(
-            child: _loadingHistory && _messages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-              controller: _scroll,
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-              itemCount: _messages.length,
-              itemBuilder: (_, i) {
-                final m = _messages[i];
-                final isMe = m['sendNo'] == widget.myUserNo;
+      // 🔥 FooterSafeArea로 전체를 감싸서 푸터 높이만큼 패딩 추가
+      body: FooterSafeArea(
+        child: Column(
+          children: [
+            // 메시지 목록
+            Expanded(
+              child: _loadingHistory && _messages.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                controller: _scroll,
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                itemCount: _messages.length,
+                itemBuilder: (_, i) {
+                  final m = _messages[i];
+                  final isMe = m['sendNo'] == widget.myUserNo;
 
-                final bubbleBg = isMe ? myBubbleBg : otherBubbleBg;
-                final bubbleFg = isMe ? myBubbleFg : otherBubbleFg;
+                  final bubbleBg = isMe ? myBubbleBg : otherBubbleBg;
+                  final bubbleFg = isMe ? myBubbleFg : otherBubbleFg;
 
-                return GestureDetector(
-                  onLongPress: () => _reportMessage(m),
-                  child: Align(
-                    alignment: isMe
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 2),
-                      child: Column(
-                        crossAxisAlignment: isMe
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: bubbleBg,
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(16),
-                                topRight: const Radius.circular(16),
-                                bottomLeft:
-                                Radius.circular(isMe ? 16 : 4),
-                                bottomRight:
-                                Radius.circular(isMe ? 4 : 16),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
+                  return GestureDetector(
+                    onLongPress: () => _reportMessage(m),
+                    child: Align(
+                      alignment: isMe
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 2),
+                        child: Column(
+                          crossAxisAlignment: isMe
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: bubbleBg,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(16),
+                                  topRight: const Radius.circular(16),
+                                  bottomLeft: Radius.circular(
+                                      isMe ? 16 : 4),
+                                  bottomRight: Radius.circular(
+                                      isMe ? 4 : 16),
                                 ),
-                              ],
-                            ),
-                            child: Text(
-                              m['message'] ?? '',
-                              style:
-                              theme.textTheme.bodyMedium?.copyWith(
-                                color: bubbleFg,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black
+                                        .withOpacity(0.04),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                          if ((m['time'] ?? '').toString().isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  top: 2, left: 4, right: 4),
                               child: Text(
-                                m['time'].toString(),
-                                style: theme.textTheme.labelSmall
+                                m['message'] ?? '',
+                                style: theme.textTheme.bodyMedium
                                     ?.copyWith(
-                                  color: timeColor,
-                                  fontSize: 10,
+                                  color: bubbleFg,
                                 ),
                               ),
                             ),
-                        ],
+                            if ((m['time'] ?? '')
+                                .toString()
+                                .isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    top: 2, left: 4, right: 4),
+                                child: Text(
+                                  m['time'].toString(),
+                                  style: theme.textTheme.labelSmall
+                                      ?.copyWith(
+                                    color: timeColor,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // 입력창
-          SafeArea(
-            top: false,
-            child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark ? scheme.surfaceContainerHigh : scheme.surface,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x14000000),
-                    blurRadius: 10,
-                    offset: Offset(0, -2),
-                  ),
-                ],
+                  );
+                },
               ),
-              child: Row(
-                children: [
-                  /// === ✨ 엔터 전송 + Shift+Enter 줄바꿈 기능 포함 ===
-                  Expanded(
-                    child: RawKeyboardListener(
-                      focusNode: FocusNode(),
-                      onKey: (event) {
-                        if (event is RawKeyDownEvent) {
-                          // 엔터 → 메시지 전송
-                          if (event.logicalKey == LogicalKeyboardKey.enter &&
-                              !event.isShiftPressed) {
-                            _sendMessage();
-                            return; // 줄바꿈 방지
+            ),
+
+            // 입력창
+            SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color:
+                  isDark ? scheme.surfaceContainerHigh : scheme.surface,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 10,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    /// === ✨ 엔터 전송 + Shift+Enter 줄바꿈 기능 포함 ===
+                    Expanded(
+                      child: RawKeyboardListener(
+                        focusNode: FocusNode(),
+                        onKey: (event) {
+                          if (event is RawKeyDownEvent) {
+                            // 엔터 → 메시지 전송
+                            if (event.logicalKey ==
+                                LogicalKeyboardKey.enter &&
+                                !event.isShiftPressed) {
+                              _sendMessage();
+                              return; // 줄바꿈 방지
+                            }
                           }
-                        }
-                      },
-                      child: TextField(
-                        controller: _controller,
-                        keyboardType: TextInputType.multiline,
-                        minLines: 1,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: "chat.input.hint".tr(),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide(
-                              color: scheme.primary,
-                              width: 1.4,
+                        },
+                        child: TextField(
+                          controller: _controller,
+                          keyboardType: TextInputType.multiline,
+                          minLines: 1,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            hintText: "chat.input.hint".tr(),
+                            isDense: true,
+                            contentPadding:
+                            const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide(
+                                color: scheme.primary,
+                                width: 1.4,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(width: 4),
+                    const SizedBox(width: 4),
 
-                  /// === 전송 버튼 ===
-                  IconButton(
-                    icon: Icon(Icons.send, color: scheme.primary),
-                    onPressed: _sendMessage,
-                  ),
-                ],
+                    /// === 전송 버튼 ===
+                    IconButton(
+                      icon: Icon(Icons.send, color: scheme.primary),
+                      onPressed: _sendMessage,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

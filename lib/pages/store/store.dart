@@ -114,9 +114,14 @@ class _StorePageState extends State<StorePage> {
         label = '기본 테마로 변경했어요.';
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(label)),
+    showFooterSnackBar(
+      context,
+      label,
+      duration: Duration(seconds: 2),
     );
+
+
+
 
   }
 
@@ -195,11 +200,13 @@ class _StorePageState extends State<StorePage> {
     const int price = 2000;
 
     if (_pointBalance! < price) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('포인트가 부족해요.')),
+      showFooterSnackBar(
+        context,
+        '포인트가 부족해요.',
       );
       return;
     }
+
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -228,11 +235,13 @@ class _StorePageState extends State<StorePage> {
     setState(() => _loading = false);
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('구매에 실패했어요. 다시 시도해 주세요.')),
+      showFooterSnackBar(
+        context,
+        '구매에 실패했어요. 다시 시도해 주세요.',
       );
       return;
     }
+
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasDarkTheme', true);
@@ -241,9 +250,11 @@ class _StorePageState extends State<StorePage> {
       _hasDarkTheme = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('다크 테마가 해금되었어요! 설정에서 변경할 수 있어요.')),
+    showFooterSnackBar(
+      context,
+      '다크 테마가 해금되었어요! 설정에서 변경할 수 있어요.',
     );
+
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -288,9 +299,11 @@ class _StorePageState extends State<StorePage> {
     setState(() => _loading = false);
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('구매에 실패했어요. 다시 시도해 주세요.')),
+      showFooterSnackBar(
+        context,
+        '구매에 실패했어요. 다시 시도해 주세요.',
       );
+
       return;
     }
 
@@ -301,9 +314,11 @@ class _StorePageState extends State<StorePage> {
       _hasMintTheme = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('민트 테마가 해금되었어요! 설정에서 변경할 수 있어요.')),
+    showFooterSnackBar(
+      context,
+      '민트 테마가 해금되었어요! 설정에서 변경할 수 있어요.',
     );
+
   }
 
   // ─────────────────────────────────────────────────────────────

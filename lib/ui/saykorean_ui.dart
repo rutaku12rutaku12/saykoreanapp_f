@@ -87,46 +87,54 @@ class SKPageHeader extends StatelessWidget {
 // lib/ui/saykorean_ui.dart 안에 넣을 SKPrimaryButton
 class SKPrimaryButton extends StatelessWidget {
   final String label;
-  final VoidCallback? onPressed; // ✅ Nullable 로 변경!
-  final bool expand; // true면 가로 전체
+  final VoidCallback? onPressed;
+  final bool expand;      // 가로 전체
+  final bool forcePink;   // ⭐ 기본 테마에서만 연핑크 강제
 
   const SKPrimaryButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.expand = true,
+    this.forcePink = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme  = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final isMint = themeColorNotifier.value == 'mint';
 
-    // 🎨 색상 규칙
-    //  - 기본 테마(light + default)  : 연핑크 고정 (#FFAAA5)
-    //  - 민트 테마(light + mint)     : 기존 민트 계열 유지
-    //  - 다크 테마                  : ColorScheme 기반
     Color bg;
     Color fg;
 
     if (isDark) {
+      // 🌙 다크 테마
       bg = scheme.primaryContainer;
       fg = scheme.onPrimaryContainer;
     } else if (isMint) {
+      // 🌿 민트 테마
       bg = const Color(0xFF2F7A69);
       fg = Colors.white;
     } else {
-      bg = const Color(0xFFFFAAA5); // ⭐ 기본 테마 연핑크 고정
-      fg = Colors.white;
+      // ☁️ 기본 라이트 테마
+      if (forcePink) {
+        // 👉 연핑크 + 갈색 글씨
+        bg = const Color(0xFFFFAAA5);
+        fg = const Color(0xFF6B4E42);
+      } else {
+        // 평소엔 테마 기본 색
+        bg = scheme.primary;
+        fg = scheme.onPrimary;
+      }
     }
 
     return SizedBox(
       width: expand ? double.infinity : null,
       height: 48,
       child: ElevatedButton(
-        onPressed: onPressed, // ✅ null 허용 → 비활성화 가능
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: bg,
           foregroundColor: fg,
@@ -144,7 +152,6 @@ class SKPrimaryButton extends StatelessWidget {
     );
   }
 }
-
 
 
 // ─────────────────────────────────────────────────────────────

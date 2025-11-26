@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ FooterSafeArea 사용
 
 class HomePage extends StatefulWidget {
@@ -55,7 +57,7 @@ class _HomePageState extends State<HomePage> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } catch (e) {
       print(e);
@@ -135,38 +137,47 @@ class _HomePageState extends State<HomePage> {
                       : const CustomPaint(painter: _BottomWavePink())),
                 ),
 
-                // ── 상단 아이콘들
-                Positioned(
-                  top: topPadding + 8,
-                  right: 16,
-                  child: Row(
-                    children: [
-                      _HomeTopIconButton(
-                        icon: Icons.storefront_outlined,
-                        label: '스토어',
-                        onTap: () {
-                          Navigator.pushNamed(context, '/store');
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _HomeTopIconButton(
-                        icon: Icons.emoji_events_outlined,
-                        label: '순위',
-                        onTap: () {
-                          Navigator.pushNamed(context, '/ranking');
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _HomeTopIconButton(
-                        icon: Icons.person_outline,
-                        label: '내정보',
-                        onTap: () {
-                          Navigator.pushNamed(context, '/info');
-                        },
-                      ),
-                    ],
-                  ),
+          // ── 상단 아이콘들
+//   - 왼쪽 끝 : 내정보
+//   - 오른쪽 끝 : 스토어 + 순위
+          Positioned(
+            top: topPadding + 8,
+            right: 16,
+            child: Row(
+              children: [
+                // 오른쪽: 스토어 + 순위
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _HomeTopIconButton(
+                      icon: Icons.storefront_outlined,
+                      label: 'store'.tr(),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/store');
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _HomeTopIconButton(
+                      icon: Icons.emoji_events_outlined,
+                      label: 'ranking.title'.tr(),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/ranking');
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _HomeTopIconButton(
+                      icon: Icons.person_outline,
+                      label: 'footer.myPage'.tr(),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/info');
+                      },
+                    ),
+
+                  ],
                 ),
+              ],
+            ),
+          ),
 
                 // ── 메인 컨텐츠 영역 (이제 별도의 FooterSafeArea 없이도
                 //    이미 하단이 푸터에 안 겹치도록 보장됨)
@@ -190,51 +201,51 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const SizedBox(height: 32),
 
-                          if (isLogin)
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: logoutBg,
-                                  foregroundColor: logoutFg,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  textStyle: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('로그아웃'),
-                                      content:
-                                      const Text('정말 로그아웃 하시겠습니까?'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, false),
-                                          child: const Text('취소'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context, true),
-                                          child: const Text('로그아웃'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-
-                                  if (confirm == true) {
-                                    LogOut();
-                                  }
-                                },
-                                child: const Text('로그아웃'),
-                              ),
+                    if (isLogin)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: logoutBg,
+                            foregroundColor: logoutFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
                             ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('home.logout'.tr()),
+                                content:
+                                Text('common.confirm'.tr()),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: Text('common.confirm'.tr()),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: Text('home.logout'.tr()),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              LogOut();
+                            }
+                          },
+                          child: Text('home.logout'.tr()),
+                        ),
+                      ),
 
                           const SizedBox(height: 10),
                         ],
@@ -343,8 +354,7 @@ class _TitleFancy extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 상단/하단 웨이브 + 상단 아이콘 버튼
-// (아래 부분은 기존 saykorean_ui.dart에서 쓰던 것 그대로 사용)
+// 상단 웨이브 (라이트: 단색 핑크 / 민트: 단색 진한 민트 / 다크: 단색 다크)
 // ─────────────────────────────────────────────────────────────
 
 class _TopWavePink extends CustomPainter {

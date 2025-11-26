@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/setting/myPage.dart';
-import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ 공통 UI (헤더/버튼)
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ FooterSafeArea / themeColorNotifier / SKPageHeader
 
 // ─────────────────────────────────────────────────────────────
 // 내 정보 수정 페이지
@@ -392,6 +392,20 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final bg = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
+
+    // 🔥 이 페이지 전용 버튼 색: 기본 테마(라이트 + default)일 때만 연핑크 + 갈색
+    Color primaryBtnBg;
+    Color primaryBtnFg;
+
+    if (!isDark && !isMint) {
+      primaryBtnBg = const Color(0xFFFFEEED); // 연핑크
+      primaryBtnFg = const Color(0xFF6B4E42); // 갈색
+    } else {
+      primaryBtnBg = scheme.primary;
+      primaryBtnFg = scheme.onPrimary;
+    }
 
     return Scaffold(
       backgroundColor: bg,
@@ -411,169 +425,189 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SKPageHeader(
-                title: '내 정보 관리',
-                subtitle: '닉네임과 연락처, 비밀번호를 변경할 수 있어요.',
-              ),
-              const SizedBox(height: 24),
-
-              // 섹션 1: 기본 정보 카드
-              _buildCard(
-                theme: theme,
-                scheme: scheme,
-                title: '기본 정보',
-                description: '닉네임과 전화번호를 수정할 수 있어요.',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildTextField(
-                      theme: theme,
-                      scheme: scheme,
-                      controller: nameCon,
-                      label: '이름',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      theme: theme,
-                      scheme: scheme,
-                      controller: nickCon,
-                      label: '닉네임',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildPhoneField(theme, scheme),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed: checkPhone,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        child: const Text("전화번호 중복 확인"),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: updateUserInfo,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        child: const Text("정보 수정"),
-                      ),
-                    ),
-                  ],
+        // ✅ 푸터에 안 가리도록 FooterSafeArea 추가
+        child: FooterSafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SKPageHeader(
+                  title: '내 정보 관리',
+                  subtitle: '닉네임과 연락처, 비밀번호를 변경할 수 있어요.',
                 ),
-              ),
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
-
-              // 섹션 2: 비밀번호 변경 카드
-              _buildCard(
-                theme: theme,
-                scheme: scheme,
-                title: '비밀번호 변경',
-                description: '현재 비밀번호를 확인한 후 새 비밀번호를 설정해 주세요.',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildTextField(
-                      theme: theme,
-                      scheme: scheme,
-                      controller: currentPassCon,
-                      label: '기존 비밀번호',
-                      obscure: true,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildTextField(
-                      theme: theme,
-                      scheme: scheme,
-                      controller: newPassCon,
-                      label: '새 비밀번호 (8자 이상)',
-                      obscure: true,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildTextField(
-                      theme: theme,
-                      scheme: scheme,
-                      controller: checkPassCon,
-                      label: '새 비밀번호 확인',
-                      obscure: true,
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: updatePwrd,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                // 섹션 1: 기본 정보 카드
+                _buildCard(
+                  theme: theme,
+                  scheme: scheme,
+                  title: '기본 정보',
+                  description: '닉네임과 전화번호를 수정할 수 있어요.',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTextField(
+                        theme: theme,
+                        scheme: scheme,
+                        controller: nameCon,
+                        label: '이름',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        theme: theme,
+                        scheme: scheme,
+                        controller: nickCon,
+                        label: '닉네임',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPhoneField(theme, scheme),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 44,
+                        child: ElevatedButton(
+                          onPressed: checkPhone,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          child: const Text("전화번호 중복 확인"),
                         ),
-                        child: const Text("비밀번호 수정"),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // 섹션 3: 회원 탈퇴 카드
-              _buildCard(
-                theme: theme,
-                scheme: scheme,
-                title: '회원 탈퇴',
-                description: '탈퇴 시 계정 정보와 포인트, 랭킹 기록 등이 삭제될 수 있어요.',
-                accentColor: scheme.error,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      "탈퇴 후에는 일부 데이터를 복구할 수 없습니다.",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withOpacity(0.75),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: updateUserInfo,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: const Text("정보 수정"),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    SKPrimaryButton(
-                      label: '회원 탈퇴',
-                      onPressed: deleteUserStatus,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 24),
+
+                // 섹션 2: 비밀번호 변경 카드
+                _buildCard(
+                  theme: theme,
+                  scheme: scheme,
+                  title: '비밀번호 변경',
+                  description: '현재 비밀번호를 확인한 후 새 비밀번호를 설정해 주세요.',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTextField(
+                        theme: theme,
+                        scheme: scheme,
+                        controller: currentPassCon,
+                        label: '기존 비밀번호',
+                        obscure: true,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildTextField(
+                        theme: theme,
+                        scheme: scheme,
+                        controller: newPassCon,
+                        label: '새 비밀번호 (8자 이상)',
+                        obscure: true,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildTextField(
+                        theme: theme,
+                        scheme: scheme,
+                        controller: checkPassCon,
+                        label: '새 비밀번호 확인',
+                        obscure: true,
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: updatePwrd,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: const Text("비밀번호 수정"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // 섹션 3: 회원 탈퇴 카드
+                _buildCard(
+                  theme: theme,
+                  scheme: scheme,
+                  title: '회원 탈퇴',
+                  description: '탈퇴 시 계정 정보와 포인트, 랭킹 기록 등이 삭제될 수 있어요.',
+                  accentColor: scheme.error,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        "탈퇴 후에는 일부 데이터를 복구할 수 없습니다.",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurface.withOpacity(0.75),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: deleteUserStatus,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: const Text("회원 탈퇴"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
       ),
@@ -592,7 +626,24 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     Color? accentColor,
     required Widget child,
   }) {
-    final cardColor = scheme.surface;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
+
+    // ✅ 이 페이지는 카드도 기본테마에서 흰색으로
+    Color cardColor;
+    if (isDark) {
+      cardColor = scheme.surfaceContainer;
+    } else {
+      cardColor = Colors.white;
+    }
+
+    Color titleColor = accentColor ?? scheme.primary;
+    Color descColor = scheme.onSurface.withOpacity(0.7);
+
+    if (isMint && !isDark && accentColor == null) {
+      titleColor = const Color(0xFF2F7A69);
+      descColor = const Color(0xFF4E8476);
+    }
 
     return Material(
       color: cardColor,
@@ -614,14 +665,14 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
               style: theme.textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: accentColor ?? scheme.primary,
+                color: titleColor,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               description,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurface.withOpacity(0.7),
+                color: descColor,
               ),
             ),
             const SizedBox(height: 16),

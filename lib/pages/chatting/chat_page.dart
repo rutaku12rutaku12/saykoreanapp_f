@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../api/chatting_api.dart';
@@ -121,19 +122,36 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   // 메시지 전송
-  void _send() {
+  void _sendMessage() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
+    if (_channel == null) {
+      print("❌ 소켓 연결 안 됨");
+      return;
+    }
 
     final payload = {
       "type": "chat",
       "roomNo": widget.roomNo,
       "userNo": widget.myUserNo,
-      "message": text,
+      "message": text
     };
 
-    _channel?.sink.add(jsonEncode(payload));
-    _controller.clear();
+    try {
+      _channel!.sink.add(jsonEncode(payload));
+      _controller.clear();
+
+      // 스크롤 아래로
+      _scrollToBottom();
+
+      // 부모에게 알려줄 필요 있을 때
+      widget.onMessageSent?.call();
+
+    } catch (e) {
+      print("❌ 메시지 전송 오류: $e");
+      _connectSocket(); // 자동 재연결
+    }
   }
 
   // 메시지 신고 기능
@@ -203,7 +221,6 @@ class _ChatPageState extends State<ChatPage> {
     final otherBubbleBg =
     isDark ? scheme.surfaceContainerHigh : scheme.surface;
     final otherBubbleFg = scheme.onSurface;
-
     final timeColor = scheme.onSurface.withOpacity(0.5);
 
     return Scaffold(
@@ -323,47 +340,53 @@ class _ChatPageState extends State<ChatPage> {
               ),
               child: Row(
                 children: [
+                  /// === ✨ 엔터 전송 + Shift+Enter 줄바꿈 기능 포함 ===
                   Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: "메시지를 입력하세요",
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(
-                            color: scheme.outline.withOpacity(0.5),
+                    child: RawKeyboardListener(
+                      focusNode: FocusNode(),
+                      onKey: (event) {
+                        if (event is RawKeyDownEvent) {
+                          // 엔터 → 메시지 전송
+                          if (event.logicalKey == LogicalKeyboardKey.enter &&
+                              !event.isShiftPressed) {
+                            _sendMessage();
+                            return; // 줄바꿈 방지
+                          }
+                        }
+                      },
+                      child: TextField(
+                        controller: _controller,
+                        keyboardType: TextInputType.multiline,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: "메시지를 입력하세요",
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
                           ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(
-                            color: scheme.primary,
-                            width: 1.4,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(
+                              color: scheme.primary,
+                              width: 1.4,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 4),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _send,
-                    ),
+
+                  /// === 전송 버튼 ===
+                  IconButton(
+                    icon: Icon(Icons.send, color: scheme.primary),
+                    onPressed: _sendMessage,
                   ),
                 ],
               ),

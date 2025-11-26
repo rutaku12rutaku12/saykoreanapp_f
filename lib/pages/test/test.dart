@@ -109,9 +109,7 @@ class _TestPageState extends State<TestPage> {
     } catch (e) {
       print('❌ 오디오 재생 실패: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오디오를 재생할 수 없습니다: $e')),
-        );
+        showFooterSnackBar(context, '오디오를 재생할 수 없어요.');
       }
     }
   }
@@ -189,20 +187,22 @@ class _TestPageState extends State<TestPage> {
         setState(() => testRound = nextRound);
 
         list = await _loadRegularItems();
+
       }
+
 
       print("✅ 로드된 문항 수: ${list.length}");
 
       setState(() {
         items = list;
         idx = 0;
-        msg = items.isEmpty ? "문항이 없습니다." : "";
+        msg = items.isEmpty ? "test.empty".tr() : "";
       });
     } catch (e, st) {
       print("_loadQuestions error: $e");
       print(st);
       setState(() {
-        msg = "문항을 불러올 수 없습니다.";
+        msg = "test.loadError".tr();
         items = [];
       });
     } finally {
@@ -232,6 +232,7 @@ class _TestPageState extends State<TestPage> {
     }
   }
 
+
   // ♾️ [3-2] 무한모드 문항 로드
   Future<List<dynamic>> _loadInfiniteItems() async {
     final prefs = await SharedPreferences.getInstance();
@@ -242,7 +243,7 @@ class _TestPageState extends State<TestPage> {
         .where((n) => n != null && n! > 0)
         .cast<int>()
         .toList();
-
+    
     // 완료한 주제가 비어있으면
     if (studyNos.isEmpty) {
       print("⚠️ 무한모드 : 완료한 주제가 없습니다");
@@ -319,6 +320,7 @@ class _TestPageState extends State<TestPage> {
         widget.testMode == "INFINITE" || widget.testMode == "HARD";
     final bool isRegular = !isInfiniteHard;
 
+
     if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
       // 무한/하드모드: 모두 객관식
       questionType = 0;
@@ -362,7 +364,7 @@ class _TestPageState extends State<TestPage> {
 
       if (!mounted || result == null || result['ok'] != true) {
         setState(() {
-          msg = "답안 제출 실패";
+          msg = "test.submitError".tr();
           feedback = {
             "correct": false,
             "score": 0,
@@ -450,7 +452,7 @@ class _TestPageState extends State<TestPage> {
       print("submitAnswer error: $e");
       print(st);
       setState(() {
-        msg = "답안 제출 실패";
+        msg = "test.submitError".tr();
         feedback = {
           "correct": false,
           "score": 0,
@@ -498,26 +500,28 @@ class _TestPageState extends State<TestPage> {
 
   // 무한모드/하드모드 오답 시 종료 다이얼로그
   void _showGameOverDialog() {
+    final count = idx + 1;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("게임 오버"),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
-              : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // 다이얼로그 닫기
-              Navigator.pop(context); // 시험페이지 닫기
-            },
-            child: const Text("확인"),
+      builder: (context) =>
+          AlertDialog(
+            title: Text("test.gameover.title".tr()),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "test.gameover.infinite".tr(args: ["$count"])
+                  : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // 다이얼로그 닫기
+                  Navigator.pop(context); // 시험페이지 닫기
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -526,23 +530,24 @@ class _TestPageState extends State<TestPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("🎉 완벽합니다!"),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
-              : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text("확인"),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("🎉 완벽합니다!"),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
+                  : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -555,8 +560,7 @@ class _TestPageState extends State<TestPage> {
     // 🔥 locale 변경 시 이 페이지도 자동으로 rebuild 되도록 강제 의존
     print("🔍 TESTPAGE locale = ${context.locale}");
     print("🔍 supportedLocales = ${context.supportedLocales}");
-    print(
-        "🔍 delegates OK? = ${Localizations.of(context, WidgetsLocalizations)}");
+    print("🔍 delegates OK? = ${Localizations.of(context, WidgetsLocalizations)}");
 
     final _ = context.locale;
 
@@ -736,38 +740,41 @@ class _TestPageState extends State<TestPage> {
                       ),
 
                     // 오디오
-                    if ((isRegular &&
-                        hasAudio &&
-                        questionType == 1) ||
+                    if ((isRegular && hasAudio && questionType == 1) ||
                         (isInfiniteHard && hasAudio))
-                      Column(
-                        children: [
-                          for (final audio
-                          in (cur!['audios'] as List))
-                            if (_safeSrc(audio['audioPath']) !=
-                                null)
-                              Padding(
-                                padding:
-                                const EdgeInsets.symmetric(
-                                    vertical: 6.0),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final maxWidth = constraints.maxWidth;
+                          // 한 줄에 2개씩 나란히 배치 (좌/우)
+                          final itemWidth = (maxWidth - 12) / 2; // 가운데 여백 12
+
+                          final audios = (cur!['audios'] as List);
+
+                          return Wrap(
+                            spacing: 12,       // 가로 간격
+                            runSpacing: 8,     // 세로 간격
+                            children: audios.where((audio) {
+                              return _safeSrc(audio['audioPath']) != null;
+                            }).map<Widget>((audio) {
+                              return SizedBox(
+                                width: itemWidth,
                                 child: OutlinedButton.icon(
                                   onPressed: () {
-                                    _playAudio(
-                                        audio['audioPath']);
+                                    _playAudio(audio['audioPath']);
                                   },
                                   icon: const Text('🔊'),
-                                  label:
-                                  const Text('음성 듣기'),
-                                  style:
-                                  OutlinedButton.styleFrom(
+                                  label: const Text('음성 듣기'),
+                                  style: OutlinedButton.styleFrom(
                                     foregroundColor: titleColor,
                                     side: BorderSide(
                                       color: cardBorderColor,
                                     ),
                                   ),
                                 ),
-                              )
-                        ],
+                              );
+                            }).toList(),
+                          );
+                        },
                       ),
 
                     // 주관식 예문
@@ -813,7 +820,8 @@ class _TestPageState extends State<TestPage> {
                   CrossAxisAlignment.stretch,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding:
+                      const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: feedback!['correct']
                             ? Colors.green.shade100
@@ -826,8 +834,7 @@ class _TestPageState extends State<TestPage> {
                             ? "정답입니다!"
                             : "틀렸어요 😢",
                         style: TextStyle(
-                          color:
-                          feedback!['correct']
+                          color: feedback!['correct']
                               ? Colors
                               .green.shade900
                               : Colors.red.shade900,
@@ -838,24 +845,13 @@ class _TestPageState extends State<TestPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: goNext,
-                        style:
-                        ElevatedButton.styleFrom(
-                          backgroundColor:
-                          nextButtonBg,
-                          foregroundColor:
-                          nextButtonFg,
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          idx < items.length - 1
-                              ? "다음 문제"
-                              : "결과 보기",
-                        ),
-                      ),
+
+                    // 🔥 공통 기본 버튼 사용 (테마/민트 자동 반영)
+                    SKPrimaryButton(
+                      label: idx < items.length - 1
+                          ? "다음 문제"
+                          : "결과 보기",
+                      onPressed: goNext,
                     ),
                   ],
                 ),
@@ -931,8 +927,6 @@ class _TestPageState extends State<TestPage> {
     final scheme = theme.colorScheme;
     final titleColor = theme.appBarTheme.foregroundColor ??
         const Color(0xFF6B4E42);
-    final buttonBg = scheme.primaryContainer;
-    final buttonFg = scheme.onPrimaryContainer;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -967,21 +961,15 @@ class _TestPageState extends State<TestPage> {
           ),
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 44,
-          child: ElevatedButton(
-            onPressed:
-            (subjective.trim().isEmpty || submitting)
-                ? null
-                : () => submitAnswer(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonBg,
-              foregroundColor: buttonFg,
-              elevation: 0,
-            ),
-            child: Text(submitting ? "로딩 중..." : "제출"),
-          ),
-        ),
+
+        // 공통 기본 버튼 사용 (themeColor 따라 자동 변경)
+    SKPrimaryButton(
+    label: '제출',
+    onPressed: () {
+    if (subjective.trim().isEmpty || submitting) return;
+    submitAnswer();
+    },
+    ),
       ],
     );
   }

@@ -481,7 +481,7 @@ class _RouteArgErrorPage extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 푸터바
+// 푸터바 (i18n 적용 버전)
 // ─────────────────────────────────────────────────────────────
 class _FooterBar extends StatelessWidget {
   final String currentRoute;
@@ -496,7 +496,6 @@ class _FooterBar extends StatelessWidget {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final isMint = themeColorNotifier.value == 'mint';
-    final isHome = current == '/home';
 
     // 모드/테마별 색 결정
     late final Color bgTop;
@@ -546,7 +545,7 @@ class _FooterBar extends StatelessWidget {
             child: Row(
               children: [
                 _item(
-                  "게임",
+                  "footer.game".tr(),
                   "assets/icons/game.svg",
                   "/game",
                   current == "/game",
@@ -554,7 +553,7 @@ class _FooterBar extends StatelessWidget {
                   inactiveColor,
                 ),
                 _item(
-                  "채팅",
+                  "footer.chat".tr(),
                   "assets/icons/friends.svg",
                   "/chat",
                   current == "/chat",
@@ -562,7 +561,7 @@ class _FooterBar extends StatelessWidget {
                   inactiveColor,
                 ),
                 _item(
-                  "홈",
+                  "footer.home".tr(),
                   "assets/icons/home.svg",
                   "/home",
                   current == "/home",
@@ -570,7 +569,7 @@ class _FooterBar extends StatelessWidget {
                   inactiveColor,
                 ),
                 _item(
-                  "학습",
+                  "footer.study".tr(),
                   "assets/icons/study.svg",
                   "/study",
                   current == "/study",
@@ -578,15 +577,13 @@ class _FooterBar extends StatelessWidget {
                   inactiveColor,
                 ),
                 _item(
-                  "시험",
+                  "footer.test".tr(),
                   "assets/icons/test.svg",
                   "/testList",
                   current == "/testList",
                   activeColor,
                   inactiveColor,
                 ),
-
-
               ],
             ),
           ),
@@ -632,42 +629,6 @@ class _FooterBar extends StatelessWidget {
   }
 }
 
-
-  Widget _item(
-      String label,
-      String svg,
-      String route,
-      bool active,
-      Color activeColor,
-      Color inactiveColor,
-      ) {
-    final c = active ? activeColor : inactiveColor;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => goNamed(route),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              svg,
-              height: 28,
-              colorFilter: ColorFilter.mode(c, BlendMode.srcIn),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: c,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
 
 // ─────────────────────────────────────────────────────────────

@@ -28,13 +28,7 @@ class _ChatListWrapperPageState extends State<ChatListWrapperPage>
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          "채팅",
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).appBarTheme.foregroundColor,
-          ),
-        ),
+        title: null,
 
         bottom: TabBar(
           controller: _tab,

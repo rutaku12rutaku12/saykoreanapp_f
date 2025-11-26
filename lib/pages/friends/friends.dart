@@ -220,9 +220,17 @@ class _FriendsPageState extends State<FriendsPage>
     }
   }
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  void _showSnack(String msg, {Color? bg, Color? fg}) {
+    showFooterSnackBar(
+      context,
+      msg,
+      backgroundColor: bg,
+      foregroundColor: fg, // ✅ 이름 맞추기
+    );
   }
+
+
+
 
   void _showError(String msg) {
     final scheme = Theme.of(context).colorScheme;
@@ -243,13 +251,7 @@ class _FriendsPageState extends State<FriendsPage>
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        title: Text(
-          "친구",
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: theme.appBarTheme.foregroundColor ?? scheme.primary,
-          ),
-        ),
+        title: null,
         backgroundColor: bg,
         elevation: 0,
         centerTitle: true,

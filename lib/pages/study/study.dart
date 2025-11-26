@@ -345,10 +345,17 @@ class _StudyPageState extends State<StudyPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-
     final bg = theme.scaffoldBackgroundColor;
-    final titleColor =
-    isDark ? scheme.onSurface : const Color(0xFF6B4E42); // 브라운 포인트
+
+    // mintTheme 판별: 배경색 + notifier 둘 다 사용
+    final bool isMintTheme =
+        !isDark &&
+            (themeColorNotifier.value == 'mint' ||
+                bg.value == const Color(0xFFE7FFF6).value);
+
+    final titleColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF6B4E42));
 
     // 🔥 각 상태별로 보여줄 내용 한 번에 정리
     Widget content;
@@ -359,7 +366,7 @@ class _StudyPageState extends State<StudyPage> {
     } else {
       content = (_subject == null)
           ? _buildList(theme, scheme, isDark)
-          : _buildDetail(theme, scheme, isDark);
+          : _buildDetail(theme, scheme, isDark, isMintTheme);
     }
 
     return Scaffold(
@@ -391,7 +398,6 @@ class _StudyPageState extends State<StudyPage> {
   // ───────────────────────────────────────────────────────────────────────────
   Widget _buildList(ThemeData theme, ColorScheme scheme, bool isDark) {
     if (_subjects.isEmpty) {
-      // 주제가 하나도 없을 때
       final subtitleColor =
       isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF9C7C68);
 
@@ -439,9 +445,10 @@ class _StudyPageState extends State<StudyPage> {
         final s = _subjects[index - 1];
         final label = s.themeSelected ?? s.themeKo ?? '제목 없음';
 
-        return _StudyTile(
-          index: index, // 1부터 시작하도록 그대로 사용
-          label: label,
+        return SKSelectTile(
+          index: index, // 1,2,3,... 번호
+          label: label, // 주제 이름
+          selected: false, // 목록이니까 기본은 선택 상태 아님
           onTap: () async {
             setState(() {
               _loading = true;
@@ -461,15 +468,20 @@ class _StudyPageState extends State<StudyPage> {
   // ───────────────────────────────────────────────────────────────────────────
   // 주제 상세 + 예문 학습 화면
   // ───────────────────────────────────────────────────────────────────────────
-  Widget _buildDetail(ThemeData theme, ColorScheme scheme, bool isDark) {
+  Widget _buildDetail(
+      ThemeData theme, ColorScheme scheme, bool isDark, bool isMintTheme) {
     final t = _subject!;
     final title = t.themeSelected ?? t.themeKo ?? '제목 없음';
 
-    final mainTitleColor =
-    isDark ? scheme.onSurface : const Color(0xFF6B4E42);
-    final subtitleColor =
-    isDark ? scheme.onSurface.withOpacity(0.7) : const Color(0xFF9C7C68);
-    final sectionColor = isDark ? scheme.onSurface : const Color(0xFF7C5A48);
+    final mainTitleColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF6B4E42));
+    final subtitleColor = isDark
+        ? scheme.onSurface.withOpacity(0.7)
+        : (isMintTheme ? const Color(0xFF4E8476) : const Color(0xFF9C7C68));
+    final sectionColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF7C5A48));
     final cardColor = isDark ? scheme.surface : Colors.white;
 
     // 테마 기반 버튼 색
@@ -477,7 +489,8 @@ class _StudyPageState extends State<StudyPage> {
     final completeFg = scheme.onPrimaryContainer;
 
     final outlineColor = scheme.outline.withOpacity(0.5);
-    final outlineFg = isDark ? scheme.onSurface : const Color(0xFF6B4E42);
+    final outlineFg =
+    isDark ? scheme.onSurface : const Color(0xFF6B4E42);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
@@ -622,7 +635,7 @@ class _StudyPageState extends State<StudyPage> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 장르 선택 카드 느낌으로 맞춘 주제 카드
+// 장르 선택 카드 느낌으로 맞춘 주제 카드 (현재는 사용 X, 혹시 몰라 정리만)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _StudyTile extends StatelessWidget {
@@ -641,7 +654,12 @@ class _StudyTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final isMint = themeColorNotifier.value == 'mint';
+    final bg = theme.scaffoldBackgroundColor;
+
+    final bool isMintTheme =
+    (!isDark &&
+        (themeColorNotifier.value == 'mint' ||
+            bg.value == const Color(0xFFE7FFF6).value));
 
     // 기본(라이트 테마) 톤 – 장르/언어 선택 화면과 같은 계열
     Color cardBg = const Color(0xFFFFF5ED); // 카드 배경
@@ -650,7 +668,7 @@ class _StudyTile extends StatelessWidget {
     Color titleColor = const Color(0xFF6B4E42);
     Color chevronColor = const Color(0xFFCCB3A5);
 
-    if (isMint && !isDark) {
+    if (isMintTheme && !isDark) {
       // 🌿 민트 테마
       cardBg = const Color(0xFFF4FFFA);
       badgeBg = const Color(0xFFE7FFF6);
@@ -834,7 +852,8 @@ class _ExamCard extends StatelessWidget {
     isDark ? scheme.onSurface : const Color(0xFF3F3F46);
 
     final outlineColor = scheme.outline.withOpacity(0.5);
-    final btnFg = isDark ? scheme.onSurface : const Color(0xFF6B4E42);
+    final btnFg =
+    isDark ? scheme.onSurface : const Color(0xFF6B4E42);
 
     // 🔥 이미지도 ApiClient.getImageUrl 사용
     final imageUrl = ApiClient.getImageUrl(exam.imagePath);

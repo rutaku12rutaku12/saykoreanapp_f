@@ -357,5 +357,54 @@
   "exam.mode.regular.two": "Regular Test",
   "study.language.select": "Please choose the language you want to study in.",
   "common.retry": "Retry",
-  "study.language.none": "No supported languages available."
+  "study.language.none": "No supported languages available.",
+  "loading.slide5.desc": "Please enter the description for image #5.",
+  "loading.phrase1": "Grading in progress... Please wait a moment.",
+  "loading.phrase2": "Analyzing your answers... The results will be ready soon!",
+  "loading.phrase3": "Just a moment more—your results are almost ready!",
+  "error.argsFormat": "Invalid access. (Invalid arguments format)",
+  "error.actionPayload": "Invalid access. (Action/Payload error)",
+  "error.emptyUrl": "The request URL is empty.",
+  "genre.saved": "Selected genre: {name} (No.{no}) saved",
+  "theme.changed.dark": "Switched to dark theme.",
+  "theme.changed.mint": "Switched to mint theme.",
+  "theme.changed.default": "Switched to default theme.",
+  "feedback.great": "Great job! 😊",
+  "feedback.practiceMore": "Shall we practice a little more?",
+  "feedback.tryAgain": "It's okay, try again! 💪",
+  "test.number": "Test No. {no}",
+  "test.summary": "You got {correct} out of {total} questions right!",
+  "test.correctCount": "Correct Answers",
+  "store.loadError": "Unable to load store information.\nPlease try again later.",
+
+  "store.buy.dark": "Buy Dark Theme",
+  "store.buy.dark.confirm": "Use {price} points to purchase the Dark Theme?",
+  "store.buy.success.dark": "Dark Theme unlocked! You can change it in the settings.",
+
+  "store.buy.mint": "Buy Mint Theme",
+  "store.buy.mint.confirm": "Use {price} points to purchase the Mint Theme?",
+  "store.buy.success.mint": "Mint Theme unlocked! You can change it in the settings.",
+
+  "store.buy": "Purchase",
+  "store.buy.fail": "Purchase failed. Please try again.",
+  "store.buy.notEnough": "Not enough points.",
+  "store.points": "My Points",
+
+  "theme.section": "Theme",
+  "theme.default": "Default Theme",
+  "theme.default.desc": "The original warm cream + pink theme.\nIt feels like when you first installed the app.",
+  "theme.dark": "Dark Theme",
+  "theme.dark.desc": "A premium dark mode that keeps your eyes comfortable even at night.",
+  "theme.mint": "Mint Theme",
+  "theme.mint.desc": "A fresh pastel theme focused on mint instead of pink.\nPerfect for studying in a refreshing mood.",
+
+  "store.free": "Free",
+  "theme.change": "Change Theme",
+  "store.lack": "Insufficient Points",
+  "store.title": "Store"
+
+
+
+
+
 }

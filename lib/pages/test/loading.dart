@@ -1,10 +1,12 @@
 // lib/pages/test/loading.dart
 
 import 'dart:math';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ FooterSafeArea 사용
+import 'package:easy_localization/easy_localization.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -30,7 +32,7 @@ class _LoadingSlide {
 
 class _LoadingPageState extends State<LoadingPage> {
   bool _started = false;
-  String _message = '채점 중입니다...';
+  String _message = "loading.grading".tr();
 
   late final _LoadingSlide _slide;   // 랜덤으로 선택된 이미지+텍스트
   late final String _phrase;         // 하단 문구
@@ -40,56 +42,49 @@ class _LoadingPageState extends State<LoadingPage> {
     super.initState();
 
     // ── 슬라이드 후보들
-    const slides = <_LoadingSlide>[
+    final slides = <_LoadingSlide>[
       _LoadingSlide(
         asset: 'assets/loading/1_loading_img.png',
-        title: '숭례문',
-        description: '서울을 대표하는 국보 제1호 숭례문은 '
-            '조선시대 한양 도성의 남쪽 문으로, '
-            '지금은 도심 속 유서 깊은 랜드마크가 되었어요.',
+        title: "loading.sungrye".tr(),
+        description: "loading.sungryeInfo".tr(),
       ),
       _LoadingSlide(
         asset: 'assets/loading/2_loading_img.png',
-        title: '북촌 한옥마을',
-        description: '고즈넉한 한옥과 골목길이 이어진 북촌은 '
-            '전통과 현대가 공존하는 서울의 대표적인 관광지예요.',
+        title: "loading.bookchon".tr(),
+        description: "loading.bookchonInfo".tr(),
       ),
       _LoadingSlide(
         asset: 'assets/loading/3_loading_img.png',
-        title: '국립중앙박물관',
-        description: '한국의 역사와 문화를 한자리에서 만날 수 있는 곳, '
-            '다양한 전시와 체험 프로그램도 즐겨 보세요.',
+        title: "loading.guckjungback".tr(),
+        description: "loading.guckjungbackInfo".tr(),
       ),
       _LoadingSlide(
         asset: 'assets/loading/4_loading_img.png',
-        title: '무령왕릉',
-        description: '백제 무령왕과 왕비의 무덤으로, '
-            '수많은 유물이 발견된 중요한 역사 유적지입니다.',
+        title: "loading.muryung".tr(),
+        description: "loading.muryungInfo".tr(),
       ),
       _LoadingSlide(
         asset: 'assets/loading/5_loading_img.png',
         title: '???',
-        description: '5번 이미지 설명을 여기에 적어 주세요.',
+        description: "loading.slide5.desc".tr(),
       ),
       _LoadingSlide(
         asset: 'assets/loading/6_loading_img.png',
-        title: '광한루원',
-        description: '춘향전의 무대가 된 남원의 광한루원은 '
-            '기와와 연못, 정원이 어우러진 고즈넉한 누각이에요.',
+        title: "loading.gwanghan".tr(),
+        description: "loading.gwanghanInfo".tr(),
       ),
       _LoadingSlide(
         asset: 'assets/loading/7_loading_img.png',
-        title: '한라산',
-        description: '제주도의 상징 한라산은 사계절마다 다른 풍경으로 '
-            '등산객들을 반겨주는 우리나라 최고의 명산 중 하나입니다.',
+        title: "loading.hanra".tr(),
+        description: "loading.hanraInfo".tr(),
       ),
     ];
 
     // 하단에 띄울 문구들
-    const phrases = <String>[
-      '채점 중입니다... 잠시만 기다려 주세요.',
-      '답안을 분석하는 중이에요. 곧 결과가 나와요!',
-      '조금만 더 기다리면 결과를 확인할 수 있어요.',
+    final phrases = <String>[
+      "loading.phrase1".tr(),
+      "loading.phrase".tr(),
+      "loading.phrase3".tr(),
     ];
 
     final rng = Random();
@@ -114,7 +109,7 @@ class _LoadingPageState extends State<LoadingPage> {
       if (mounted) {
         Navigator.pop(context, {
           'ok': false,
-          'error': '잘못된 접근입니다. (arguments 형식 오류)',
+          'error': "error.argsFormat".tr(),
         });
       }
       return;
@@ -128,7 +123,7 @@ class _LoadingPageState extends State<LoadingPage> {
       if (mounted) {
         Navigator.pop(context, {
           'ok': false,
-          'error': '잘못된 접근입니다. (action/payload 오류)',
+          'error': "error.actionPayload".tr(),
         });
       }
       return;
@@ -144,7 +139,7 @@ class _LoadingPageState extends State<LoadingPage> {
       if (mounted) {
         Navigator.pop(context, {
           'ok': false,
-          'error': '요청 URL이 비어있습니다.',
+          'error': "error.emptyUrl".tr(),
         });
       }
       return;
@@ -152,7 +147,7 @@ class _LoadingPageState extends State<LoadingPage> {
 
     try {
       // 2) 실제 채점 요청
-      setState(() => _message = '채점 중입니다...');
+      setState(() => _message = "loading.grading".tr());
 
       final res = await ApiClient.dio.post(url, data: body);
 

@@ -332,5 +332,7 @@
   "exam.mode.regular.two": "定期考试",
   "study.language.select": "请选择要用于学习的语言。",
   "common.retry": "重试",
-  "study.language.none": "没有可用的支持语言。"
+  "study.language.none": "没有可用的支持语言。",
+  "study.myList": "我的学习列表",
+  "study.topic.pickOne": "要不要选一个要学习的主题呢？"
 }

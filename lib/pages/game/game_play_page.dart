@@ -247,93 +247,92 @@ class _GamePlayPageState extends State<GamePlayPage> {
         ),
       ),
       backgroundColor: bg,
-      body: Stack(
-        children: [
-          // ✅ 웹뷰
-          if (_errorMessage == null)
-            WebViewWidget(controller: controller)
-          else
-          // ✅ 에러 화면
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: scheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _errorMessage!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 16,
+      // ✅ 푸터 영역만큼 bottom padding 추가
+      body: Padding(
+        padding: const EdgeInsets.only(bottom: 88.0), // 76 (footer) + 12 (margin)
+        child: Stack(
+          children: [
+            if (_errorMessage == null)
+              WebViewWidget(controller: controller)
+            else
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
                         color: scheme.error,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _errorMessage = null;
-                            _isLoading = true;
-                          });
-                          _initializeWebView();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 16,
+                          color: scheme.error,
                         ),
-                        child: const Text('다시 시도'),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: 44,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _errorMessage = null;
+                              _isLoading = true;
+                            });
+                            _initializeWebView();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: scheme.primary,
+                            foregroundColor: scheme.onPrimary,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text('다시 시도'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-
-          // ✅ 로딩 인디케이터
-          if (_isLoading)
-            Container(
-              color: isDark
-                  ? Colors.black.withOpacity(0.5)
-                  : bg.withOpacity(0.8),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      color: scheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '게임을 불러오는 중...',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 16,
-                        color: scheme.onSurface.withOpacity(0.8),
+            if (_isLoading)
+              Container(
+                color: isDark
+                    ? Colors.black.withOpacity(0.5)
+                    : bg.withOpacity(0.8),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: scheme.primary,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        '게임을 불러오는 중...',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 16,
+                          color: scheme.onSurface.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   @override
   void dispose() {
-    // 웹뷰 리소스 정리 필요 시 여기에서 처리
     super.dispose();
   }
 }

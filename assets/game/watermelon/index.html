@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>한글 수박게임</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <style>
@@ -21,23 +21,25 @@
             height: 100%;
             overflow: hidden;
             position: fixed;
+            /* ✅ 상단 여백 완전 제거 */
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         body {
             font-family: 'Noto Sans KR', sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: stretch;
         }
 
         #gameContainer {
             width: 100%;
             max-width: 400px;
-            height: 600px;
-            max-height: 100vh;
+            height: 95%;
             background: #FFF9E6;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 0;
+            box-shadow: none;
             overflow: hidden;
             display: flex;
             flex-direction: column;

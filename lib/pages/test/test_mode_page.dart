@@ -5,11 +5,13 @@
 // - 무한모드 : 완료한 주제의 모든 문항(틀릴 때까지)
 // - 하드모드 : 전체 DB의 모든 문항 (틀릴 때까지)
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/test/test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TestModePage extends StatefulWidget {
   const TestModePage({super.key});
@@ -78,7 +80,7 @@ class _TestModePageState extends State<TestModePage> {
       print("TestModePage _bootstrap error: $e");
       print(st);
       setState(() {
-        _error = '시험 목록을 불러오는 중 문제가 발생했습니다.';
+        _error = "test.list.loadError".tr();
       });
     } finally {
       if (mounted) {
@@ -149,8 +151,8 @@ class _TestModePageState extends State<TestModePage> {
 
       if (completedStudyNos.isEmpty) {
         _showDiaLog(
-          '♾️ 무한모드',
-          '완료한 주제가 없습니다.\n먼저 학습을 완료해주세요!',
+          "exam.mode.infinite".tr(),
+          "test.infinite.noCompleted".tr(),
         );
         return;
       }
@@ -169,7 +171,7 @@ class _TestModePageState extends State<TestModePage> {
       );
     } catch (e) {
       print("무한모드 시작 실패: $e");
-      _showDiaLog('오류', '무한모드를 시작할 수 없습니다.');
+      _showDiaLog("common.error".tr(), "test.infinite.cannotStart".tr());
     }
   }
 
@@ -181,20 +183,18 @@ class _TestModePageState extends State<TestModePage> {
     final confirm = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('🔥 하드모드'),
-        content: const Text(
-          '재밌는한국어가 보유한 모든 문항이 출제됩니다.\n'
-              '배우지 않은 내용도 포함될 수 있어요.\n'
-              '도전하시겠어요?',
+        title: Text("exam.mode.hard".tr()),
+        content: Text(
+            "test.hard.desc".tr(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text("common.cancel".tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('도전!'),
+            child: Text("test.challenge".tr()),
           ),
         ],
       ),
@@ -208,7 +208,7 @@ class _TestModePageState extends State<TestModePage> {
       MaterialPageRoute(
         builder: (_) => TestPage(
           testNo: 0, // 하드모드는 testNo 없음
-          testMode: "HARD",
+          testMode: "test.mode.hard.short".tr(),
         ),
       ),
     );
@@ -223,7 +223,7 @@ class _TestModePageState extends State<TestModePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text("common.confirm".tr()),
           ),
         ],
       ),
@@ -254,7 +254,7 @@ class _TestModePageState extends State<TestModePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          '시험',
+          "footer.test".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             color: titleColor,
             fontWeight: FontWeight.w700,
@@ -298,7 +298,7 @@ class _TestModePageState extends State<TestModePage> {
               foregroundColor: scheme.onPrimaryContainer,
               elevation: 0,
             ),
-            child: const Text('다시 시도'),
+            child: Text("common.retry".tr()),
           ),
         ],
       ),
@@ -326,9 +326,9 @@ class _TestModePageState extends State<TestModePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SKPageHeader(
-          title: '시험 모드 선택',
-          subtitle: '원하는 모드를 골라 실력을 테스트해보세요.',
+        SKPageHeader(
+          title: "test.mode.select".tr(),
+          subtitle: "test.mode.selectDesc".tr(),
         ),
         const SizedBox(height: 18),
 
@@ -336,8 +336,8 @@ class _TestModePageState extends State<TestModePage> {
         _ModeTile(
           index: 1,
           emoji: '♾️',
-          title: '무한모드',
-          description: '완료한 주제에서 틀릴 때까지 도전!',
+          title: "exam.mode.infinite".tr(),
+          description: "test.header.infiniteSubtitle".tr(),
           onTap: _startInfiniteMode,
         ),
         const SizedBox(height: 8),
@@ -346,14 +346,14 @@ class _TestModePageState extends State<TestModePage> {
         _ModeTile(
           index: 2,
           emoji: '🔥',
-          title: '하드모드',
-          description: '전체 문항에서 틀릴 때까지 도전!',
+          title: "exam.mode.hard.two".tr(),
+          description: "test.header.hardSubtitle".tr(),
           onTap: _startHardMode,
         ),
         const SizedBox(height: 26),
 
         Text(
-          '📚 정기시험',
+          "exam.mode.regular".tr(),
           style: theme.textTheme.titleMedium?.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -362,7 +362,7 @@ class _TestModePageState extends State<TestModePage> {
         ),
         const SizedBox(height: 6),
         Text(
-          '주제별로 준비된 시험에 응시해보세요.',
+          "test.header.regularSubtitle".tr(),
           style: theme.textTheme.bodySmall?.copyWith(
             color: sectionSubColor,
           ),
@@ -372,9 +372,9 @@ class _TestModePageState extends State<TestModePage> {
         if (_regularTests.isEmpty)
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(28.0),
+              padding: EdgeInsets.all(28.0),
               child: Text(
-                '완료한 주제의 정기시험이 없습니다.',
+                "test.regular.noAvailable".tr(),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: sectionSubColor,
                 ),
@@ -660,7 +660,7 @@ class _RegularTestTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '정기시험',
+                        "exam.mode.regular.two".tr(),
                         style: TextStyle(
                           fontSize: 12,
                           color: subColor,

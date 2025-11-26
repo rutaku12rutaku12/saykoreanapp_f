@@ -109,7 +109,7 @@ class _TestPageState extends State<TestPage> {
     } catch (e) {
       print('❌ 오디오 재생 실패: $e');
       if (mounted) {
-        showFooterSnackBar(context, "test.audio.error".tr();
+        showFooterSnackBar(context, "test.audio.error".tr());
       }
     }
   }
@@ -607,14 +607,14 @@ class _TestPageState extends State<TestPage> {
     final String headerSubtitle;
 
     if (widget.testMode == "INFINITE") {
-      headerTitle = '♾️ 무한모드';
-      headerSubtitle = '완료한 주제에서 틀릴 때까지 도전해 보세요.';
+      headerTitle =  "exam.mode.infinite".tr();
+      headerSubtitle = "test.header.infiniteSubtitle".tr();
     } else if (widget.testMode == "HARD") {
-      headerTitle = '🔥 하드모드';
-      headerSubtitle = '전체 문항에서 틀릴 때까지 도전해 보세요.';
+      headerTitle = "exam.mode.hard".tr();
+      headerSubtitle = "test.header.hardSubtitle".tr();
     } else {
-      headerTitle = '오늘의 시험';
-      headerSubtitle = '문제를 풀고 자신의 실력을 확인해 보세요.';
+      headerTitle = "exam.today".tr();
+      headerSubtitle = "test.header.regularSubtitle".tr();
     }
 
     final titleColor = theme.appBarTheme.foregroundColor ??
@@ -635,7 +635,7 @@ class _TestPageState extends State<TestPage> {
         centerTitle: true,
         iconTheme: IconThemeData(color: titleColor),
         title: Text(
-          '시험',
+          "footer.test".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             color: titleColor,
             fontWeight: FontWeight.w700,
@@ -666,31 +666,7 @@ class _TestPageState extends State<TestPage> {
               // 🔥 상단 공통 헤더 (학습/시험모드와 톤 통일)
               SKPageHeader(
                 title: headerTitle,
-                subtitle: headerSubtitle,
-              // 상단 타이틀
-              Text(
-                widget.testMode == "INFINITE"
-                    ? "exam.mode.infinite".tr()
-                    : widget.testMode == "HARD"
-                    ? "exam.mode.hard".tr()
-                    : "exam.today".tr(),
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: titleColor,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                widget.testMode == "INFINITE" ||
-                    widget.testMode == "HARD"
-                    ? "exam.desc.infinite".tr()
-                    : "exam.desc.default".tr(),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: subtitleColor,
-                ),
-              ),
+                subtitle: headerSubtitle,),
               const SizedBox(height: 18),
 
               // 진행도
@@ -988,7 +964,7 @@ class _TestPageState extends State<TestPage> {
 
         // 공통 기본 버튼 사용 (themeColor 따라 자동 변경)
     SKPrimaryButton(
-    label: '제출',
+    label: "test.submit".tr(),
     onPressed: () {
     if (subjective.trim().isEmpty || submitting) return;
     submitAnswer();

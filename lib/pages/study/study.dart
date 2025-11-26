@@ -445,7 +445,7 @@ class _StudyPageState extends State<StudyPage> {
       itemBuilder: (context, index) {
         // 0번 인덱스: 상단 텍스트 영역
         if (index == 0) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.only(bottom: 8.0),
             child: SKPageHeader(
               title: "study.myList".tr(),

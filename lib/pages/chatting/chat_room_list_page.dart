@@ -1,8 +1,10 @@
 // lib/pages/chatting/chat_room_list_page.dart
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../api/chatting_api.dart';
 import 'chat_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChatRoomListPage extends StatefulWidget {
   final int myUserNo;
@@ -48,7 +50,7 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
       setState(() => rooms = list);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = '채팅방 목록을 가져오지 못했어요.');
+      setState(() => _error = "chat.list.error".tr());
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -77,14 +79,14 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
             const SizedBox(height: 8),
             TextButton(
               onPressed: loadRooms,
-              child: const Text('다시 시도'),
+              child: Text("common.retry".tr()),
             ),
           ],
         ),
       );
     } else if (rooms.isEmpty) {
-      body = const Center(
-        child: Text('대화 중인 채팅방이 아직 없어요.'),
+      body = Center(
+        child: Text("chat.list.empty".tr()),
       );
     } else {
       body = ListView.separated(
@@ -94,11 +96,11 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
         itemBuilder: (_, i) {
           final r = rooms[i];
           final friendName =
-              r['friendName']?.toString() ?? '알 수 없는 사용자';
+              r['friendName']?.toString() ?? "chat.user.unknown".tr();
           final lastMessage =
           (r['lastMessage']?.toString().isNotEmpty ?? false)
               ? r['lastMessage'].toString()
-              : '대화 없음';
+              : "chat.none".tr();
           final lastTime = r['lastTime']?.toString() ?? '';
 
           return _ChatRoomTile(

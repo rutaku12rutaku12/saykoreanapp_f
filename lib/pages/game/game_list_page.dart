@@ -1,9 +1,11 @@
 // lib/pages/game/game_list_page.dart
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/game_api.dart';
 import 'package:saykoreanapp_f/pages/game/game_play_page.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ 공통 UI 헤더/버튼
+import 'package:easy_localization/easy_localization.dart';
 
 class GameListPage extends StatefulWidget {
   const GameListPage({super.key});
@@ -39,7 +41,7 @@ class _GameListPageState extends State<GameListPage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = '게임 목록을 불러오는데 실패했습니다.';
+        _errorMessage = "game.loadError".tr();
         _isLoading = false;
       });
       // ignore: avoid_print
@@ -97,7 +99,7 @@ class _GameListPageState extends State<GameListPage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          '게임 선택',
+          "game.select".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.appBarTheme.foregroundColor ?? scheme.primary,
@@ -128,9 +130,9 @@ class _GameListPageState extends State<GameListPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SKPageHeader(
-            title: '게임 선택',
-            subtitle: '게임 목록을 불러오는 중 문제가 발생했어요.',
+          SKPageHeader(
+            title: "game.select".tr(),
+            subtitle: "game.loadError.detail".tr(),
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -151,9 +153,9 @@ class _GameListPageState extends State<GameListPage> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   SKPrimaryButton(
-                    label: '다시 시도',
+                    label: "common.retry".tr(),
                     onPressed: _loadGames,
                   ),
                 ],
@@ -172,9 +174,9 @@ class _GameListPageState extends State<GameListPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SKPageHeader(
-            title: '게임 선택',
-            subtitle: '등록된 게임이 아직 없어요.',
+          SKPageHeader(
+            title: "game.select".tr(),
+            subtitle: "game.empty".tr(),
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -189,7 +191,7 @@ class _GameListPageState extends State<GameListPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '등록된 게임이 없습니다.',
+                    "game.empty.short".tr(),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onBackground.withOpacity(0.6),
                     ),
@@ -218,10 +220,10 @@ class _GameListPageState extends State<GameListPage> {
           if (index == 0) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: const [
+              children: [
                 SKPageHeader(
-                  title: '게임 선택',
-                  subtitle: '재밌는 게임으로 한글을 더 익혀볼까요?',
+                  title: "game.select".tr(),
+                  subtitle: "game.suggest".tr(),
                 ),
                 SizedBox(height: 16),
               ],
@@ -230,7 +232,7 @@ class _GameListPageState extends State<GameListPage> {
 
           final game = _games[index - 1];
           final gameNo = game['gameNo'] ?? 0;
-          final gameTitle = game['gameTitle'] ?? '제목 없음';
+          final gameTitle = game['gameTitle'] ?? "game.noTitle".tr();
           final gameColor = _getGameColor(gameNo);
           final gameIcon = _getGameIcon(gameNo);
 

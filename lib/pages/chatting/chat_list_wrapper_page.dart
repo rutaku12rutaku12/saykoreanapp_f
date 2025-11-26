@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../friends/friends.dart';
 import 'chat_room_list_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChatListWrapperPage extends StatefulWidget {
   final int myUserNo;
@@ -40,9 +41,9 @@ class _ChatListWrapperPageState extends State<ChatListWrapperPage>
 
           indicatorColor: Theme.of(context).appBarTheme.foregroundColor,
 
-          tabs: const [
-            Tab(text: "채팅방"),
-            Tab(text: "친구"),
+          tabs: [
+            Tab(text: "tab.chatrooms".tr()),
+            Tab(text: "tab.friends".tr()),
           ],
         ),
       ),

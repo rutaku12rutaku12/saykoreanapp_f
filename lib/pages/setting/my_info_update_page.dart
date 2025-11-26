@@ -599,7 +599,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: const Text("myInfoUpdate.deleteUser".tr(),),
+                        child: Text("myInfoUpdate.deleteUser".tr()),
                       ),
                     ),
                   ],

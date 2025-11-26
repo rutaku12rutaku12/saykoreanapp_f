@@ -159,7 +159,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(width: 8),
                     _HomeTopIconButton(
                       icon: Icons.emoji_events_outlined,
-                      label: 'ranking.title'.tr(),
+                      label: "ranking.ranking".tr(),
                       onTap: () {
                         Navigator.pushNamed(context, '/ranking');
                       },

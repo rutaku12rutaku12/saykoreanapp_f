@@ -5,6 +5,7 @@ import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 import '../../api/friends_api.dart';
 import '../../models/friend.dart';
 import '../../models/friend_request.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class FriendsPage extends StatefulWidget {
   final int myUserNo;
@@ -105,22 +106,22 @@ class _FriendsPageState extends State<FriendsPage>
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("친구 요청"),
+        title: Text("friend.request".tr()),
         content: TextField(
           controller: receiverCtl,
-          decoration: const InputDecoration(
-            labelText: "상대방 이메일",
+          decoration: InputDecoration(
+            labelText: "friend.email".tr(),
           ),
           keyboardType: TextInputType.emailAddress,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text("취소"),
+            child: Text("common.cancel".tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("보내기"),
+            child: Text("friend.send".tr()),
           ),
         ],
       ),
@@ -130,7 +131,7 @@ class _FriendsPageState extends State<FriendsPage>
 
     final email = receiverCtl.text.trim();
     if (email.isEmpty) {
-      _showError("이메일을 입력하세요.");
+      _showError("account.emailPlaceholder".tr());
       return;
     }
 
@@ -168,7 +169,7 @@ class _FriendsPageState extends State<FriendsPage>
   Future<void> _accept(FriendRequest r) async {
     try {
       await _api.acceptFriend(offer: r.offer, receiver: widget.myUserNo);
-      _showSnack('친구 요청을 수락했습니다.');
+      _showSnack("friend.accepte".tr());
 
       // 화면 상태에서 즉시 제거
       setState(() {
@@ -192,7 +193,7 @@ class _FriendsPageState extends State<FriendsPage>
       );
 
       if (ok) {
-        _showSnack("요청을 거절했습니다.");
+        _showSnack("friend.rejected".tr());
 
         // 화면 상태에서 즉시 제거
         setState(() {
@@ -200,7 +201,7 @@ class _FriendsPageState extends State<FriendsPage>
                   (e) => e.offer == r.offer && e.receiver == r.receiver);
         });
       } else {
-        _showError("이미 처리된 요청이거나 존재하지 않습니다.");
+        _showError("friend.invalid".tr());
       }
       await _loadRequests();
       await _loadSentRequests();
@@ -213,7 +214,7 @@ class _FriendsPageState extends State<FriendsPage>
   Future<void> _delete(Friend friend) async {
     try {
       await _api.deleteFriend(offer: friend.offer, receiver: friend.receiver);
-      _showSnack('친구 삭제 완료.');
+      _showSnack("friend.delete".tr());
       _loadFriends();
     } catch (e) {
       _showError('삭제 실패.\n$e');
@@ -262,7 +263,7 @@ class _FriendsPageState extends State<FriendsPage>
           IconButton(
             onPressed: _sendRequest,
             icon: const Icon(Icons.person_add_alt_1_outlined),
-            tooltip: "친구 요청 보내기",
+            tooltip: "friend.request.send".tr(),
           ),
         ],
       ),
@@ -284,10 +285,10 @@ class _FriendsPageState extends State<FriendsPage>
               theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
               indicatorColor: scheme.primary,
               indicatorWeight: 2.5,
-              tabs: const [
-                Tab(text: "친구 목록"),
-                Tab(text: "받은 요청"),
-                Tab(text: "보낸 요청"),
+              tabs: [
+                Tab(text: "friend.list".tr()),
+                Tab(text: "friend.received".tr()),
+                Tab(text: "friend.sent".tr()),
               ],
             ),
           ),
@@ -316,7 +317,7 @@ class _FriendsPageState extends State<FriendsPage>
     }
 
     if (_friends.isEmpty) {
-      return const Center(child: Text("친구가 없습니다."));
+      return Center(child: Text("friend.none".tr()));
     }
 
     return RefreshIndicator(
@@ -358,7 +359,7 @@ class _FriendsPageState extends State<FriendsPage>
     }
 
     if (_requests.isEmpty) {
-      return const Center(child: Text("받은 요청이 없습니다."));
+      return Center(child: Text("friend.received.none".tr()));
     }
 
     return RefreshIndicator(
@@ -385,13 +386,13 @@ class _FriendsPageState extends State<FriendsPage>
                       onPressed: () => _accept(r),
                       icon: Icon(Icons.check_circle,
                           color: scheme.primary.withOpacity(0.9)),
-                      tooltip: "수락",
+                      tooltip: "friend.accept".tr(),
                     ),
                     IconButton(
                       icon: Icon(Icons.cancel,
                           color: scheme.error.withOpacity(0.9)),
                       onPressed: () => _refusal(r),
-                      tooltip: "거절",
+                      tooltip: "friend.decline".tr(),
                     ),
                   ],
                 ),
@@ -413,7 +414,7 @@ class _FriendsPageState extends State<FriendsPage>
     }
 
     if (_sentRequests.isEmpty) {
-      return const Center(child: Text("보낸 친구 요청이 없습니다."));
+      return Center(child: Text("friend.sent.none".tr()));
     }
 
     return RefreshIndicator(
@@ -433,7 +434,7 @@ class _FriendsPageState extends State<FriendsPage>
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 subtitle: Text(
-                  "요청 중",
+                  "friend.pending".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurface.withOpacity(0.7),
                   ),

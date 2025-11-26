@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../api/chatting_api.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ChatPage extends StatefulWidget {
   final int roomNo;
@@ -161,23 +162,23 @@ class _ChatPageState extends State<ChatPage> {
     final reason = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("메시지 신고"),
+        title: Text("report.message".tr()),
         content: TextField(
           controller: reasonController,
           maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: "신고 사유를 입력해주세요.",
+          decoration: InputDecoration(
+            hintText: "report.reason.hint".tr(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("취소"),
+            child: Text("common.cancel".tr()),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.pop(context, reasonController.text.trim()),
-            child: const Text("신고"),
+            child: Text("common.report".tr()),
           ),
         ],
       ),
@@ -193,11 +194,11 @@ class _ChatPageState extends State<ChatPage> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("신고가 접수되었습니다.")),
+        SnackBar(content: Text("report.success".tr())),
       );
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("신고 중 오류가 발생했습니다.")),
+        SnackBar(content: Text("report.error".tr())),
       );
     }
   }
@@ -360,7 +361,7 @@ class _ChatPageState extends State<ChatPage> {
                         minLines: 1,
                         maxLines: 4,
                         decoration: InputDecoration(
-                          hintText: "메시지를 입력하세요",
+                          hintText: "chat.input.hint".tr(),
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,

@@ -163,7 +163,7 @@ class _LanguagePageState extends State<LanguagePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          '언어 선택',
+          "language.title".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.appBarTheme.foregroundColor ?? scheme.primary,
@@ -195,7 +195,7 @@ class _LanguagePageState extends State<LanguagePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '에러가 발생했어요',
+            "common.errorOccurred".tr(),
             style: theme.textTheme.titleMedium?.copyWith(
               color: scheme.error,
               fontWeight: FontWeight.bold,
@@ -211,7 +211,7 @@ class _LanguagePageState extends State<LanguagePage> {
           ),
           const SizedBox(height: 20),
           SKPrimaryButton(
-            label: '다시 시도',
+            label: "common.retry".tr(),
             onPressed: _fetchLanguages,
           ),
         ],
@@ -226,16 +226,16 @@ class _LanguagePageState extends State<LanguagePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SKPageHeader(
-            title: '언어 선택',
-            subtitle: '학습에 사용할 언어를 골라주세요.',
+          SKPageHeader(
+            title: "language.title".tr(),
+            subtitle: "study.language.select".tr(),
           ),
           const SizedBox(height: 20),
           Expanded(
             child: _items.isEmpty
                 ? Center(
               child: Text(
-                '지원 언어가 없습니다.',
+                "study.language.none".tr(),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurface.withOpacity(0.6),
                 ),

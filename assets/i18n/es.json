@@ -384,7 +384,9 @@
   "store.free": "Gratis",
   "theme.change": "Cambiar tema",
   "store.lack": "Puntos insuficientes",
-  "store.title": "Tienda"
+  "store.title": "Tienda",
+  "language.saved": "Idioma seleccionado: {name} ({code}) guardado"
+
 
 
 

@@ -143,7 +143,10 @@ class _LanguagePageState extends State<LanguagePage> {
 
     showFooterSnackBar(
       context,
-      '선택한 언어: $name ($code) 저장됨',
+        'language.saved'.tr(namedArgs: {
+          'name': name,
+          'code': code,
+        }),
     );
 
     // 필요하면 여기서 화면 이동

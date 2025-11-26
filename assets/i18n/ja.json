@@ -393,7 +393,9 @@
   "store.free": "無料",
   "theme.change": "テーマ変更",
   "store.lack": "ポイント不足",
-  "store.title": "ストア"
+  "store.title": "ストア",
+  "language.saved": "選択した言語: {name} ({code}) を保存しました"
+
 
 
 

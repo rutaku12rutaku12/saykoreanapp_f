@@ -347,5 +347,6 @@
   "exam.mode.regular.two": "정기시험",
   "study.language.select": "학습에 사용할 언어를 골라주세요.",
   "common.retry": "다시 시도",
-  "study.language.none": "지원 언어가 없습니다."
+  "study.language.none": "지원 언어가 없습니다.",
+  "language.changedSimple": "선택한 언어로 변경되었습니다."
 }

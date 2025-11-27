@@ -341,5 +341,7 @@
   "study.description.long": "阅读说明,听例句,自然地熟悉一下。",
   "study.example.study": "艺文学习",
   "study.completeButton": "学习完毕",
-  "common.backToList": "进入目录"
+  "common.backToList": "进入目录",
+  "language.changedSimple": "所选语言已更改。"
+
 }

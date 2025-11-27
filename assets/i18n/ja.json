@@ -349,5 +349,6 @@
   "exam.mode.regular.two": "定期テスト",
   "study.language.select": "学習に使用する言語を選んでください。",
   "common.retry": "再試行",
-  "study.language.none": "対応言語がありません。"
+  "study.language.none": "対応言語がありません。",
+  "language.changedSimple": "選択した言語に変更されました。"
 }

@@ -338,7 +338,6 @@
   "exam.mode.regular.two": "Examen Regular",
   "study.language.select": "Elige el idioma que deseas usar para estudiar.",
   "common.retry": "Reintentar",
-  "study.language.none": "No hay idiomas compatibles disponibles.",
   "language.changedSimple": "The selected language has been changed.",
   "study.language.none": "No hay idiomas compatibles disponibles.",
   "loading.slide5.desc": "Ingresa la descripción de la imagen número 5.",
@@ -358,23 +357,17 @@
   "test.number": "Número de prueba: {no}",
   "test.summary": "¡Asertaste {correct} de {total} preguntas!",
   "test.correctCount": "Respuestas correctas",
-  "store.loadError": "Unable to load store information.\nPlease try again later.",
-
   "store.loadError": "No se pudo cargar la información de la tienda.\nPor favor, inténtalo de nuevo más tarde.",
-
   "store.buy.dark": "Comprar tema oscuro",
   "store.buy.dark.confirm": "¿Usar {price} puntos para comprar el tema oscuro?",
   "store.buy.success.dark": "¡Tema oscuro desbloqueado! Puedes cambiarlo en la configuración.",
-
   "store.buy.mint": "Comprar tema menta",
   "store.buy.mint.confirm": "¿Usar {price} puntos para comprar el tema menta?",
   "store.buy.success.mint": "¡Tema menta desbloqueado! Puedes cambiarlo en la configuración.",
-
   "store.buy": "Comprar",
   "store.buy.fail": "La compra falló. Inténtalo de nuevo.",
   "store.buy.notEnough": "No tienes suficientes puntos.",
   "store.points": "Mis puntos",
-
   "theme.section": "Tema",
   "theme.default": "Tema predeterminado",
   "theme.default.desc": "Vuelve al tema original de crema cálida + rosa.\nLa misma sensación que al instalar la aplicación por primera vez.",
@@ -382,7 +375,6 @@
   "theme.dark.desc": "Un modo oscuro elegante que cuida tus ojos incluso de noche.",
   "theme.mint": "Tema menta",
   "theme.mint.desc": "Un tema pastel fresco centrado en el color menta en lugar del rosa.\nPerfecto para estudiar con un ambiente claro y refrescante.",
-
   "store.free": "Gratis",
   "theme.change": "Cambiar tema",
   "store.lack": "Puntos insuficientes",

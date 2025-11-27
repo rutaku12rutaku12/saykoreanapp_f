@@ -364,20 +364,16 @@
   "test.summary": "在 {total} 道题中，你答对了 {correct} 道！",
   "test.correctCount": "答对数量",
   "store.loadError": "无法加载商店信息。\n请稍后再试。",
-
   "store.buy.dark": "购买深色主题",
   "store.buy.dark.confirm": "使用 {price} 点数购买深色主题？",
   "store.buy.success.dark": "深色主题已解锁！可以在设置中切换。",
-
   "store.buy.mint": "购买薄荷主题",
   "store.buy.mint.confirm": "使用 {price} 点数购买薄荷主题？",
   "store.buy.success.mint": "薄荷主题已解锁！可以在设置中切换。",
-
   "store.buy": "购买",
   "store.buy.fail": "购买失败，请重试。",
   "store.buy.notEnough": "点数不足。",
   "store.points": "我的点数",
-
   "theme.section": "主题",
   "theme.default": "默认主题",
   "theme.default.desc": "温暖的奶油 + 粉色组合的默认主题。\n就像刚安装应用时的感觉。",
@@ -385,7 +381,6 @@
   "theme.dark.desc": "高品质的深色模式，让你在夜间也能舒适学习。",
   "theme.mint": "薄荷主题",
   "theme.mint.desc": "以薄荷色为主的清新柔和主题。\n适合想要清爽心情学习的时候。",
-
   "store.free": "免费",
   "theme.change": "更改主题",
   "store.lack": "点数不足",

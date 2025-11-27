@@ -350,8 +350,7 @@
   "study.language.select": "学習に使用する言語を選んでください。",
   "common.retry": "再試行",
   "study.language.none": "対応言語がありません。",
-  "language.changedSimple": "選択した言語に変更されました。"
-  "study.language.none": "対応言語がありません。",
+  "language.changedSimple": "選択した言語に変更されました。",
   "loading.slide5.desc": "5番目の画像の説明を入力してください。",
   "loading.phrase1": "採点中です… 少々お待ちください。",
   "loading.phrase2": "回答を分析しています。まもなく結果が表示されます！",
@@ -370,20 +369,16 @@
   "test.summary": "{total}問中{correct}問正解しました！",
   "test.correctCount": "正解数",
   "store.loadError": "ストア情報を読み込めませんでした。\nしばらくしてからもう一度お試しください。",
-
   "store.buy.dark": "ダークテーマを購入",
   "store.buy.dark.confirm": "{price} ポイントを使ってダークテーマを購入しますか？",
   "store.buy.success.dark": "ダークテーマが解放されました！設定で変更できます。",
-
   "store.buy.mint": "ミントテーマを購入",
   "store.buy.mint.confirm": "{price} ポイントを使ってミントテーマを購入しますか？",
   "store.buy.success.mint": "ミントテーマが解放されました！設定で変更できます。",
-
   "store.buy": "購入",
   "store.buy.fail": "購入に失敗しました。もう一度お試しください。",
   "store.buy.notEnough": "ポイントが足りません。",
   "store.points": "マイポイント",
-
   "theme.section": "テーマ",
   "theme.default": "デフォルトテーマ",
   "theme.default.desc": "温かいクリーム + ピンクの組み合わせのデフォルトテーマです。\nアプリを初めてインストールした時の雰囲気です。",
@@ -391,7 +386,6 @@
   "theme.dark.desc": "夜でも目に優しい高級感のあるダークモードです。",
   "theme.mint": "ミントテーマ",
   "theme.mint.desc": "ピンクの代わりにミント中心の爽やかなパステルテーマです。\nすっきり明るい気分で勉強したいときにおすすめです。",
-
   "store.free": "無料",
   "theme.change": "テーマ変更",
   "store.lack": "ポイント不足",

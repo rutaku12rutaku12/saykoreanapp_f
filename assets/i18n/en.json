@@ -376,20 +376,16 @@
   "test.summary": "You got {correct} out of {total} questions right!",
   "test.correctCount": "Correct Answers",
   "store.loadError": "Unable to load store information.\nPlease try again later.",
-
   "store.buy.dark": "Buy Dark Theme",
   "store.buy.dark.confirm": "Use {price} points to purchase the Dark Theme?",
   "store.buy.success.dark": "Dark Theme unlocked! You can change it in the settings.",
-
   "store.buy.mint": "Buy Mint Theme",
   "store.buy.mint.confirm": "Use {price} points to purchase the Mint Theme?",
   "store.buy.success.mint": "Mint Theme unlocked! You can change it in the settings.",
-
   "store.buy": "Purchase",
   "store.buy.fail": "Purchase failed. Please try again.",
   "store.buy.notEnough": "Not enough points.",
   "store.points": "My Points",
-
   "theme.section": "Theme",
   "theme.default": "Default Theme",
   "theme.default.desc": "The original warm cream + pink theme.\nIt feels like when you first installed the app.",
@@ -397,7 +393,6 @@
   "theme.dark.desc": "A premium dark mode that keeps your eyes comfortable even at night.",
   "theme.mint": "Mint Theme",
   "theme.mint.desc": "A fresh pastel theme focused on mint instead of pink.\nPerfect for studying in a refreshing mood.",
-
   "store.free": "Free",
   "theme.change": "Change Theme",
   "store.lack": "Insufficient Points",

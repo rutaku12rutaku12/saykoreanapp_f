@@ -335,6 +335,7 @@
   "exam.mode.hard.two": "困难模式",
   "exam.mode.regular.two": "定期考试",
   "study.language.select": "请选择要用于学习的语言。",
+  "common.retry": "重试",
   "study.language.none": "没有可用的支持语言。",
   "study.myList": "我的学习目录",
   "study.topic.pickOne": "我们来选一个学习的主题吧？",
@@ -342,6 +343,59 @@
   "study.example.study": "艺文学习",
   "study.completeButton": "学习完毕",
   "common.backToList": "进入目录",
-  "language.changedSimple": "所选语言已更改。"
+  "language.changedSimple": "所选语言已更改。",
+  "study.myList": "我的学习列表",
+  "study.topic.pickOne": "要不要选一个要学习的主题呢？",
+  "loading.slide5.desc": "请填写第5张图片的说明。",
+  "loading.phrase1": "正在评分… 请稍候。",
+  "loading.phrase2": "正在分析您的答案… 很快会显示结果！",
+  "loading.phrase3": "再稍等一下，结果马上就好！",
+  "error.argsFormat": "无效的访问。（参数格式错误）",
+  "error.actionPayload": "无效的访问。（action/payload 错误）",
+  "error.emptyUrl": "请求的URL为空。",
+  "genre.saved": "已保存所选的类别：{name}（No.{no}）",
+  "theme.changed.dark": "已切换为深色主题。",
+  "theme.changed.mint": "已切换为薄荷主题。",
+  "theme.changed.default": "已切换为默认主题。",
+  "feedback.great": "做得非常好！😊",
+  "feedback.practiceMore": "要不要再练习一下？",
+  "feedback.tryAgain": "没关系，再试一次吧！💪",
+  "test.number": "测试编号：{no}",
+  "test.summary": "在 {total} 道题中，你答对了 {correct} 道！",
+  "test.correctCount": "答对数量",
+  "store.loadError": "无法加载商店信息。\n请稍后再试。",
+
+  "store.buy.dark": "购买深色主题",
+  "store.buy.dark.confirm": "使用 {price} 点数购买深色主题？",
+  "store.buy.success.dark": "深色主题已解锁！可以在设置中切换。",
+
+  "store.buy.mint": "购买薄荷主题",
+  "store.buy.mint.confirm": "使用 {price} 点数购买薄荷主题？",
+  "store.buy.success.mint": "薄荷主题已解锁！可以在设置中切换。",
+
+  "store.buy": "购买",
+  "store.buy.fail": "购买失败，请重试。",
+  "store.buy.notEnough": "点数不足。",
+  "store.points": "我的点数",
+
+  "theme.section": "主题",
+  "theme.default": "默认主题",
+  "theme.default.desc": "温暖的奶油 + 粉色组合的默认主题。\n就像刚安装应用时的感觉。",
+  "theme.dark": "深色主题",
+  "theme.dark.desc": "高品质的深色模式，让你在夜间也能舒适学习。",
+  "theme.mint": "薄荷主题",
+  "theme.mint.desc": "以薄荷色为主的清新柔和主题。\n适合想要清爽心情学习的时候。",
+
+  "store.free": "免费",
+  "theme.change": "更改主题",
+  "store.lack": "点数不足",
+  "store.title": "商城",
+  "language.saved": "已保存所选语言：{name}（{code}）"
+
+
+
+
+
+
 
 }

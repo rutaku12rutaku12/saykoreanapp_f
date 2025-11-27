@@ -1,5 +1,6 @@
 // lib/pages/store/store.dart
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
@@ -105,13 +106,13 @@ class _StorePageState extends State<StorePage> {
     String label;
     switch (themeKey) {
       case 'dark':
-        label = '다크 테마로 변경했어요.';
+        label = "theme.changed.dark".tr();
         break;
       case 'mint':
-        label = '민트 테마로 변경했어요.';
+        label = "theme.changed.mint".tr();
         break;
       default:
-        label = '기본 테마로 변경했어요.';
+        label = "theme.changed.default".tr();
     }
 
     showFooterSnackBar(
@@ -202,7 +203,7 @@ class _StorePageState extends State<StorePage> {
     if (_pointBalance! < price) {
       showFooterSnackBar(
         context,
-        '포인트가 부족해요.',
+        "store.buy.notEnough".tr(),
       );
       return;
     }
@@ -211,16 +212,16 @@ class _StorePageState extends State<StorePage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('다크 테마 구매'),
-        content: Text('$price 포인트를 사용해서 다크 테마를 구매할까요?'),
+        title: Text("store.buy.dark".tr()),
+        content: Text("store.buy.dark.confirm".tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text("common.cancel".tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('구매'),
+            child: Text("store.buy".tr()),
           ),
         ],
       ),
@@ -237,7 +238,7 @@ class _StorePageState extends State<StorePage> {
     if (!success) {
       showFooterSnackBar(
         context,
-        '구매에 실패했어요. 다시 시도해 주세요.',
+        "store.buy.fail".tr(),
       );
       return;
     }
@@ -252,7 +253,7 @@ class _StorePageState extends State<StorePage> {
 
     showFooterSnackBar(
       context,
-      '다크 테마가 해금되었어요! 설정에서 변경할 수 있어요.',
+      "store.buy.success.dark".tr(),
     );
 
   }
@@ -267,7 +268,7 @@ class _StorePageState extends State<StorePage> {
 
     if (_pointBalance! < price) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('포인트가 부족해요.')),
+        SnackBar(content: Text("store.buy.notEnough".tr())),
       );
       return;
     }
@@ -275,16 +276,16 @@ class _StorePageState extends State<StorePage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('민트 테마 구매'),
-        content: Text('$price 포인트를 사용해서 민트 테마를 구매할까요?'),
+        title: Text("store.buy.mint".tr()),
+        content: Text("store.buy.mint.confirm".tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text("common.cancel".tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('구매'),
+            child: Text("store.buy".tr()),
           ),
         ],
       ),
@@ -301,7 +302,7 @@ class _StorePageState extends State<StorePage> {
     if (!success) {
       showFooterSnackBar(
         context,
-        '구매에 실패했어요. 다시 시도해 주세요.',
+        "store.buy.fail".tr(),
       );
 
       return;
@@ -316,7 +317,7 @@ class _StorePageState extends State<StorePage> {
 
     showFooterSnackBar(
       context,
-      '민트 테마가 해금되었어요! 설정에서 변경할 수 있어요.',
+      "store.buy.success.mint".tr(),
     );
 
   }
@@ -348,7 +349,7 @@ class _StorePageState extends State<StorePage> {
         centerTitle: true,
         iconTheme: IconThemeData(color: mainTitleColor),
         title: Text(
-          '스토어',
+          "store.title".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             color: mainTitleColor,
             fontWeight: FontWeight.w700,
@@ -391,7 +392,7 @@ class _StorePageState extends State<StorePage> {
                 foregroundColor: const Color(0xFF6B4E42),
                 elevation: 0,
               ),
-              child: const Text('다시 시도'),
+              child: const Text("common.retry"),
             ),
           ],
         ),
@@ -446,7 +447,7 @@ class _StorePageState extends State<StorePage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '내 포인트',
+                    "store.points".tr(),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: sectionTitleColor,
@@ -467,7 +468,7 @@ class _StorePageState extends State<StorePage> {
           const SizedBox(height: 24),
 
           Text(
-            '테마',
+            "theme.section".tr(),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: sectionTitleColor,
@@ -577,7 +578,7 @@ class _StorePageState extends State<StorePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '기본 테마',
+                  "theme.default".tr(),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: titleColor,
@@ -585,7 +586,7 @@ class _StorePageState extends State<StorePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '따뜻한 크림 + 핑크 조합의 기본 테마로 되돌려요.\n처음 앱을 설치했을 때의 느낌이에요.',
+                  "theme.default.desc".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: descColor,
                     height: 1.3,
@@ -601,7 +602,7 @@ class _StorePageState extends State<StorePage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '무료',
+                      "store.free".tr(),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: freeColor,
@@ -630,7 +631,7 @@ class _StorePageState extends State<StorePage> {
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              child: const Text('테마 변경'),
+              child: Text("theme.change".tr()),
             ),
           ),
         ],
@@ -748,7 +749,7 @@ class _StorePageState extends State<StorePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '다크 테마',
+                  "theme.dark".tr(),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: titleColor,
@@ -756,7 +757,7 @@ class _StorePageState extends State<StorePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '밤에도 눈 편하게 학습할 수 있는 고급스러운 다크 모드예요.',
+                  "theme.dark.desc".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: descColor,
                     height: 1.3,
@@ -809,10 +810,10 @@ class _StorePageState extends State<StorePage> {
               ),
               child: Text(
                 owned
-                    ? '테마 변경'
+                    ? "theme.change".tr()
                     : (_pointBalance != null && _pointBalance! < price
-                    ? '포인트 부족'
-                    : '구매'),
+                    ? "store.lack".tr()
+                    : "store.buy".tr()),
               ),
             ),
           ),
@@ -917,7 +918,7 @@ class _StorePageState extends State<StorePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '민트 테마',
+                  "theme.mint".tr(),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: titleColor,
@@ -925,7 +926,7 @@ class _StorePageState extends State<StorePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '핑크 대신 민트 중심의 상큼한 파스텔 테마예요.\n맑고 산뜻한 분위기로 공부하고 싶을 때 좋아요.',
+                  "theme.mint.desc".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: descColor,
                     height: 1.3,
@@ -977,10 +978,10 @@ class _StorePageState extends State<StorePage> {
               ),
               child: Text(
                 owned
-                    ? '테마 변경'
+                    ? "theme.change".tr()
                     : (_pointBalance != null && _pointBalance! < price
-                    ? '포인트 부족'
-                    : '구매'),
+                    ? "store.lack".tr()
+                    : "store.buy".tr()),
               ),
             ),
           ),

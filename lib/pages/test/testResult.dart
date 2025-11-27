@@ -1,7 +1,9 @@
 // lib/pages/test/test_result_page.dart
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ FooterSafeArea
+import 'package:easy_localization/easy_localization.dart';
 
 class TestResultPage extends StatelessWidget {
   const TestResultPage({super.key});
@@ -91,10 +93,10 @@ class TestResultPage extends StatelessWidget {
             Colors.grey.shade600;
 
     String getMessage() {
-      if (percent >= 90) return "완벽해요! ✨";
-      if (percent >= 70) return "아주 잘했어요! 😊";
-      if (percent >= 40) return "조금만 더 연습해볼까요?";
-      return "괜찮아요, 다시 도전해봐요! 💪";
+      if (percent >= 90) return "test.result.perfect".tr();
+      if (percent >= 70) return "feedback.great".tr();
+      if (percent >= 40) return "feedback.practiceMore".tr();
+      return "feedback.tryAgain".tr();
     }
 
     return Scaffold(
@@ -104,7 +106,7 @@ class TestResultPage extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          '시험 결과',
+          "test.result.title".tr(),
           style: TextStyle(
             color: primary,
             fontWeight: FontWeight.w700,
@@ -135,14 +137,15 @@ class TestResultPage extends StatelessWidget {
                             children: [
                               // 시험 번호 칩
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 18, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: chipBg,
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
-                                  '시험 번호 : $testNo',
+                                  'test.number'.tr(namedArgs: {
+                                    'no': testNo.toString(),
+                                  }),
                                   style: TextStyle(
                                     color: primary,
                                     fontWeight: FontWeight.w600,
@@ -227,7 +230,10 @@ class TestResultPage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      '총 $total문항 중 $correct문항을 맞혔어요!',
+                                      'test.summary'.tr(namedArgs: {
+                                        'total': total.toString(),
+                                        'correct': correct.toString(),
+                                      }),
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 13,
@@ -255,7 +261,7 @@ class TestResultPage extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                '정답률',
+                                                "ranking.th.accuracy".tr(),
                                                 style: TextStyle(
                                                   fontSize: 13,
                                                   color: subtleTextColor,
@@ -280,14 +286,14 @@ class TestResultPage extends StatelessWidget {
                                               MainAxisAlignment.end,
                                               children: [
                                                 _StatChip(
-                                                  label: '총 문항',
+                                                  label: "ranking.th.total".tr(),
                                                   value: '$total',
                                                   color: primary,
                                                   bgColor: statChipBg,
                                                 ),
                                                 const SizedBox(width: 8),
                                                 _StatChip(
-                                                  label: '맞힌 개수',
+                                                  label: "test.correctCount".tr(),
                                                   value: '$correct',
                                                   color: primary,
                                                   bgColor: statChipBg,

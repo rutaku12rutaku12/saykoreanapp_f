@@ -340,5 +340,59 @@
   "common.retry": "Reintentar",
   "study.language.none": "No hay idiomas compatibles disponibles.",
   "language.changedSimple": "The selected language has been changed.",
-  "language.changedSimple": "El idioma seleccionado ha sido cambiado."
-}
+  "study.language.none": "No hay idiomas compatibles disponibles.",
+  "loading.slide5.desc": "Ingresa la descripción de la imagen número 5.",
+  "loading.phrase1": "Calificando... Por favor espera un momento.",
+  "loading.phrase2": "Analizando tus respuestas... ¡Los resultados estarán listos pronto!",
+  "loading.phrase3": "Solo un momento más, ¡tus resultados están casi listos!",
+  "error.argsFormat": "Acceso no válido. (Error en el formato de los argumentos)",
+  "error.actionPayload": "Acceso no válido. (Error en la acción/payload)",
+  "error.emptyUrl": "La URL de la solicitud está vacía.",
+  "genre.saved": "Género seleccionado: {name} (No.{no}) guardado",
+  "theme.changed.dark": "Cambiado al tema oscuro.",
+  "theme.changed.mint": "Cambiado al tema menta.",
+  "theme.changed.default": "Cambiado al tema predeterminado.",
+  "feedback.great": "¡Muy bien hecho! 😊",
+  "feedback.practiceMore": "¿Practicamos un poco más?",
+  "feedback.tryAgain": "No pasa nada, ¡inténtalo de nuevo! 💪",
+  "test.number": "Número de prueba: {no}",
+  "test.summary": "¡Asertaste {correct} de {total} preguntas!",
+  "test.correctCount": "Respuestas correctas",
+  "store.loadError": "Unable to load store information.\nPlease try again later.",
+
+  "store.loadError": "No se pudo cargar la información de la tienda.\nPor favor, inténtalo de nuevo más tarde.",
+
+  "store.buy.dark": "Comprar tema oscuro",
+  "store.buy.dark.confirm": "¿Usar {price} puntos para comprar el tema oscuro?",
+  "store.buy.success.dark": "¡Tema oscuro desbloqueado! Puedes cambiarlo en la configuración.",
+
+  "store.buy.mint": "Comprar tema menta",
+  "store.buy.mint.confirm": "¿Usar {price} puntos para comprar el tema menta?",
+  "store.buy.success.mint": "¡Tema menta desbloqueado! Puedes cambiarlo en la configuración.",
+
+  "store.buy": "Comprar",
+  "store.buy.fail": "La compra falló. Inténtalo de nuevo.",
+  "store.buy.notEnough": "No tienes suficientes puntos.",
+  "store.points": "Mis puntos",
+
+  "theme.section": "Tema",
+  "theme.default": "Tema predeterminado",
+  "theme.default.desc": "Vuelve al tema original de crema cálida + rosa.\nLa misma sensación que al instalar la aplicación por primera vez.",
+  "theme.dark": "Tema oscuro",
+  "theme.dark.desc": "Un modo oscuro elegante que cuida tus ojos incluso de noche.",
+  "theme.mint": "Tema menta",
+  "theme.mint.desc": "Un tema pastel fresco centrado en el color menta en lugar del rosa.\nPerfecto para estudiar con un ambiente claro y refrescante.",
+
+  "store.free": "Gratis",
+  "theme.change": "Cambiar tema",
+  "store.lack": "Puntos insuficientes",
+  "store.title": "Tienda",
+  "language.saved": "Idioma seleccionado: {name} ({code}) guardado"
+
+
+
+
+
+
+
+

@@ -143,7 +143,10 @@ class _LanguagePageState extends State<LanguagePage> {
 
     showFooterSnackBar(
       context,
-      tr("language.changedSimple"),
+        'language.saved'.tr(namedArgs: {
+          'name': name,
+          'code': code,
+        }),
     );
 
     // 필요하면 여기서 화면 이동

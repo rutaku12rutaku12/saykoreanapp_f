@@ -105,7 +105,10 @@ class _GenreState extends State<GenrePage> {
 
     showFooterSnackBar(
       context,
-      '선택한 장르: $name (No.$genreNo) 저장됨',
+      'genre.saved'.tr(namedArgs: {
+        'name': name,
+        'no': genreNo.toString(),
+      }),
     );
 
     // 필요 시 다른 페이지로 이동할 때 여기서 Navigator.pushReplacement 사용

@@ -76,7 +76,6 @@
 - Google Cloud Text-to-Speech API
 - Google Gemini API
 - Crizin (발음기호 라이브러리)
-- reCAPTCHA
 - i18next (언어 변경)
 - JJWT
 - WebSocket

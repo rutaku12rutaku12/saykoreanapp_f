@@ -1,4 +1,4 @@
-# <img src="https://github.com/user-attachments/assets/90f7363f-768b-40b2-81bf-ca9864c39488" width="100" height="100"/> 재밌는한국어 
+# <img src="https://github.com/user-attachments/assets/7e36b0d3-34f1-4fa8-a576-ddd434e96247" width="100" height="100"/> 재밌는한국어 
 
 
 ## 💻 프로젝트 소개
